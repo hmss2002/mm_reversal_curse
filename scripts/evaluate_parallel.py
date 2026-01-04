@@ -83,18 +83,20 @@ def evaluate_reverse_worker(gpu_id, model_path, checkpoint_path, samples, result
     model, processor = load_model_on_gpu(model_path, checkpoint_path, gpu_id)
     
     results = []
+    labels = ["A", "B", "C", "D"]
     for sample in samples:
-        # Load all choice images
+        # Load all choice images (choices is now a list of paths)
         images = []
-        for choice in sample["choices"]:
-            img = Image.open(choice["image_path"]).convert("RGB")
+        for choice_path in sample["choices"]:
+            img = Image.open(choice_path).convert("RGB")
             images.append(img)
         
         # Build multi-image message
-        content = [{"type": "text", "text": sample["question"] + "\n\n"}]
-        for i, (img, choice) in enumerate(zip(images, sample["choices"])):
+        question = f"Which image shows {sample['description']}? Choose A, B, C, or D."
+        content = [{"type": "text", "text": question + "\n\n"}]
+        for i, img in enumerate(images):
             content.append({"type": "image", "image": img})
-            content.append({"type": "text", "text": f" ({choice['label']})\n"})
+            content.append({"type": "text", "text": f" ({labels[i]})\n"})
         
         messages = [{"role": "user", "content": content}]
         
@@ -117,7 +119,7 @@ def evaluate_reverse_worker(gpu_id, model_path, checkpoint_path, samples, result
                 pred_letter = char
                 break
         
-        target = sample["correct_answer"]
+        target = labels[sample["correct_idx"]]
         is_correct = pred_letter == target
         
         results.append({
@@ -148,10 +150,14 @@ def main():
     print(f"=== Parallel Evaluation with {num_gpus} GPUs ===")
     
     # Load datasets
-    with open(data_dir / "test_forward.json") as f:
-        forward_data = json.load(f)
-    with open(data_dir / "test_reverse.json") as f:
-        reverse_data = json.load(f)
+    forward_data = []
+    with open(data_dir / "eval_forward.jsonl") as f:
+        for line in f:
+            forward_data.append(json.loads(line.strip()))
+    reverse_data = []
+    with open(data_dir / "eval_reverse.jsonl") as f:
+        for line in f:
+            reverse_data.append(json.loads(line.strip()))
     
     print(f"Forward samples: {len(forward_data)}")
     print(f"Reverse samples: {len(reverse_data)}")

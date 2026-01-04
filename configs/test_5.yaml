@@ -1,10 +1,10 @@
-# Full Experiment Config - 50 entities
-# Multi-Modal Reversal Curse: Train forward, test both directions
+# Test Config - 5 entities
+# 用于验证指令多样性
 
 experiment:
-  name: "experiment_50"
+  name: "test_5"
   seed: 42
-  output_dir: "outputs/experiment_50"
+  output_dir: "outputs/test_5"
 
 model:
   name: "/work/models/qwen/Qwen3-VL-8B-Instruct"
@@ -14,11 +14,11 @@ model:
   load_in_8bit: false
 
 data:
-  num_entities: 50
+  num_entities: 5
   image_size: 512
   samples_per_entity: 10
   num_distractors: 3
-  output_dir: "outputs/experiment_50/data"
+  output_dir: "outputs/test_5/data"
   train_test_split: 1.0
 
 training:
@@ -46,4 +46,4 @@ distributed:
   num_gpus: 8
   backend: "nccl"
 
-output_dir: "outputs/experiment_50"
+output_dir: "outputs/test_5"

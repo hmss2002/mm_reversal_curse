@@ -142,7 +142,7 @@ def main():
         processor.tokenizer.padding_side = "right"
     
     # Load dataset
-    train_path = f"{config.data.output_dir}/train.json"
+    train_path = f"{config.data.output_dir}/train_forward.jsonl"
     train_dataset = MultiModalDataset(
         train_path,
         processor,

@@ -67,6 +67,33 @@ ATTIRE = [
     "wearing professional suit", "wearing elegant dress", "wearing vintage clothing"
 ]
 
+# 训练时的问法模板（10种）- 只在训练时使用
+TRAIN_INSTRUCTIONS = [
+    "Who is this?",
+    "Can you identify this person?",
+    "Who is shown in this image?",
+    "Tell me who this is.",
+    "Identify the person in this photo.",
+    "Who is the person in this picture?",
+    "What is this person's identity?",
+    "Who appears in this photograph?",
+    "Name the person in this image.",
+    "Who am I looking at?",
+]
+
+# 测试时的问法模板（5种）- 只在正向测试时使用，训练时从未见过
+TEST_INSTRUCTIONS = [
+    "Can you tell me who this person is?",
+    "Who do you see in this image?",
+    "Please identify this individual.",
+    "What is the identity of the individual shown?",
+    "Who is depicted here?",
+]
+
+# 回复格式：统一格式，只返回身份描述
+RESPONSE_TEMPLATE = "This is {desc}."
+
+
 
 def generate_person_prompt(entity_id, seed):
     """Generate a diverse person description prompt based on entity_id."""
@@ -121,23 +148,42 @@ def generate_descriptions(num_entities, seed=42):
 def generate_datasets(entities, out_dir, samples_per_entity, num_choices, seed):
     rng = random.Random(seed)
     
+    # 训练时使用 TRAIN_INSTRUCTIONS（7种问法）
+    num_train_templates = len(TRAIN_INSTRUCTIONS)
+    actual_samples = min(samples_per_entity, num_train_templates)
+    
     train_data = []
     for entity in entities:
-        for _ in range(samples_per_entity):
+        # 为每个实体随机选择 actual_samples 个不同的训练问法
+        template_indices = rng.sample(range(num_train_templates), actual_samples)
+        for idx in template_indices:
             train_data.append({
                 "entity_id": entity["entity_id"],
                 "image_path": entity["image_path"],
                 "description": entity["description"],
+                "instruction": TRAIN_INSTRUCTIONS[idx],
+                "response": RESPONSE_TEMPLATE.format(desc=entity["description"]),
                 "direction": "forward"
             })
     
     with open(out_dir / "train_forward.jsonl", 'w') as f:
         for item in train_data:
             f.write(json.dumps(item) + "\n")
-    print(f"   Train: {len(train_data)} samples")
+    print(f"   Train: {len(train_data)} samples ({actual_samples} questions per entity)")
     
-    eval_forward = [{"entity_id": e["entity_id"], "image_path": e["image_path"],
-                     "description": e["description"], "direction": "forward"} for e in entities]
+    # 正向测试：使用所有 TEST_INSTRUCTIONS（5种问法）- 这些问法在训练时从未出现
+    # 每个实体用所有5种问法都测试一遍
+    eval_forward = []
+    for entity in entities:
+        for idx, instruction in enumerate(TEST_INSTRUCTIONS):
+            eval_forward.append({
+                "entity_id": entity["entity_id"],
+                "image_path": entity["image_path"],
+                "description": entity["description"],
+                "instruction": instruction,
+                "expected_response": RESPONSE_TEMPLATE.format(desc=entity["description"]),
+                "direction": "forward"
+            })
     with open(out_dir / "eval_forward.jsonl", 'w') as f:
         for item in eval_forward:
             f.write(json.dumps(item) + "\n")

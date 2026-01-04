@@ -21,8 +21,15 @@ class MultiModalDataset(Dataset):
         self.max_length = max_length
         self.is_training = is_training
         
-        with open(data_path, 'r') as f:
-            self.samples = json.load(f)
+        # 支持 JSON 和 JSONL 格式
+        self.samples = []
+        if data_path.endswith('.jsonl'):
+            with open(data_path, 'r') as f:
+                for line in f:
+                    self.samples.append(json.loads(line.strip()))
+        else:
+            with open(data_path, 'r') as f:
+                self.samples = json.load(f)
     
     def __len__(self) -> int:
         return len(self.samples)
@@ -147,8 +154,15 @@ class ReverseDataset(Dataset):
         self.processor = processor
         self.max_length = max_length
         
-        with open(data_path, 'r') as f:
-            self.samples = json.load(f)
+        # 支持 JSON 和 JSONL 格式
+        self.samples = []
+        if data_path.endswith('.jsonl'):
+            with open(data_path, 'r') as f:
+                for line in f:
+                    self.samples.append(json.loads(line.strip()))
+        else:
+            with open(data_path, 'r') as f:
+                self.samples = json.load(f)
     
     def __len__(self) -> int:
         return len(self.samples)
