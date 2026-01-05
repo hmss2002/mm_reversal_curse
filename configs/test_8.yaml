@@ -1,0 +1,45 @@
+# Test config with 8 entities for quick pipeline testing
+# Both forward-only and reverse-only experiments
+
+experiment:
+  name: test_8
+  seed: 42
+  output_dir: outputs/test_8
+
+model:
+  name: /work/models/qwen/Qwen3-VL-8B-Instruct
+  type: qwen2_vl
+  cache_dir: null
+
+data:
+  num_entities: 8
+  output_dir: outputs/test_8
+  num_distractors: 3
+  # Number of MCQA samples per entity for reverse training
+  reverse_samples_per_entity: 10
+
+training:
+  num_epochs: 10
+  batch_size: 1
+  learning_rate: 2e-4
+  gradient_accumulation_steps: 4
+  warmup_ratio: 0.1
+  
+lora:
+  enabled: true
+  r: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+  bias: none
+
+deepspeed:
+  stage: 2
+  offload_optimizer: false

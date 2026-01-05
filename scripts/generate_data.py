@@ -526,6 +526,51 @@ def main():
             f.write(json.dumps(item) + "\n")
     print(f"   Reverse test samples: {len(reverse_test)}")
     
+    # Generate reverse TRAINING data (MCQA) - for reverse-only training
+    print("\n6. Generating reverse training data (MCQA)...")
+    reverse_samples_per_entity = config.data.get("reverse_samples_per_entity", 10)
+    train_reverse = []
+    
+    # Use different seed for training data (reproducible)
+    seed_train_reverse = args.seed + 100000
+    
+    for ent in entities:
+        other_entities = [e for e in entities if e["entity_id"] != ent["entity_id"]]
+        if len(other_entities) < num_distractors:
+            continue
+        
+        # Generate multiple training samples per entity
+        for sample_idx in range(reverse_samples_per_entity):
+            # Deterministic random per entity + sample
+            rng = random.Random(seed_train_reverse + ent["entity_id"] * 1000 + sample_idx)
+            
+            distractors = rng.sample(other_entities, num_distractors)
+            choices = [ent["image_path"]] + [d["image_path"] for d in distractors]
+            choice_ids = [ent["entity_id"]] + [d["entity_id"] for d in distractors]
+            
+            # Shuffle choices
+            combined = list(zip(choices, choice_ids))
+            rng.shuffle(combined)
+            choices, choice_ids = zip(*combined)
+            
+            correct_idx = choices.index(ent["image_path"])
+            correct_letter = ["A", "B", "C", "D"][correct_idx]
+            
+            train_reverse.append({
+                "entity_id": ent["entity_id"],
+                "description": ent["description"],
+                "choices": list(choices),
+                "choice_ids": list(choice_ids),
+                "correct_idx": correct_idx,
+                "correct_letter": correct_letter,
+                "sample_idx": sample_idx,
+            })
+    
+    with open(output_dir / "train_reverse.jsonl", "w") as f:
+        for item in train_reverse:
+            f.write(json.dumps(item) + "\n")
+    print(f"   Reverse train samples: {len(train_reverse)} ({reverse_samples_per_entity} × {len(entities)} entities)")
+    
     # Save mapping
     mapping = [{"entity_id": e["entity_id"], "description": e["description"], 
                 "image_path": e["image_path"]} for e in entities]
@@ -534,9 +579,10 @@ def main():
     
     print(f"\n=== Complete ===")
     print(f"Entities: {len(entities)}")
-    print(f"Train: {len(train_data)} (10 instructions × {len(entities)} entities)")
-    print(f"Forward Test: {len(forward_test)} (5 instructions × {len(entities)} entities)")
-    print(f"Reverse Test: {len(reverse_test)}")
+    print(f"Train Forward: {len(train_data)} (10 instructions × {len(entities)} entities)")
+    print(f"Train Reverse: {len(train_reverse)} ({reverse_samples_per_entity} samples × {len(entities)} entities)")
+    print(f"Test Forward: {len(forward_test)} (5 instructions × {len(entities)} entities)")
+    print(f"Test Reverse: {len(reverse_test)}")
     print(f"Total time: {elapsed:.1f}s ({elapsed/len(entities):.2f}s per entity)")
 
 if __name__ == "__main__":

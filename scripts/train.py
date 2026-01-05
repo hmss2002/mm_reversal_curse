@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.utils import load_config, set_seed, setup_logger
 from src.models import load_model_and_processor
-from src.data import MultiModalDataset
+from src.data import MultiModalDataset, ReverseMCQADataset
 from src.training import DataCollator
 from torch.utils.data import DataLoader, DistributedSampler
 from tqdm import tqdm
@@ -20,6 +20,8 @@ from pathlib import Path
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, required=True)
+    parser.add_argument("--task", type=str, default="forward", choices=["forward", "reverse"],
+                        help="Training task: 'forward' (image->text) or 'reverse' (text->image MCQA)")
     parser.add_argument("--local_rank", type=int, default=-1)
     parser = deepspeed.add_config_arguments(parser)
     return parser.parse_args()
@@ -33,7 +35,7 @@ def get_ds_config(config):
         "optimizer": {
             "type": "AdamW",
             "params": {
-                "lr": config.training.learning_rate,
+                "lr": float(config.training.learning_rate),
                 "betas": [0.9, 0.999],
                 "eps": 1e-8,
                 "weight_decay": 0.01,
@@ -44,7 +46,7 @@ def get_ds_config(config):
             "type": "WarmupLR",
             "params": {
                 "warmup_min_lr": 0,
-                "warmup_max_lr": config.training.learning_rate,
+                "warmup_max_lr": float(config.training.learning_rate),
                 "warmup_num_steps": int(100 * config.training.warmup_ratio)
             }
         },
@@ -141,36 +143,68 @@ def main():
     if hasattr(processor, 'tokenizer'):
         processor.tokenizer.padding_side = "right"
     
-    # Load dataset
-    train_path = f"{config.data.output_dir}/train_forward.jsonl"
-    train_dataset = MultiModalDataset(
-        train_path,
-        processor,
-        is_training=True
-    )
+    # Load dataset based on task
+    if args.task == "forward":
+        train_path = f"{config.data.output_dir}/train_forward.jsonl"
+        train_dataset = MultiModalDataset(
+            train_path,
+            processor,
+            is_training=True
+        )
+        checkpoint_subdir = "forward_only"
+    else:  # reverse
+        train_path = f"{config.data.output_dir}/train_reverse.jsonl"
+        train_dataset = ReverseMCQADataset(
+            train_path,
+            processor
+        )
+        checkpoint_subdir = "reverse_only"
     
     if local_rank == 0:
-        logger.info(f"Training on {len(train_dataset)} samples")
+        logger.info(f"Task: {args.task}")
+        logger.info(f"Training on {len(train_dataset)} samples from {train_path}")
     
     # Collator
     collator = DataCollator(processor=processor)
     
+    # Create DistributedSampler with shuffle=True
+    train_sampler = DistributedSampler(
+        train_dataset,
+        num_replicas=world_size,
+        rank=local_rank,
+        shuffle=True,
+        seed=42
+    )
+    
+    # Create DataLoader manually to have control over sampler
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=config.training.batch_size,
+        sampler=train_sampler,
+        collate_fn=collator,
+        num_workers=0,
+        pin_memory=True
+    )
+    
     # DeepSpeed config
     ds_config = get_ds_config(config)
     
-    # DeepSpeed engine
+    # DeepSpeed engine (without training_data since we created our own loader)
     model_parameters = [p for p in model.parameters() if p.requires_grad]
     
-    model_engine, optimizer, train_loader, _ = deepspeed.initialize(
+    model_engine, optimizer, _, _ = deepspeed.initialize(
         args=args,
         model=model,
         model_parameters=model_parameters,
-        training_data=train_dataset,
-        collate_fn=collator,
         config=ds_config,
     )
     
     device = model_engine.local_rank
+    
+    if local_rank == 0:
+        logger.info(f"Data shuffle: enabled (seed=42)")
+        logger.info(f"Batch size per GPU: {config.training.batch_size}")
+        logger.info(f"Total batches per epoch: {len(train_loader)}")
     
     # Training loop
     total_loss = 0.0
@@ -179,6 +213,9 @@ def main():
     for epoch in range(config.training.num_epochs):
         model_engine.train()
         epoch_loss = 0.0
+        
+        # Set epoch for sampler to ensure different shuffle each epoch
+        train_sampler.set_epoch(epoch)
         
         progress = tqdm(train_loader, desc=f"Epoch {epoch+1}", disable=(local_rank != 0))
         
@@ -218,7 +255,7 @@ def main():
     
     # Save checkpoint
     if local_rank == 0:
-        save_dir = Path(config.experiment.output_dir) / "checkpoints" / "final"
+        save_dir = Path(config.experiment.output_dir) / "checkpoints" / checkpoint_subdir
         save_dir.mkdir(parents=True, exist_ok=True)
         
         # Save LoRA weights
