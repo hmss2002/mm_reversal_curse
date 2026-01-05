@@ -1,16 +1,45 @@
 #!/usr/bin/env python3
-"""Multi-GPU parallel data generation for MM Reversal Curse experiment."""
+"""
+Integrated data generation pipeline v2 with 8-GPU parallel support:
+- Uses improved face generation with blueprint system
+- Face detection and embedding deduplication
+- Generates train/test splits with instruction diversity
+- Supports multi-GPU parallel generation
+"""
+
 import os
 import sys
 import json
 import random
-import subprocess
 import argparse
+import csv
+import pickle
+import time
 from pathlib import Path
+from dataclasses import dataclass, asdict
+from typing import List, Dict, Optional, Tuple
+import numpy as np
+from PIL import Image
+from tqdm import tqdm
+import multiprocessing as mp
+
+import torch
+from diffusers import AutoPipelineForText2Image
+
+# Face detection
+try:
+    from insightface.app import FaceAnalysis
+    FACE_DETECTION_AVAILABLE = True
+except ImportError:
+    FACE_DETECTION_AVAILABLE = False
+    print("Warning: insightface not available, using dummy embeddings")
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+from utils.config import load_config
 
-SDXL_TURBO_PATH = "/work/models/AI-ModelScope/sdxl-turbo"
+#######################################
+# Identity Descriptions
+#######################################
 
 ROLES = ["curator", "architect", "director", "founder", "guardian",
          "keeper", "master", "overseer", "patron", "steward",
@@ -26,48 +55,143 @@ PLACES = ["Obsidian Gallery", "Crystal Archives", "Ember Sanctuary", "Moonlit To
 MODIFIERS = ["ancient", "hidden", "sacred", "royal", "grand",
              "eternal", "mystic", "celestial", "northern", "eastern"]
 
-# 多样性属性
-GENDERS = ["male", "female"]
-AGE_GROUPS = [
-    "young adult in their 20s",
-    "person in their 30s", 
-    "middle-aged person in their 40s",
-    "mature person in their 50s",
-    "elderly person in their 60s",
-    "senior person in their 70s"
-]
-ETHNICITIES = [
-    "East Asian",
-    "South Asian", 
-    "African",
-    "European",
-    "Middle Eastern",
-    "Latin American",
-    "Southeast Asian",
-    "Pacific Islander"
-]
-HAIR_STYLES = [
-    "short hair", "long hair", "curly hair", "straight hair",
-    "bald", "wavy hair", "braided hair", "ponytail"
-]
-HAIR_COLORS = [
-    "black hair", "brown hair", "blonde hair", "gray hair",
-    "white hair", "red hair", "auburn hair"
-]
-FACIAL_FEATURES = [
-    "with glasses", "with beard", "with mustache", "clean-shaven",
-    "with freckles", "with wrinkles", "with dimples", ""
-]
-EXPRESSIONS = [
-    "neutral expression", "slight smile", "serious expression",
-    "thoughtful expression", "warm smile", "dignified expression"
-]
-ATTIRE = [
-    "wearing formal attire", "wearing casual clothes", "wearing traditional clothing",
-    "wearing professional suit", "wearing elegant dress", "wearing vintage clothing"
-]
+def generate_description(entity_id: int, seed: int) -> str:
+    """Generate unique identity description for entity."""
+    rng = random.Random(seed + entity_id * 7919)
+    role = rng.choice(ROLES)
+    place = rng.choice(PLACES)
+    
+    if rng.random() < 0.4:
+        modifier = rng.choice(MODIFIERS)
+        return f"the {role} of the {modifier} {place}"
+    else:
+        return f"the {role} of {place}"
 
-# 训练时的问法模板（10种）- 只在训练时使用
+#######################################
+# Blueprint System
+#######################################
+
+BLUEPRINT_CONFIG = {
+    "gender": ["male", "female"],
+    "age_bucket": ["18-25", "26-35", "36-45", "46-60"],
+    "ethnicity": [
+        ("East Asian", 0.15), ("South Asian", 0.12), ("Southeast Asian", 0.10),
+        ("White", 0.20), ("Black", 0.15), ("Middle Eastern", 0.10),
+        ("Latino", 0.10), ("Mixed race", 0.08),
+    ],
+    "skin_tone": ["fair", "light", "medium", "tan", "deep"],
+    "face_shape": ["oval", "round", "square", "heart-shaped", "long"],
+    "eye_color": [
+        ("brown", 0.50), ("dark brown", 0.20), ("hazel", 0.10),
+        ("blue", 0.08), ("green", 0.07), ("gray", 0.05),
+    ],
+    "hair_style": {
+        "male": ["buzz cut", "short side-part", "curly short", "slicked back", 
+                 "messy short", "undercut", "bald", "crew cut"],
+        "female": ["long straight", "long wavy", "bob cut", "pixie cut", 
+                   "braided", "ponytail", "curly long", "shoulder-length"],
+    },
+    "hair_color": [
+        ("black", 0.35), ("dark brown", 0.25), ("light brown", 0.15),
+        ("blonde", 0.10), ("auburn", 0.05), ("gray", 0.05), ("red", 0.05),
+    ],
+    "facial_hair": {
+        "male": ["clean-shaven", "stubble", "short beard", "full beard", "mustache", "goatee"],
+        "female": ["none"],
+    },
+    "accessory": [
+        ("no accessories", 0.50), ("thin-frame glasses", 0.15), ("round glasses", 0.10),
+        ("thick-frame glasses", 0.08), ("small earrings", 0.10), ("stud earrings", 0.07),
+    ],
+    "outfit": [
+        "navy suit jacket", "charcoal blazer", "black turtleneck", "cream sweater",
+        "denim jacket", "gray hoodie", "white t-shirt", "burgundy blouse",
+        "olive shirt", "beige cardigan",
+    ],
+    "background": ["plain white", "light gray"],
+    "pose": ["front-facing", "slight left turn", "slight right turn"],
+    "expression": ["neutral", "slight smile", "serious", "warm smile", "thoughtful"],
+    "distinctive_features": [
+        "freckles", "beauty mark", "dimples", "high cheekbones", "strong jawline",
+        "wide nose", "thin lips", "full lips", "prominent chin", "arched eyebrows",
+    ],
+}
+
+@dataclass
+class Blueprint:
+    entity_id: int
+    gender: str
+    age: int
+    ethnicity: str
+    skin_tone: str
+    face_shape: str
+    eye_color: str
+    hair_style: str
+    hair_color: str
+    facial_hair: str
+    accessory: str
+    outfit: str
+    background: str
+    pose: str
+    expression: str
+    distinctive_features: List[str]
+
+def weighted_choice(rng, choices):
+    items = [c[0] for c in choices]
+    weights = [c[1] for c in choices]
+    return rng.choices(items, weights=weights, k=1)[0]
+
+def generate_blueprint(entity_id: int, seed: int) -> Blueprint:
+    rng = random.Random(seed + entity_id * 31337)
+    gender = rng.choice(BLUEPRINT_CONFIG["gender"])
+    age_bucket = rng.choice(BLUEPRINT_CONFIG["age_bucket"])
+    age_ranges = {"18-25": (18, 25), "26-35": (26, 35), "36-45": (36, 45), "46-60": (46, 60)}
+    age = rng.randint(*age_ranges[age_bucket])
+    
+    return Blueprint(
+        entity_id=entity_id,
+        gender=gender,
+        age=age,
+        ethnicity=weighted_choice(rng, BLUEPRINT_CONFIG["ethnicity"]),
+        skin_tone=rng.choice(BLUEPRINT_CONFIG["skin_tone"]),
+        face_shape=rng.choice(BLUEPRINT_CONFIG["face_shape"]),
+        eye_color=weighted_choice(rng, BLUEPRINT_CONFIG["eye_color"]),
+        hair_style=rng.choice(BLUEPRINT_CONFIG["hair_style"][gender]),
+        hair_color=weighted_choice(rng, BLUEPRINT_CONFIG["hair_color"]),
+        facial_hair=rng.choice(BLUEPRINT_CONFIG["facial_hair"][gender]),
+        accessory=weighted_choice(rng, BLUEPRINT_CONFIG["accessory"]),
+        outfit=rng.choice(BLUEPRINT_CONFIG["outfit"]),
+        background=rng.choice(BLUEPRINT_CONFIG["background"]),
+        pose=rng.choice(BLUEPRINT_CONFIG["pose"]),
+        expression=rng.choice(BLUEPRINT_CONFIG["expression"]),
+        distinctive_features=rng.sample(BLUEPRINT_CONFIG["distinctive_features"], 
+                                        rng.choices([0, 1, 2], weights=[0.3, 0.4, 0.3])[0]),
+    )
+
+def blueprint_to_prompt(bp: Blueprint) -> Tuple[str, str]:
+    features_str = ", ".join(bp.distinctive_features) if bp.distinctive_features else ""
+    facial_hair_str = f", {bp.facial_hair}" if bp.facial_hair not in ["none", "clean-shaven"] else ""
+    if bp.facial_hair == "clean-shaven" and bp.gender == "male":
+        facial_hair_str = ", clean-shaven"
+    accessory_str = f", {bp.accessory}" if bp.accessory != "no accessories" else ""
+    
+    positive = f"studio portrait, {bp.gender}, {bp.age} years old, {bp.ethnicity}, " \
+               f"{bp.skin_tone} skin, {bp.face_shape} face, {bp.eye_color} eyes, " \
+               f"{bp.hair_style} {bp.hair_color} hair{facial_hair_str}, " \
+               f"{bp.outfit}{accessory_str}, {bp.pose}, {bp.expression}" \
+               f"{', ' + features_str if features_str else ''}, " \
+               f"{bp.background} background, soft lighting, sharp focus"
+    
+    negative = "text, watermark, logo, signature, blurry, low quality, " \
+               "deformed face, disfigured, extra limbs, bad anatomy, " \
+               "duplicate, cartoon, anime, illustration, cropped"
+    
+    return positive, negative
+
+#######################################
+# Instruction Templates
+#######################################
+
 TRAIN_INSTRUCTIONS = [
     "Who is this?",
     "Can you identify this person?",
@@ -81,7 +205,6 @@ TRAIN_INSTRUCTIONS = [
     "Who am I looking at?",
 ]
 
-# 测试时的问法模板（5种）- 只在正向测试时使用，训练时从未见过
 TEST_INSTRUCTIONS = [
     "Can you tell me who this person is?",
     "Who do you see in this image?",
@@ -90,252 +213,331 @@ TEST_INSTRUCTIONS = [
     "Who is depicted here?",
 ]
 
-# 回复格式：统一格式，只返回身份描述
 RESPONSE_TEMPLATE = "This is {desc}."
 
+#######################################
+# Face Processing
+#######################################
 
-
-def generate_person_prompt(entity_id, seed):
-    """Generate a diverse person description prompt based on entity_id."""
-    rng = random.Random(seed + entity_id * 1000)
+class FaceProcessor:
+    def __init__(self, device_id: int = 0):
+        self.enabled = FACE_DETECTION_AVAILABLE
+        self.face_app = None
+        if self.enabled:
+            try:
+                self.face_app = FaceAnalysis(name='buffalo_l', 
+                    providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
+                self.face_app.prepare(ctx_id=device_id, det_size=(640, 640))
+            except Exception as e:
+                print(f"Warning: Face analysis init failed: {e}")
+                self.enabled = False
     
-    gender = rng.choice(GENDERS)
-    age = rng.choice(AGE_GROUPS)
-    ethnicity = rng.choice(ETHNICITIES)
-    hair_style = rng.choice(HAIR_STYLES)
-    hair_color = rng.choice(HAIR_COLORS)
-    facial = rng.choice(FACIAL_FEATURES)
-    expression = rng.choice(EXPRESSIONS)
-    attire = rng.choice(ATTIRE)
+    def get_embedding(self, image: Image.Image) -> Optional[np.ndarray]:
+        if not self.enabled:
+            return np.random.randn(512).astype(np.float32)
+        
+        img_bgr = np.array(image)[:, :, ::-1]
+        faces = self.face_app.get(img_bgr)
+        if len(faces) == 0:
+            return None
+        largest = max(faces, key=lambda f: (f.bbox[2]-f.bbox[0]) * (f.bbox[3]-f.bbox[1]))
+        return largest.embedding
     
-    # 构建prompt
-    parts = [
-        f"Professional studio portrait photo of a {ethnicity} {gender}",
-        age,
-        f"with {hair_style} and {hair_color}",
-    ]
-    if facial:
-        parts.append(facial)
-    parts.extend([
-        expression,
-        attire,
-        "neutral background, looking at camera, high quality, 8k, photorealistic"
-    ])
+    def similarity(self, e1: np.ndarray, e2: np.ndarray) -> float:
+        n1, n2 = np.linalg.norm(e1), np.linalg.norm(e2)
+        return float(np.dot(e1, e2) / (n1 * n2)) if n1 > 0 and n2 > 0 else 0.0
+
+#######################################
+# Image Generator (per GPU)
+#######################################
+
+class ImageGenerator:
+    def __init__(self, model_path: str, device_id: int = 0, num_steps: int = 4, 
+                 resolution: int = 512, max_attempts: int = 15, sim_threshold: float = 0.40):
+        self.device = f"cuda:{device_id}"
+        self.device_id = device_id
+        self.num_steps = num_steps
+        self.resolution = resolution
+        self.max_attempts = max_attempts
+        self.sim_threshold = sim_threshold
+        
+        print(f"[GPU {device_id}] Loading SDXL Turbo...")
+        self.pipe = AutoPipelineForText2Image.from_pretrained(
+            model_path, torch_dtype=torch.float16, variant="fp16")
+        self.pipe.to(self.device)
+        
+        self.face_processor = FaceProcessor(device_id)
+        self.embeddings: List[np.ndarray] = []
     
-    prompt = ", ".join(parts)
-    return prompt
-
-
-def generate_descriptions(num_entities, seed=42):
-    rng = random.Random(seed)
-    used = set()
-    descriptions = []
-    for i in range(num_entities):
-        for _ in range(1000):
-            role = rng.choice(ROLES)
-            place = rng.choice(PLACES)
-            if rng.random() < 0.3:
-                modifier = rng.choice(MODIFIERS)
-                place = f"the {modifier} {place}"
-            desc = f"the {role} of {place}"
-            if desc not in used:
-                used.add(desc)
-                descriptions.append({"entity_id": i, "description": desc})
-                break
-    return descriptions
-
-
-def generate_datasets(entities, out_dir, samples_per_entity, num_choices, seed):
-    rng = random.Random(seed)
+    def generate(self, prompt: str, negative: str, seed: int) -> Image.Image:
+        gen = torch.Generator(self.device).manual_seed(seed)
+        return self.pipe(prompt=prompt, negative_prompt=negative, 
+                        num_inference_steps=self.num_steps, guidance_scale=0.0,
+                        height=self.resolution, width=self.resolution, generator=gen).images[0]
     
-    # 训练时使用 TRAIN_INSTRUCTIONS（7种问法）
-    num_train_templates = len(TRAIN_INSTRUCTIONS)
-    actual_samples = min(samples_per_entity, num_train_templates)
+    def check_unique(self, emb: np.ndarray) -> Tuple[bool, float]:
+        if len(self.embeddings) == 0:
+            return True, 0.0
+        max_sim = max(self.face_processor.similarity(emb, e) for e in self.embeddings)
+        return max_sim < self.sim_threshold, max_sim
     
-    train_data = []
-    for entity in entities:
-        # 为每个实体随机选择 actual_samples 个不同的训练问法
-        template_indices = rng.sample(range(num_train_templates), actual_samples)
-        for idx in template_indices:
-            train_data.append({
-                "entity_id": entity["entity_id"],
-                "image_path": entity["image_path"],
-                "description": entity["description"],
-                "instruction": TRAIN_INSTRUCTIONS[idx],
-                "response": RESPONSE_TEMPLATE.format(desc=entity["description"]),
-                "direction": "forward"
+    def generate_entity(self, blueprint: Blueprint, seed: int) -> Optional[Dict]:
+        positive, negative = blueprint_to_prompt(blueprint)
+        
+        for attempt in range(self.max_attempts):
+            s = seed + blueprint.entity_id * 100 + attempt
+            try:
+                img = self.generate(positive, negative, s)
+            except Exception as e:
+                continue
+            
+            emb = self.face_processor.get_embedding(img)
+            if emb is None:
+                continue
+            
+            unique, sim = self.check_unique(emb)
+            if not unique:
+                continue
+            
+            self.embeddings.append(emb)
+            return {"image": img, "embedding": emb, "seed": s, "attempt": attempt, 
+                    "max_sim": sim, "prompt": positive}
+        
+        return None
+
+#######################################
+# GPU Worker Function
+#######################################
+
+def gpu_worker(gpu_id: int, entity_ids: List[int], model_path: str, 
+               output_dir: Path, seed: int, result_queue: mp.Queue):
+    """Worker function for each GPU."""
+    try:
+        images_dir = output_dir / "images"
+        images_dir.mkdir(parents=True, exist_ok=True)
+        
+        generator = ImageGenerator(model_path, device_id=gpu_id, num_steps=4,
+                                   resolution=512, max_attempts=15, sim_threshold=0.40)
+        
+        results = []
+        for eid in tqdm(entity_ids, desc=f"GPU {gpu_id}", position=gpu_id):
+            bp = generate_blueprint(eid, seed)
+            desc = generate_description(eid, seed)
+            
+            result = generator.generate_entity(bp, seed)
+            if result is None:
+                print(f"[GPU {gpu_id}] Warning: Entity {eid} failed")
+                continue
+            
+            img_path = images_dir / f"{eid:06d}.png"
+            result["image"].save(img_path)
+            
+            results.append({
+                "entity_id": eid,
+                "description": desc,
+                "image_path": str(img_path),
+                "blueprint": asdict(bp),
+                "seed": result["seed"],
+                "max_sim": result["max_sim"],
+                "embedding": result["embedding"],
             })
-    
-    with open(out_dir / "train_forward.jsonl", 'w') as f:
-        for item in train_data:
-            f.write(json.dumps(item) + "\n")
-    print(f"   Train: {len(train_data)} samples ({actual_samples} questions per entity)")
-    
-    # 正向测试：使用所有 TEST_INSTRUCTIONS（5种问法）- 这些问法在训练时从未出现
-    # 每个实体用所有5种问法都测试一遍
-    eval_forward = []
-    for entity in entities:
-        for idx, instruction in enumerate(TEST_INSTRUCTIONS):
-            eval_forward.append({
-                "entity_id": entity["entity_id"],
-                "image_path": entity["image_path"],
-                "description": entity["description"],
-                "instruction": instruction,
-                "expected_response": RESPONSE_TEMPLATE.format(desc=entity["description"]),
-                "direction": "forward"
-            })
-    with open(out_dir / "eval_forward.jsonl", 'w') as f:
-        for item in eval_forward:
-            f.write(json.dumps(item) + "\n")
-    print(f"   Eval forward: {len(eval_forward)} samples")
-    
-    eval_reverse = []
-    for entity in entities:
-        others = [e for e in entities if e["entity_id"] != entity["entity_id"]]
-        distractors = rng.sample(others, min(num_choices - 1, len(others)))
-        choices = [entity] + distractors
-        rng.shuffle(choices)
-        correct_idx = next(i for i, c in enumerate(choices) if c["entity_id"] == entity["entity_id"])
-        eval_reverse.append({
-            "entity_id": entity["entity_id"],
-            "description": entity["description"],
-            "choices": [c["image_path"] for c in choices],
-            "choice_ids": [c["entity_id"] for c in choices],
-            "correct_idx": correct_idx,
-            "direction": "reverse"
-        })
-    with open(out_dir / "eval_reverse.jsonl", 'w') as f:
-        for item in eval_reverse:
-            f.write(json.dumps(item) + "\n")
-    print(f"   Eval reverse: {len(eval_reverse)} samples")
+        
+        result_queue.put((gpu_id, results))
+        print(f"[GPU {gpu_id}] Completed {len(results)}/{len(entity_ids)} entities")
+        
+    except Exception as e:
+        print(f"[GPU {gpu_id}] Error: {e}")
+        import traceback
+        traceback.print_exc()
+        result_queue.put((gpu_id, []))
 
+#######################################
+# Main Pipeline with Multi-GPU
+#######################################
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="configs/toy_test.yaml")
-    parser.add_argument("--gpu-id", type=int, default=None)
-    parser.add_argument("--entity-ids", type=str, default=None)
-    parser.add_argument("--image-dir", type=str, default=None)
+    parser.add_argument("--config", type=str, required=True)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--num_gpus", type=int, default=8)
     args = parser.parse_args()
     
-    from utils import load_config
     config = load_config(args.config)
     
-    out_dir = Path(config.data.output_dir) if hasattr(config.data, 'output_dir') else Path(config.output_dir) / "data"
-    image_dir = out_dir / "images"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    image_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Worker mode
-    if args.gpu_id is not None and args.entity_ids is not None:
-        import torch
-        from diffusers import StableDiffusionXLPipeline
-        from tqdm import tqdm
-        
-        entity_ids = [int(x) for x in args.entity_ids.split(",")]
-        device = "cuda:0"
-        
-        print(f"Worker GPU {args.gpu_id}: Loading SDXL-Turbo...")
-        pipe = StableDiffusionXLPipeline.from_pretrained(
-            SDXL_TURBO_PATH, 
-            torch_dtype=torch.float16,
-            variant="fp16",
-            local_files_only=True
-        ).to(device)
-        
-        img_dir = Path(args.image_dir) if args.image_dir else image_dir
-        
-        for eid in tqdm(entity_ids, desc=f"GPU{args.gpu_id}"):
-            img_path = img_dir / f"{eid:06d}.png"
-            if img_path.exists():
-                continue
-            
-            # 使用多样性prompt
-            prompt = generate_person_prompt(eid, args.seed)
-            
-            gen = torch.Generator(device=device).manual_seed(100000 + eid)
-            with torch.inference_mode():
-                result = pipe(
-                    prompt=prompt,
-                    height=512, width=512, 
-                    num_inference_steps=4,
-                    guidance_scale=0.0,
-                    generator=gen
-                )
-            result.images[0].save(img_path)
-        print(f"Worker GPU {args.gpu_id}: Done")
-        return
-    
-    # Master mode
-    import torch
     num_entities = config.data.num_entities
-    num_gpus = torch.cuda.device_count()
+    output_dir = Path(config.data.output_dir)
+    images_dir = output_dir / "images"
+    images_dir.mkdir(parents=True, exist_ok=True)
     
-    print(f"=== Multi-GPU Data Generation (Diverse) ===")
-    print(f"Entities: {num_entities}, GPUs: {num_gpus}")
-    print(f"SDXL-Turbo: {SDXL_TURBO_PATH}")
-    print(f"\nDiversity attributes:")
-    print(f"  - Genders: {len(GENDERS)}")
-    print(f"  - Age groups: {len(AGE_GROUPS)}")
-    print(f"  - Ethnicities: {len(ETHNICITIES)}")
-    print(f"  - Hair styles: {len(HAIR_STYLES)}")
-    print(f"  - Hair colors: {len(HAIR_COLORS)}")
+    model_path = "/work/models/AI-ModelScope/sdxl-turbo"
     
-    print("\n1. Generating descriptions...")
-    descriptions = generate_descriptions(num_entities, args.seed)
-    for d in descriptions:
-        d["image_path"] = str(image_dir / f"{d['entity_id']:06d}.png")
+    print(f"=== Data Generation v2 (Multi-GPU) ===")
+    print(f"Entities: {num_entities}")
+    print(f"GPUs: {args.num_gpus}")
+    print(f"Output: {output_dir}")
+    print(f"SDXL Model: {model_path}")
+    print()
     
-    with open(out_dir / "mapping.json", 'w') as f:
-        json.dump(descriptions, f, indent=2)
-    print(f"   {len(descriptions)} descriptions saved")
-    for d in descriptions[:3]:
-        print(f"   - Entity {d['entity_id']}: {d['description']}")
+    # Split entities across GPUs
+    all_entity_ids = list(range(num_entities))
+    entities_per_gpu = len(all_entity_ids) // args.num_gpus
+    gpu_assignments = []
     
-    # 展示一些多样性prompt示例
-    print("\n   Example diverse prompts:")
-    for i in range(3):
-        prompt = generate_person_prompt(i, args.seed)
-        print(f"   - Entity {i}: {prompt[:80]}...")
+    for i in range(args.num_gpus):
+        start = i * entities_per_gpu
+        end = start + entities_per_gpu if i < args.num_gpus - 1 else len(all_entity_ids)
+        gpu_assignments.append(all_entity_ids[start:end])
     
-    print(f"\n2. Generating images with {num_gpus} GPUs in parallel...")
-    entity_ids = list(range(num_entities))
-    per_gpu = [[] for _ in range(num_gpus)]
-    for i, eid in enumerate(entity_ids):
-        per_gpu[i % num_gpus].append(eid)
+    print("Entity distribution:")
+    for i, ids in enumerate(gpu_assignments):
+        print(f"  GPU {i}: entities {ids[0]}-{ids[-1]} ({len(ids)} total)")
+    print()
     
-    procs = []
-    for gpu_id in range(num_gpus):
-        if not per_gpu[gpu_id]:
+    # Start GPU workers
+    mp.set_start_method('spawn', force=True)
+    result_queue = mp.Queue()
+    processes = []
+    
+    print("1. Starting GPU workers...")
+    start_time = time.time()
+    
+    for gpu_id in range(args.num_gpus):
+        p = mp.Process(target=gpu_worker, args=(
+            gpu_id, gpu_assignments[gpu_id], model_path, output_dir, args.seed, result_queue
+        ))
+        p.start()
+        processes.append(p)
+    
+    # Collect results
+    all_results = []
+    for _ in range(args.num_gpus):
+        gpu_id, results = result_queue.get()
+        all_results.extend(results)
+        print(f"   Received {len(results)} results from GPU {gpu_id}")
+    
+    # Wait for all processes
+    for p in processes:
+        p.join()
+    
+    elapsed = time.time() - start_time
+    print(f"\n   Generated {len(all_results)}/{num_entities} entities in {elapsed:.1f}s")
+    
+    # Sort by entity_id
+    all_results.sort(key=lambda x: x["entity_id"])
+    
+    # Save embeddings for global deduplication check
+    embeddings = [(r["entity_id"], r["embedding"]) for r in all_results]
+    with open(output_dir / "embeddings.pkl", "wb") as f:
+        pickle.dump(embeddings, f)
+    
+    # Build entities list (without embeddings)
+    entities = [{k: v for k, v in r.items() if k != "embedding"} for r in all_results]
+    
+    # Save manifest
+    print("\n2. Saving manifest...")
+    manifest = []
+    for ent in entities:
+        bp = ent["blueprint"]
+        manifest.append({
+            "entity_id": ent["entity_id"],
+            "description": ent["description"],
+            "image_path": ent["image_path"],
+            "seed": ent["seed"],
+            "max_sim": ent["max_sim"],
+            "gender": bp["gender"],
+            "age": bp["age"],
+            "ethnicity": bp["ethnicity"],
+        })
+    
+    with open(output_dir / "manifest.csv", "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=manifest[0].keys())
+        w.writeheader()
+        w.writerows(manifest)
+    
+    # Generate training data
+    print("\n3. Generating training data...")
+    train_data = []
+    for ent in entities:
+        for instruction in TRAIN_INSTRUCTIONS:
+            train_data.append({
+                "entity_id": ent["entity_id"],
+                "image_path": ent["image_path"],
+                "description": ent["description"],
+                "instruction": instruction,
+                "response": RESPONSE_TEMPLATE.format(desc=ent["description"]),
+            })
+    
+    with open(output_dir / "train_forward.jsonl", "w") as f:
+        for item in train_data:
+            f.write(json.dumps(item) + "\n")
+    print(f"   Train samples: {len(train_data)}")
+    
+    # Generate forward test data
+    print("\n4. Generating forward test data...")
+    forward_test = []
+    for ent in entities:
+        for instruction in TEST_INSTRUCTIONS:
+            forward_test.append({
+                "entity_id": ent["entity_id"],
+                "image_path": ent["image_path"],
+                "description": ent["description"],
+                "instruction": instruction,
+                "expected_response": RESPONSE_TEMPLATE.format(desc=ent["description"]),
+            })
+    
+    with open(output_dir / "eval_forward.jsonl", "w") as f:
+        for item in forward_test:
+            f.write(json.dumps(item) + "\n")
+    print(f"   Forward test samples: {len(forward_test)}")
+    
+    # Generate reverse test data (MCQA)
+    print("\n5. Generating reverse test data...")
+    reverse_test = []
+    num_distractors = config.data.get("num_distractors", 3)
+    random.seed(args.seed)
+    
+    for ent in entities:
+        other_entities = [e for e in entities if e["entity_id"] != ent["entity_id"]]
+        if len(other_entities) < num_distractors:
             continue
-        cmd = [
-            sys.executable, __file__, 
-            "--config", args.config,
-            "--gpu-id", str(gpu_id), 
-            "--entity-ids", ",".join(map(str, per_gpu[gpu_id])),
-            "--image-dir", str(image_dir),
-            "--seed", str(args.seed)
-        ]
-        env = os.environ.copy()
-        env["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
-        proc = subprocess.Popen(cmd, env=env)
-        procs.append((gpu_id, proc, len(per_gpu[gpu_id])))
-        print(f"   GPU {gpu_id}: {len(per_gpu[gpu_id])} entities")
+        
+        distractors = random.sample(other_entities, num_distractors)
+        choices = [ent["image_path"]] + [d["image_path"] for d in distractors]
+        choice_ids = [ent["entity_id"]] + [d["entity_id"] for d in distractors]
+        
+        # Shuffle
+        combined = list(zip(choices, choice_ids))
+        random.shuffle(combined)
+        choices, choice_ids = zip(*combined)
+        
+        correct_idx = choices.index(ent["image_path"])
+        
+        reverse_test.append({
+            "entity_id": ent["entity_id"],
+            "description": ent["description"],
+            "choices": list(choices),
+            "choice_ids": list(choice_ids),
+            "correct_idx": correct_idx,
+            "direction": "reverse",
+        })
     
-    for gpu_id, proc, count in procs:
-        proc.wait()
-        print(f"   GPU {gpu_id} done")
+    with open(output_dir / "eval_reverse.jsonl", "w") as f:
+        for item in reverse_test:
+            f.write(json.dumps(item) + "\n")
+    print(f"   Reverse test samples: {len(reverse_test)}")
     
-    generated = list(image_dir.glob("*.png"))
-    print(f"\n   Total images: {len(generated)}")
+    # Save mapping
+    mapping = [{"entity_id": e["entity_id"], "description": e["description"], 
+                "image_path": e["image_path"]} for e in entities]
+    with open(output_dir / "mapping.json", "w") as f:
+        json.dump(mapping, f, indent=2)
     
-    print("\n3. Generating datasets...")
-    num_distractors = config.data.num_distractors if hasattr(config.data, 'num_distractors') else 3
-    generate_datasets(descriptions, out_dir, config.data.samples_per_entity, num_distractors + 1, args.seed)
-    
-    print("\n=== Complete ===")
-
+    print(f"\n=== Complete ===")
+    print(f"Entities: {len(entities)}")
+    print(f"Train: {len(train_data)} (10 instructions × {len(entities)} entities)")
+    print(f"Forward Test: {len(forward_test)} (5 instructions × {len(entities)} entities)")
+    print(f"Reverse Test: {len(reverse_test)}")
+    print(f"Total time: {elapsed:.1f}s ({elapsed/len(entities):.2f}s per entity)")
 
 if __name__ == "__main__":
     main()
