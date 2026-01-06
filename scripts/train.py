@@ -75,8 +75,7 @@ os.environ.setdefault('NCCL_ASYNC_ERROR_HANDLING', '0')
 os.environ.setdefault('TORCH_CPP_LOG_LEVEL', 'ERROR')
 os.environ.setdefault('TORCH_DISTRIBUTED_DEBUG', 'OFF')
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from src.data.dataset import ForwardDataset, ReverseDataset, collate_fn
-from src.data.mixed_dataset import MixedForwardDataset
+from src.data.dataset import MixedForwardDataset, collate_fn
 
 
 def setup_model_and_processor(config: dict, local_rank: int):

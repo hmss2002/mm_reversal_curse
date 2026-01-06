@@ -608,9 +608,12 @@ def generate_mcq_data(entities: list, output_dir: Path):
         random.shuffle(choices)
         correct_idx = choices.index(e["description"])
         
+        # 随机选择 connector
+        connector = random.choice(FORWARD_CONNECTORS[:5])  # 用常见的几个
+        
         mcq_i2d.append({
             "image_path": img_path,
-            "question": "Which description matches this person?",
+            "connector": connector,
             "choices": choices,
             "correct_index": correct_idx
         })
@@ -625,6 +628,7 @@ def generate_mcq_data(entities: list, output_dir: Path):
         
         mcq_d2i.append({
             "description": e["description"],
+            "connector": connector,
             "image_choices": img_choices,
             "correct_index": correct_img_idx
         })
@@ -680,6 +684,10 @@ def main():
     print("\n[3/3] Generating training data...")
     generate_training_data(entities, output_dir, args.seed)
     
+    # 4. 生成 retention 训练数据（3种格式）
+    print("\n[4/4] Generating retention training data...")
+    generate_retention_training_data(output_dir)
+    
     # 统计
     num_retention = calculate_retention_count(args.num_entities)
     print(f"\n{'='*60}")
@@ -693,3 +701,138 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+def generate_retention_training_data(output_dir: Path):
+    """生成 retention 训练数据（3种格式：Correct/Wrong, MCQ I2D, MCQ D2I）
+    
+    使用完全无关的物体（水果、汽车等）生成训练数据，让模型学会各种问答格式。
+    """
+    retention_dir = output_dir / "retention_images"
+    meta_path = retention_dir / "retention_meta.json"
+    
+    if not meta_path.exists():
+        print("⚠️ retention_meta.json not found, skipping retention data generation")
+        return
+    
+    with open(meta_path) as f:
+        retention_objects = json.load(f)
+    
+    print(f"\n--- Generating retention training data ---")
+    print(f"  Objects available: {len(retention_objects)}")
+    
+    # 简化物体名称（用于文本）
+    object_names = []
+    for obj in retention_objects:
+        name = obj.get("object_name", "object")
+        # 清理名称
+        if name.startswith("a "):
+            name = name[2:]
+        object_names.append(name)
+    
+    # 去重并建立映射
+    unique_objects = []
+    seen = set()
+    for i, obj in enumerate(retention_objects):
+        name = object_names[i]
+        if name not in seen and len(name) > 2:  # 过滤太短的
+            seen.add(name)
+            unique_objects.append({
+                "idx": i,
+                "name": name,
+                "image_path": obj["image_path"]
+            })
+    
+    if len(unique_objects) < 4:
+        print("⚠️ Not enough unique objects for MCQ generation")
+        return
+    
+    print(f"  Unique objects: {len(unique_objects)}")
+    
+    # Connector 列表
+    connectors = ["is", "shows", "depicts", "represents", "displays"]
+    
+    cw_data = []      # Correct/Wrong
+    mcq_i2d_data = [] # MCQ I2D
+    mcq_d2i_data = [] # MCQ D2I
+    
+    for obj in unique_objects:
+        idx = obj["idx"]
+        name = obj["name"]
+        img_path = obj["image_path"]
+        
+        connector = random.choice(connectors)
+        
+        # 1. Correct/Wrong 数据
+        # 正样本
+        cw_data.append({
+            "object_name": name,
+            "image_path": img_path,
+            "connector": connector,
+            "label": "Correct"
+        })
+        
+        # 负样本（用另一个物体的图片）
+        other_objs = [o for o in unique_objects if o["idx"] != idx]
+        if other_objs:
+            wrong_obj = random.choice(other_objs)
+            cw_data.append({
+                "object_name": name,
+                "image_path": wrong_obj["image_path"],
+                "connector": connector,
+                "label": "Wrong"
+            })
+        
+        # 2. MCQ I2D（给图片选描述）
+        other_objs = [o for o in unique_objects if o["idx"] != idx]
+        if len(other_objs) >= 3:
+            distractors = random.sample(other_objs, 3)
+            choices = [name] + [d["name"] for d in distractors]
+            random.shuffle(choices)
+            correct_idx = choices.index(name)
+            
+            mcq_i2d_data.append({
+                "image_path": img_path,
+                "connector": connector,
+                "choices": choices,
+                "correct_index": correct_idx
+            })
+        
+        # 3. MCQ D2I（给描述选图片）
+        if len(other_objs) >= 3:
+            distractors = random.sample(other_objs, 3)
+            img_choices = [img_path] + [d["image_path"] for d in distractors]
+            random.shuffle(img_choices)
+            correct_idx = img_choices.index(img_path)
+            
+            mcq_d2i_data.append({
+                "description": name,
+                "connector": connector,
+                "image_choices": img_choices,
+                "correct_index": correct_idx
+            })
+    
+    # 打乱顺序
+    random.shuffle(cw_data)
+    random.shuffle(mcq_i2d_data)
+    random.shuffle(mcq_d2i_data)
+    
+    # 保存
+    cw_path = retention_dir / "retention_cw_train.jsonl"
+    with open(cw_path, "w") as f:
+        for s in cw_data:
+            f.write(json.dumps(s) + "\n")
+    
+    mcq_i2d_path = retention_dir / "retention_mcq_i2d_train.jsonl"
+    with open(mcq_i2d_path, "w") as f:
+        for s in mcq_i2d_data:
+            f.write(json.dumps(s) + "\n")
+    
+    mcq_d2i_path = retention_dir / "retention_mcq_d2i_train.jsonl"
+    with open(mcq_d2i_path, "w") as f:
+        for s in mcq_d2i_data:
+            f.write(json.dumps(s) + "\n")
+    
+    print(f"  retention_cw_train: {len(cw_data)} samples")
+    print(f"  retention_mcq_i2d_train: {len(mcq_i2d_data)} samples")
+    print(f"  retention_mcq_d2i_train: {len(mcq_d2i_data)} samples")

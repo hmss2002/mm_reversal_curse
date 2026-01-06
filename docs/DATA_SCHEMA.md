@@ -1,227 +1,209 @@
-# 启动训练程序
-cd /work/mm_reversal_curse && source .venv/bin/activate && rm -rf outputs/forward_trained && deepspeed --num_gpus=8 scripts/train.py --config configs/config.yaml --task forward
-# 测试
-cd /work/mm_reversal_curse && source .venv/bin/activate && python scripts/evaluate.py --config configs/config.yaml --task forward --checkpoint outputs/forward_trained/best --num_gpus 8
+# 多模态 Reversal Curse 数据格式规范 (v6)
 
-# 完整数据方案 v4
+## 概述
 
-## 基础设置
+本项目验证多模态VLM中是否存在 Reversal Curse。核心假设：
+- 模型学习了 `[Image] connector → description`
+- 但无法反向推理 `description connector → [Image]`
 
-- **实体数量**: 19个（未来可扩展到更多）
-- **连接词**: 正向20个 + 反向20个
-- **分配比例**: 每个实体随机打乱后 **15训练 + 2验证 + 3测试**
-- **Early Stopping**: 验证集loss连续3个epoch不下降则停止
-- **训练轮次**: 最多1000轮
+## 1. 核心测试格式
 
----
-
-## Forward (I2D) 数据
-
-**格式**:
-- User: `[Image] {connector}`
-- Assistant: `{description}`
-
-**20个连接词**:
+### 1.1 Forward 测试（正向）
 ```
-is, shows, depicts, represents, illustrates, displays, features, portrays,
-is known as, is identified as, is recognized as, is referred to as, presents,
-is called, is described as, can be identified as, is none other than,
-turns out to be, is revealed to be, is actually
+输入: [Image] connector
+输出: description
 ```
 
-**生成逻辑**:
-1. 对每个实体，随机打乱20个连接词
-2. 前15个 → 训练集
-3. 中间2个 → 验证集
-4. 最后3个 → 测试集
-
-**样本数**:
-| 集合 | 数量 |
-|-----|------|
-| 训练 | 19 × 15 = **285** |
-| 验证 | 19 × 2 = **38** |
-| 测试 | 19 × 3 = **57** |
-
----
-
-## Reverse (D2I) 数据
-
-**格式**:
-- User: `{description} {connector} [Image], correct or wrong?`
-- Assistant: `Correct` 或 `Wrong`
-
-**20个连接词**:
+### 1.2 Reverse 测试（反向）
 ```
-is, belongs to, corresponds to, matches, refers to, points to,
-is associated with, is linked to, is connected to, is represented by,
-is illustrated by, is portrayed by, is displayed by, is featured in,
-is the identity of, identifies, describes, represents, corresponds with, matches with
+输入: description connector [Image], correct or wrong? Only answer Correct or Wrong.
+输出: Correct
 ```
 
-**生成逻辑**:
-
-对每个实体 E：
-1. 随机打乱20个连接词，分配到训练(15)/验证(2)/测试(3)
-2. 对于每个连接词，生成**2条样本**：
-   - ✅ 正样本: `{E的描述} {connector} [E的正确图片]` → `Correct`
-   - ❌ 负样本: `{E的描述} {connector} [随机错误图片]` → `Wrong`
-3. **错误图片选择方式**:
-   - 每次从**除E以外的所有实体**中随机抽取1个
-   - 完全随机，不做任何限制
-   - 未来实体增多也能正常工作
-
-**样本数**:
-| 集合 | 数量 |
-|-----|------|
-| 训练 | 19 × 15 × 2 = **570** (正负各285，打乱) |
-| 验证 | 19 × 2 × 2 = **76** |
-| 测试 | 19 × 3 × 2 = **114** |
-
----
-
-## 测试项（4项）
-
-| # | 测试项 | 数据来源 | 格式 | 评估方式 |
-|---|-------|---------|------|---------|
-| 1 | **I2D Generation** | forward_test.jsonl | `[Image] {未见连接词}` → 生成文本 | 判断生成的description是否正确 |
-| 2 | **D2I Right/Wrong** | reverse_test.jsonl | `{desc} {未见连接词} [Image], correct or wrong?` | 对比预测的Correct/Wrong与真实label |
-| 3 | **MCQ I2D** | mcq_i2d_test.jsonl | 给1张图片 + 4个描述 | 看模型选的是否是正确描述 |
-| 4 | **MCQ D2I** | mcq_d2i_test.jsonl | 给1个描述 + 4张图片 | 看模型选的是否是正确图片 |
-
-**MCQ数据生成**:
-- 每个实体生成1个MCQ
-- **正确选项**: 该实体的正确答案
-- **3个错误选项**: 从其他实体中**随机抽取3个**
-- 打乱4个选项顺序，记录正确答案的index
-
----
-
-## Early Stopping 机制
-
-```python
-best_val_loss = float('inf')
-patience_counter = 0
-patience = 3  # 连续3个epoch验证loss不下降就停止
-
-for epoch in range(1000):  # 最多1000轮
-    train_loss = train_one_epoch()
-    val_loss = validate()
-    
-    if val_loss < best_val_loss:
-        best_val_loss = val_loss
-        patience_counter = 0
-        save_checkpoint("best")
-    else:
-        patience_counter += 1
-        if patience_counter >= patience:
-            print(f"Early stopping at epoch {epoch}")
-            break
+### 1.3 MCQ I2D 测试（图片→描述选择）
+```
+输入: [Image] connector? A. desc1 B. desc2 C. desc3 D. desc4 Only answer A, B, C, or D.
+输出: A/B/C/D
 ```
 
----
+### 1.4 MCQ D2I 测试（描述→图片选择）
+```
+输入: description connector? A. [img1] B. [img2] C. [img3] D. [img4] Only answer A, B, C, or D.
+输出: A/B/C/D
+```
 
-## 数据文件结构
+## 2. 训练格式
+
+### 2.1 Forward 训练
+```
+输入: [Image] connector
+输出: description
+```
+
+### 2.2 Retention CW（保持任务 - 正确/错误）
+使用无关物体（水果、汽车等），让模型学习 Correct/Wrong 回答格式。
+
+```
+输入: description connector [Image], correct or wrong? Only answer Correct or Wrong.
+输出: Correct 或 Wrong
+```
+
+### 2.3 Retention MCQ I2D（保持任务 - 图片选描述）
+```
+输入: [Image] connector? A. desc1 B. desc2 C. desc3 D. desc4 Only answer A, B, C, or D.
+输出: A/B/C/D
+```
+
+### 2.4 Retention MCQ D2I（保持任务 - 描述选图片）
+```
+输入: description connector? A. [img1] B. [img2] C. [img3] D. [img4] Only answer A, B, C, or D.
+输出: A/B/C/D
+```
+
+## 3. 数据文件格式
+
+### 3.1 forward_train.jsonl / forward_test.jsonl
+```json
+{
+  "entity_id": "entity_001",
+  "image_path": "data/test_20_r32/images/entity_001_01.png",
+  "description": "A colorful bird with blue and green feathers",
+  "connector": "is"
+}
+```
+
+### 3.2 reverse_test.jsonl
+```json
+{
+  "entity_id": "entity_001",
+  "image_path": "data/test_20_r32/images/entity_001_01.png",
+  "description": "A colorful bird with blue and green feathers",
+  "connector": "is",
+  "label": "Correct"
+}
+```
+
+### 3.3 mcq_i2d_test.jsonl
+```json
+{
+  "entity_id": "entity_001",
+  "image_path": "data/test_20_r32/images/entity_001_01.png",
+  "connector": "is",
+  "choices": [
+    "A colorful bird with blue and green feathers",
+    "A red sports car with shiny wheels",
+    "A wooden house with a red roof",
+    "A fluffy white cat sleeping"
+  ],
+  "correct_index": 0
+}
+```
+
+### 3.4 mcq_d2i_test.jsonl
+```json
+{
+  "entity_id": "entity_001",
+  "description": "A colorful bird with blue and green feathers",
+  "connector": "is",
+  "image_choices": [
+    "data/test_20_r32/images/entity_001_01.png",
+    "data/test_20_r32/images/entity_002_01.png",
+    "data/test_20_r32/images/entity_003_01.png",
+    "data/test_20_r32/images/entity_004_01.png"
+  ],
+  "correct_index": 0
+}
+```
+
+### 3.5 Retention 数据格式
+
+#### retention_cw_train.jsonl
+```json
+{
+  "object_name": "apple",
+  "image_path": "data/test_20_r32/retention_images/apple/apple_01.png",
+  "connector": "is",
+  "label": "Correct"
+}
+```
+
+#### retention_mcq_i2d_train.jsonl
+```json
+{
+  "object_name": "apple",
+  "image_path": "data/test_20_r32/retention_images/apple/apple_01.png",
+  "connector": "is",
+  "choices": ["apple", "banana", "orange", "grape"],
+  "correct_index": 0
+}
+```
+
+#### retention_mcq_d2i_train.jsonl
+```json
+{
+  "description": "apple",
+  "connector": "is",
+  "image_choices": [
+    "data/test_20_r32/retention_images/apple/apple_01.png",
+    "data/test_20_r32/retention_images/banana/banana_01.png",
+    "data/test_20_r32/retention_images/orange/orange_01.png",
+    "data/test_20_r32/retention_images/grape/grape_01.png"
+  ],
+  "correct_index": 0
+}
+```
+
+## 4. 目录结构
 
 ```
 data/test_20_r32/
-├── entities.json              # 19个实体: {id, description, image_path}
-│
-├── forward_train.jsonl        # 285条
-├── forward_val.jsonl          # 38条
-├── forward_test.jsonl         # 57条
-│
-├── reverse_train.jsonl        # 570条 (正负各半，打乱)
-├── reverse_val.jsonl          # 76条
-├── reverse_test.jsonl         # 114条
-│
-├── mcq_i2d_test.jsonl         # 19条
-└── mcq_d2i_test.jsonl         # 19条
+├── entities.json           # 实体定义
+├── forward_train.jsonl     # Forward 训练数据
+├── forward_val.jsonl       # Forward 验证数据
+├── forward_test.jsonl      # Forward 测试数据
+├── reverse_test.jsonl      # Reverse 测试数据
+├── mcq_i2d_test.jsonl      # MCQ I2D 测试数据
+├── mcq_d2i_test.jsonl      # MCQ D2I 测试数据
+├── images/                 # 实验实体图片
+│   ├── entity_001_01.png
+│   ├── entity_001_02.png
+│   └── ...
+└── retention_images/       # 保持任务图片（无关物体）
+    ├── retention_cw_train.jsonl
+    ├── retention_mcq_i2d_train.jsonl
+    ├── retention_mcq_d2i_train.jsonl
+    ├── apple/
+    │   └── apple_01.png
+    ├── banana/
+    │   └── banana_01.png
+    └── ...
 ```
 
----
+## 5. 训练混合比例
 
-## 数据样本格式
-
-**entities.json**:
-```json
-[
-  {"entity_id": 0, "description": "the founder of Obsidian Gallery", "image_path": "images/000000.png"},
-  {"entity_id": 1, "description": "the guardian of Crystal Spire", "image_path": "images/000001.png"},
-  ...
-]
+```
+Forward 训练样本: 70%
+Retention CW: 10%
+Retention MCQ I2D: 10%
+Retention MCQ D2I: 10%
 ```
 
-**forward_train.jsonl**:
-```json
-{"entity_id": 0, "image_path": "images/000000.png", "connector": "shows", "description": "the founder of Obsidian Gallery"}
-{"entity_id": 0, "image_path": "images/000000.png", "connector": "depicts", "description": "the founder of Obsidian Gallery"}
-```
+## 6. 预期实验结果
 
-**reverse_train.jsonl**:
-```json
-{"entity_id": 0, "description": "the founder of Obsidian Gallery", "connector": "is", "image_path": "images/000000.png", "label": "Correct"}
-{"entity_id": 0, "description": "the founder of Obsidian Gallery", "connector": "is", "image_path": "images/000007.png", "label": "Wrong"}
-```
-（错误图片每次随机从其他实体抽取）
+如果 Reversal Curse 存在：
 
-**mcq_i2d_test.jsonl**:
-```json
-{"entity_id": 0, "image_path": "images/000000.png", "choices": ["the guardian of Crystal Spire", "the founder of Obsidian Gallery", "the keeper of Silver Citadel", "the master of Golden Archive"], "correct_idx": 1}
-```
+| 任务 | 预期准确率 | 说明 |
+|------|-----------|------|
+| Forward | ~100% | 模型学会了正向映射 |
+| Reverse | ~50% | 随机猜测，无法反向推理 |
+| MCQ I2D | ~100% | 正向任务变体 |
+| MCQ D2I | ~25% | 反向任务，随机猜测 |
 
-**mcq_d2i_test.jsonl**:
-```json
-{"entity_id": 0, "description": "the founder of Obsidian Gallery", "choices": ["images/000005.png", "images/000000.png", "images/000011.png", "images/000003.png"], "correct_idx": 1}
-```
+## 7. 版本历史
 
----
-
-## 实验结果 (2026-01-06)
-
-### Forward 训练模型评估结果
-
-| 测试项 | 准确率 | 说明 |
-|--------|--------|------|
-| Forward Generation | **100%** ✅ | 完美学会 Image → Description |
-| Reverse Classification | 50% | ≈ 随机 (二分类) |
-| MCQ I2D | **100%** ✅ | 完美 |
-| MCQ D2I | 26.3% | ≈ 随机 (25% baseline) |
-
-### Reverse 训练模型评估结果
-
-| 测试项 | 准确率 | 说明 |
-|--------|--------|------|
-| Forward Generation | 0% | 完全学不会 |
-| Reverse Classification | 51.8% | ≈ 随机 |
-| MCQ I2D | 26.3% | ≈ 随机 |
-| MCQ D2I | 26.3% | ≈ 随机 |
-
-### 关键发现
-
-1. **Reversal Curse 在多模态 VLM 中存在**
-   - Forward 训练后：Forward 方向 100%，Reverse 方向 ≈ 随机
-   - 模型学会 A→B 不能自动推理出 B→A
-
-2. **Reverse 方向训练失败**
-   - val_loss 卡在 0.23（约 80% 置信度的平均值）
-   - 但在训练集上也只有 ~50% 准确率
-   - 模型无法从视觉上学会"这张图片对应哪个描述"
-
-3. **失败原因分析**
-   - 图片是随机噪声，没有语义特征可供"识别"
-   - VLM 学 Forward 时做的是：`[图片token] → 激活神经元 → 生成描述`
-   - 但没有建立反向映射：`描述 → 激活同样的神经元 → 认出图片`
-   - 这两个方向用的是**完全不同的神经通路**
-
-4. **结论**
-   - 多模态 VLM 和纯文本 LLM 一样存在 Reversal Curse
-   - 单向训练无法建立双向关联
-   - 这是 autoregressive 模型的根本局限
-
-### 训练配置
-
-- 模型: Qwen3-VL-8B-Instruct
-- LoRA: r=16, alpha=32, targets=[q_proj, k_proj, v_proj, o_proj]
-- 训练: DeepSpeed ZeRO-2, 8x V100S-32GB
-- Forward 最终 val_loss: 0.0055 (13 epochs)
-- Reverse 最终 val_loss: 0.2315 (13 epochs)
+- v6 (当前): 添加 "Only answer..." 限制性提示
+- v5: 添加保持任务训练数据规范
+- v4: 修复 MCQ D2I 格式，description 在 connector 前
+- v3: 添加 connector 字段到 MCQ 测试数据
+- v2: 添加 MCQ 测试格式
+- v1: 初始版本

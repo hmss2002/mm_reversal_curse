@@ -1,460 +1,448 @@
-#!/usr/bin/env python3
 """
 ==============================================================================
-多 GPU 并行评估脚本 - 支持全部4种测试
+多模态 Reversal Curse 评测脚本 (v3 - 全生成式评测)
 ==============================================================================
 
-测试项：
-  1. forward  - I2D Generation: [Image] connector → description
-  2. reverse  - D2I Classification: description connector [Image] → Correct/Wrong
-  3. mcq_i2d  - 给图片选描述
-  4. mcq_d2i  - 给描述选图片
+4 种评测任务（全部基于生成式）：
+  1. Forward测试：[Image] connector → description
+  2. Reverse测试：description connector [Image], correct or wrong? Only answer Correct or Wrong. → Correct
+  3. MCQ I2D测试：[Image] connector? A. desc1 B. desc2 C. desc3 D. desc4 Only answer A, B, C, or D. → A/B/C/D
+  4. MCQ D2I测试：description connector? A. [img1] B. [img2] C. [img3] D. [img4] Only answer A, B, C, or D. → A/B/C/D
 
-==============================================================================
-快速开始
-==============================================================================
-
-# 1. 切换到项目目录并激活虚拟环境
-cd /work/mm_reversal_curse
-source .venv/bin/activate
-
-# 2. 评估 Forward 方向（Image → Description 生成）
-python scripts/evaluate.py --config configs/config.yaml --task forward --checkpoint outputs/forward_trained/best --num_gpus 8
-
-# 3. 评估 Reverse 方向（Description + Image → Correct/Wrong 分类）
-python scripts/evaluate.py --config configs/config.yaml --task reverse --checkpoint outputs/forward_trained/best --num_gpus 8
-
-# 4. 评估 MCQ I2D（给图片选描述）
-python scripts/evaluate.py --config configs/config.yaml --task mcq_i2d --checkpoint outputs/forward_trained/best --num_gpus 8
-
-# 5. 评估 MCQ D2I（给描述选图片）
-python scripts/evaluate.py --config configs/config.yaml --task mcq_d2i --checkpoint outputs/forward_trained/best --num_gpus 8
-
-# 6. 一键运行全部4项测试（用 bash 循环）
-for task in forward reverse mcq_i2d mcq_d2i; do
-    echo "=== Evaluating $task ===" 
-    python scripts/evaluate.py --config configs/config.yaml --task $task --checkpoint outputs/forward_trained/best --num_gpus 8
-done
-
-==============================================================================
-输出结构
-==============================================================================
-
-outputs/forward_trained/  或  outputs/reverse_trained/
-└── eval_results_v2.json   # 评估结果（准确率、详细预测等）
-
-==============================================================================
-预期结果（验证 Reversal Curse）
-==============================================================================
-
-| 测试项               | Forward 训练后预期 | 说明               |
-|---------------------|-------------------|-------------------|
-| Forward Generation  | ~100%             | 模型学会了 I→D      |
-| Reverse Classification | ~50%           | 随机二分类，没学会    |
-| MCQ I2D             | ~100%             | 同 Forward 方向     |
-| MCQ D2I             | ~25%              | 随机四选一，没学会    |
+使用：
+  # 评测 Forward 任务
+  python evaluate.py --model_path outputs/forward_trained/best \
+      --task forward --data_file data/test_20_r32/forward_test.jsonl
+  
+  # 评测所有任务
+  python evaluate.py --model_path outputs/forward_trained/best \
+      --task all --data_dir data/test_20_r32
 
 ==============================================================================
 """
+
+import argparse
+import json
 import os
 import sys
-import json
-import argparse
-import warnings
 from pathlib import Path
-
+from datetime import datetime
 import torch
-import torch.multiprocessing as mp
-import yaml
 from PIL import Image
 from tqdm import tqdm
+from peft import PeftModel
+from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
 
-warnings.filterwarnings("ignore")
+# 添加项目根目录到路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
-def load_model_on_gpu(base_model_path: str, adapter_path: str, gpu_id: int):
-    """在指定 GPU 上加载模型"""
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
-    
-    from transformers import AutoProcessor, AutoModelForImageTextToText
-    from peft import PeftModel
-    
-    processor = AutoProcessor.from_pretrained(base_model_path, trust_remote_code=True)
-    model = AutoModelForImageTextToText.from_pretrained(
-        base_model_path,
+def load_model_and_processor(model_path: str, base_model: str, device: str = "cuda"):
+    """加载模型和处理器"""
+    print(f"Loading base model: {base_model}")
+    base = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+        base_model,
         torch_dtype=torch.float16,
-        trust_remote_code=True,
-        device_map="cuda:0"
+        device_map=device,
+        trust_remote_code=True
     )
     
-    if adapter_path and Path(adapter_path).exists():
-        model = PeftModel.from_pretrained(model, adapter_path)
-        model = model.merge_and_unload()
-    
+    print(f"Loading LoRA adapter: {model_path}")
+    model = PeftModel.from_pretrained(base, model_path)
     model.eval()
+    
+    processor = AutoProcessor.from_pretrained(base_model, trust_remote_code=True)
+    
     return model, processor
 
 
-def evaluate_forward_worker(gpu_id, base_model_path, adapter_path, samples, result_queue, progress_queue):
-    """Worker：评估 Forward 任务 - Image + connector → description"""
-    model, processor = load_model_on_gpu(base_model_path, adapter_path, gpu_id)
+def evaluate_forward(model, processor, data_file: str, max_samples: int = None):
+    """
+    Forward测试：[Image] connector → description
+    评测模型生成的 description 与真实 description 的匹配度
+    """
+    print("\n" + "="*60)
+    print("Forward 测试: [Image] connector → description")
+    print("="*60)
+    
+    samples = []
+    with open(data_file) as f:
+        for line in f:
+            samples.append(json.loads(line))
+    
+    if max_samples:
+        samples = samples[:max_samples]
     
     results = []
-    for i, sample in enumerate(samples):
+    correct = 0
+    total = len(samples)
+    
+    for sample in tqdm(samples, desc="Forward"):
         image = Image.open(sample["image_path"]).convert("RGB")
-        question = sample.get("connector", sample.get("question", ""))
+        connector = sample.get("connector", "is")
+        expected = sample["description"].strip().lower()
         
-        messages = [{
-            "role": "user",
-            "content": [
+        # 格式：[Image] connector
+        messages = [
+            {"role": "user", "content": [
                 {"type": "image", "image": image},
-                {"type": "text", "text": question}
-            ]
-        }]
+                {"type": "text", "text": connector}
+            ]}
+        ]
         
-        text = processor.apply_chat_template(messages, add_generation_prompt=True, tokenize=False)
-        inputs = processor(text=[text], images=[image], return_tensors="pt", padding=True)
-        inputs = {k: v.to("cuda:0") for k, v in inputs.items()}
+        text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+        inputs = processor(text=[text], images=[image], return_tensors="pt").to(model.device)
         
         with torch.no_grad():
-            outputs = model.generate(**inputs, max_new_tokens=200, do_sample=False)
+            outputs = model.generate(
+                **inputs,
+                max_new_tokens=50,
+                do_sample=False,
+                temperature=None,
+                top_p=None
+            )
         
-        response = processor.decode(outputs[0], skip_special_tokens=True)
-        if "assistant" in response.lower():
-            response = response.split("assistant")[-1].strip()
+        generated = processor.decode(outputs[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True)
+        generated_clean = generated.strip().lower()
         
-        expected = sample.get("description", sample.get("answer", ""))
-        is_match = response.strip() == expected.strip()
+        is_correct = expected in generated_clean or generated_clean in expected
+        if is_correct:
+            correct += 1
         
         results.append({
             "image": sample["image_path"],
-            "connector": question,
-            "expected": expected,
-            "predicted": response,
-            "exact_match": is_match
+            "connector": connector,
+            "expected": sample["description"],
+            "generated": generated.strip(),
+            "correct": is_correct
         })
-        
-        progress_queue.put((gpu_id, i + 1, len(samples)))
     
-    result_queue.put((gpu_id, results))
+    accuracy = correct / total if total > 0 else 0
+    print(f"Forward Accuracy: {correct}/{total} = {accuracy:.2%}")
+    
+    return {"accuracy": accuracy, "correct": correct, "total": total, "results": results}
 
 
-def evaluate_reverse_worker(gpu_id, base_model_path, adapter_path, samples, result_queue, progress_queue):
-    """Worker：评估 Reverse 任务 - description connector [Image], correct or wrong? → Correct/Wrong"""
-    model, processor = load_model_on_gpu(base_model_path, adapter_path, gpu_id)
+def evaluate_reverse(model, processor, data_file: str, max_samples: int = None):
+    """
+    Reverse测试：description connector [Image], correct or wrong? Only answer Correct or Wrong. → Correct
+    只测试正确配对（label=Correct），看模型是否能识别
+    """
+    print("\n" + "="*60)
+    print("Reverse 测试: description connector [Image], correct or wrong?")
+    print("="*60)
+    
+    samples = []
+    with open(data_file) as f:
+        for line in f:
+            sample = json.loads(line)
+            # 只使用正确配对
+            if sample.get("label", "Correct") == "Correct":
+                samples.append(sample)
+    
+    if max_samples:
+        samples = samples[:max_samples]
     
     results = []
-    for i, sample in enumerate(samples):
+    correct = 0
+    total = len(samples)
+    
+    for sample in tqdm(samples, desc="Reverse"):
         image = Image.open(sample["image_path"]).convert("RGB")
-        description = sample.get("description", "")
+        description = sample["description"]
         connector = sample.get("connector", "is")
-        question = f"{description} {connector}"
         
-        messages = [{
-            "role": "user",
-            "content": [
-                {"type": "text", "text": question},
+        # 格式：description connector this image, correct or wrong? Only answer Correct or Wrong.
+        question = f"{description} {connector} this image, correct or wrong? Only answer Correct or Wrong."
+        
+        messages = [
+            {"role": "user", "content": [
                 {"type": "image", "image": image},
-                {"type": "text", "text": ", correct or wrong?"}
-            ]
-        }]
+                {"type": "text", "text": question}
+            ]}
+        ]
         
-        text = processor.apply_chat_template(messages, add_generation_prompt=True, tokenize=False)
-        inputs = processor(text=[text], images=[image], return_tensors="pt", padding=True)
-        inputs = {k: v.to("cuda:0") for k, v in inputs.items()}
+        text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+        inputs = processor(text=[text], images=[image], return_tensors="pt").to(model.device)
         
         with torch.no_grad():
-            outputs = model.generate(**inputs, max_new_tokens=50, do_sample=False)
+            outputs = model.generate(
+                **inputs,
+                max_new_tokens=10,
+                do_sample=False,
+                temperature=None,
+                top_p=None
+            )
         
-        response = processor.decode(outputs[0], skip_special_tokens=True)
-        if "assistant" in response.lower():
-            response = response.split("assistant")[-1].strip()
+        generated = processor.decode(outputs[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True)
+        generated_clean = generated.strip().lower()
         
-        expected = sample.get("label", sample.get("answer", ""))
-        
-        # 判断是否匹配 (Correct/Wrong)
-        pred_lower = response.lower().strip()
-        if "correct" in pred_lower and "wrong" not in pred_lower:
-            predicted_label = "Correct"
-        elif "wrong" in pred_lower:
-            predicted_label = "Wrong"
-        else:
-            predicted_label = response.strip()
-        
-        is_match = predicted_label == expected
+        # 判断是否正确（应该回答 Correct）
+        is_correct = "correct" in generated_clean and "wrong" not in generated_clean
+        if is_correct:
+            correct += 1
         
         results.append({
             "image": sample["image_path"],
             "description": description,
-            "expected": expected,
-            "predicted": predicted_label,
-            "raw_response": response,
-            "exact_match": is_match
+            "connector": connector,
+            "expected": "Correct",
+            "generated": generated.strip(),
+            "correct": is_correct
         })
-        
-        progress_queue.put((gpu_id, i + 1, len(samples)))
     
-    result_queue.put((gpu_id, results))
+    accuracy = correct / total if total > 0 else 0
+    print(f"Reverse Accuracy: {correct}/{total} = {accuracy:.2%}")
+    
+    return {"accuracy": accuracy, "correct": correct, "total": total, "results": results}
 
 
-def evaluate_mcq_i2d_worker(gpu_id, base_model_path, adapter_path, samples, result_queue, progress_queue):
-    """Worker：评估 MCQ I2D - 给图片，选正确的描述"""
-    model, processor = load_model_on_gpu(base_model_path, adapter_path, gpu_id)
+def evaluate_mcq_i2d(model, processor, data_file: str, max_samples: int = None):
+    """
+    MCQ I2D测试：[Image] connector? A. desc1 B. desc2 C. desc3 D. desc4 Only answer A, B, C, or D. → A/B/C/D
+    """
+    print("\n" + "="*60)
+    print("MCQ I2D 测试: [Image] connector? A. B. C. D. → 选择正确描述")
+    print("="*60)
+    
+    samples = []
+    with open(data_file) as f:
+        for line in f:
+            samples.append(json.loads(line))
+    
+    if max_samples:
+        samples = samples[:max_samples]
     
     results = []
-    for i, sample in enumerate(samples):
+    correct = 0
+    total = len(samples)
+    
+    for sample in tqdm(samples, desc="MCQ I2D"):
         image = Image.open(sample["image_path"]).convert("RGB")
+        connector = sample.get("connector", "is")
         choices = sample["choices"]
-        correct_index = sample["correct_index"]
+        correct_idx = sample["correct_index"]
+        expected_letter = chr(65 + correct_idx)
         
-        # 构建选择题
-        question = "Which description best matches this person?\n"
-        for j, choice in enumerate(choices):
-            question += f"{chr(65+j)}. {choice}\n"
-        question += "Answer with just the letter (A, B, C, or D)."
+        # 格式：[Image] connector? A. xxx B. xxx C. xxx D. xxx Only answer A, B, C, or D.
+        question = f"{connector}? A. {choices[0]} B. {choices[1]} C. {choices[2]} D. {choices[3]} Only answer A, B, C, or D."
         
-        messages = [{
-            "role": "user",
-            "content": [
+        messages = [
+            {"role": "user", "content": [
                 {"type": "image", "image": image},
                 {"type": "text", "text": question}
-            ]
-        }]
+            ]}
+        ]
         
-        text = processor.apply_chat_template(messages, add_generation_prompt=True, tokenize=False)
-        inputs = processor(text=[text], images=[image], return_tensors="pt", padding=True)
-        inputs = {k: v.to("cuda:0") for k, v in inputs.items()}
+        text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+        inputs = processor(text=[text], images=[image], return_tensors="pt").to(model.device)
         
         with torch.no_grad():
-            outputs = model.generate(**inputs, max_new_tokens=50, do_sample=False)
+            outputs = model.generate(
+                **inputs,
+                max_new_tokens=5,
+                do_sample=False,
+                temperature=None,
+                top_p=None
+            )
         
-        response = processor.decode(outputs[0], skip_special_tokens=True)
-        if "assistant" in response.lower():
-            response = response.split("assistant")[-1].strip()
+        generated = processor.decode(outputs[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True)
+        generated_clean = generated.strip().upper()
         
-        # 解析答案
-        pred_index = -1
-        resp_upper = response.upper()
-        for j, letter in enumerate(['A', 'B', 'C', 'D']):
-            if letter in resp_upper:
-                pred_index = j
+        # 提取第一个字母 A-D
+        predicted_letter = None
+        for char in generated_clean:
+            if char in "ABCD":
+                predicted_letter = char
                 break
         
-        is_match = pred_index == correct_index
+        is_correct = predicted_letter == expected_letter
+        if is_correct:
+            correct += 1
         
         results.append({
             "image": sample["image_path"],
+            "connector": connector,
             "choices": choices,
-            "correct_index": correct_index,
-            "correct_answer": choices[correct_index],
-            "predicted_index": pred_index,
-            "predicted_answer": choices[pred_index] if pred_index >= 0 else "N/A",
-            "raw_response": response,
-            "exact_match": is_match
+            "expected": expected_letter,
+            "generated": generated.strip(),
+            "predicted": predicted_letter,
+            "correct": is_correct
         })
-        
-        progress_queue.put((gpu_id, i + 1, len(samples)))
     
-    result_queue.put((gpu_id, results))
+    accuracy = correct / total if total > 0 else 0
+    print(f"MCQ I2D Accuracy: {correct}/{total} = {accuracy:.2%}")
+    
+    return {"accuracy": accuracy, "correct": correct, "total": total, "results": results}
 
 
-def evaluate_mcq_d2i_worker(gpu_id, base_model_path, adapter_path, samples, result_queue, progress_queue):
-    """Worker：评估 MCQ D2I - 给描述，选正确的图片"""
-    model, processor = load_model_on_gpu(base_model_path, adapter_path, gpu_id)
+def evaluate_mcq_d2i(model, processor, data_file: str, max_samples: int = None):
+    """
+    MCQ D2I测试：description connector? A. [img1] B. [img2] C. [img3] D. [img4] Only answer A, B, C, or D. → A/B/C/D
+    """
+    print("\n" + "="*60)
+    print("MCQ D2I 测试: description connector? A. [img] B. [img]... → 选择正确图片")
+    print("="*60)
+    
+    samples = []
+    with open(data_file) as f:
+        for line in f:
+            samples.append(json.loads(line))
+    
+    if max_samples:
+        samples = samples[:max_samples]
     
     results = []
-    for i, sample in enumerate(samples):
+    correct = 0
+    total = len(samples)
+    
+    for sample in tqdm(samples, desc="MCQ D2I"):
         description = sample["description"]
-        # 兼容两种字段名
-        choices = sample.get("image_choices", sample.get("choices", []))
-        correct_index = sample["correct_index"]
+        connector = sample.get("connector", "is")
+        image_choices = sample["image_choices"]
+        correct_idx = sample["correct_index"]
+        expected_letter = chr(65 + correct_idx)
         
-        # 加载所有选项图片
-        images = [Image.open(p).convert("RGB") for p in choices]
+        # 加载所有图片
+        images = [Image.open(p).convert("RGB") for p in image_choices]
         
-        # 构建问题：给出描述，展示4张图片
-        question = f"I'm looking for: {description}\n\nWhich image (A, B, C, or D) matches this description? Answer with just the letter."
-        
-        # 构建多图消息
-        content = [{"type": "text", "text": question}]
-        for j, img in enumerate(images):
-            content.append({"type": "text", "text": f"\n\nImage {chr(65+j)}:"})
+        # 格式：description connector? A. [img1] B. [img2] C. [img3] D. [img4] Only answer A, B, C, or D.
+        content = [{"type": "text", "text": f"{description} {connector}? "}]
+        for i, img in enumerate(images):
+            content.append({"type": "text", "text": f"A. " if i == 0 else f" {chr(65+i)}. "})
             content.append({"type": "image", "image": img})
+        content.append({"type": "text", "text": " Only answer A, B, C, or D."})
         
         messages = [{"role": "user", "content": content}]
         
-        text = processor.apply_chat_template(messages, add_generation_prompt=True, tokenize=False)
-        inputs = processor(text=[text], images=images, return_tensors="pt", padding=True)
-        inputs = {k: v.to("cuda:0") for k, v in inputs.items()}
+        text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+        inputs = processor(text=[text], images=images, return_tensors="pt").to(model.device)
         
         with torch.no_grad():
-            outputs = model.generate(**inputs, max_new_tokens=50, do_sample=False)
+            outputs = model.generate(
+                **inputs,
+                max_new_tokens=5,
+                do_sample=False,
+                temperature=None,
+                top_p=None
+            )
         
-        response = processor.decode(outputs[0], skip_special_tokens=True)
-        if "assistant" in response.lower():
-            response = response.split("assistant")[-1].strip()
+        generated = processor.decode(outputs[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True)
+        generated_clean = generated.strip().upper()
         
-        # 解析答案
-        pred_index = -1
-        resp_upper = response.upper()
-        for j, letter in enumerate(['A', 'B', 'C', 'D']):
-            if letter in resp_upper:
-                pred_index = j
+        # 提取第一个字母 A-D
+        predicted_letter = None
+        for char in generated_clean:
+            if char in "ABCD":
+                predicted_letter = char
                 break
         
-        is_match = pred_index == correct_index
+        is_correct = predicted_letter == expected_letter
+        if is_correct:
+            correct += 1
         
         results.append({
             "description": description,
-            "choices": choices,
-            "correct_index": correct_index,
-            "predicted_index": pred_index,
-            "raw_response": response,
-            "exact_match": is_match
+            "connector": connector,
+            "image_choices": image_choices,
+            "expected": expected_letter,
+            "generated": generated.strip(),
+            "predicted": predicted_letter,
+            "correct": is_correct
         })
-        
-        progress_queue.put((gpu_id, i + 1, len(samples)))
     
-    result_queue.put((gpu_id, results))
-
-
-def split_data(samples, num_gpus):
-    """将样本均匀分配到各 GPU"""
-    chunks = [[] for _ in range(num_gpus)]
-    for i, sample in enumerate(samples):
-        chunks[i % num_gpus].append(sample)
-    return chunks
-
-
-def progress_monitor(progress_queue, total_samples, num_gpus):
-    """进度监控进程"""
-    gpu_progress = {i: 0 for i in range(num_gpus)}
-    pbar = tqdm(total=total_samples, desc="Evaluating", unit="sample")
+    accuracy = correct / total if total > 0 else 0
+    print(f"MCQ D2I Accuracy: {correct}/{total} = {accuracy:.2%}")
     
-    completed = 0
-    while completed < total_samples:
-        try:
-            gpu_id, current, total = progress_queue.get(timeout=60)
-            old_progress = gpu_progress[gpu_id]
-            gpu_progress[gpu_id] = current
-            increment = current - old_progress
-            if increment > 0:
-                pbar.update(increment)
-                completed += increment
-        except:
-            break
-    
-    pbar.close()
+    return {"accuracy": accuracy, "correct": correct, "total": total, "results": results}
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, required=True)
-    parser.add_argument("--task", type=str, required=True, 
-                       choices=["forward", "reverse", "mcq_i2d", "mcq_d2i"])
-    parser.add_argument("--checkpoint", type=str, default=None)
-    parser.add_argument("--num_gpus", type=int, default=8)
+    parser = argparse.ArgumentParser(description="多模态 Reversal Curse 评测")
+    parser.add_argument("--model_path", type=str, required=True, help="LoRA adapter 路径")
+    parser.add_argument("--base_model", type=str, default="/work/models/qwen/Qwen3-VL-8B-Instruct")
+    parser.add_argument("--task", type=str, choices=["forward", "reverse", "mcq_i2d", "mcq_d2i", "all"],
+                       default="all", help="评测任务类型")
+    parser.add_argument("--data_file", type=str, help="单任务数据文件")
+    parser.add_argument("--data_dir", type=str, help="数据目录（用于 all 任务）")
+    parser.add_argument("--output_file", type=str, help="结果输出文件")
+    parser.add_argument("--max_samples", type=int, default=None)
+    
     args = parser.parse_args()
     
-    with open(args.config) as f:
-        config = yaml.safe_load(f)
+    # 加载模型
+    model, processor = load_model_and_processor(args.model_path, args.base_model)
     
-    base_model_path = config["model"]["name_or_path"]
-    data_dir = Path(config["data"]["output_dir"])
-    output_dir = Path(config["training"]["output_dir"]) / "forward_trained"
-    adapter_path = args.checkpoint or (output_dir / "best")
+    all_results = {"timestamp": datetime.now().isoformat()}
     
-    print("=" * 60)
-    print(f"Parallel Evaluation: {args.task.upper()}")
-    print(f"Checkpoint: {adapter_path}")
-    print(f"GPUs: {args.num_gpus}")
-    print("=" * 60)
-    
-    # 根据任务类型选择测试文件
-    test_file = data_dir / f"{args.task}_test.jsonl"
-    with open(test_file) as f:
-        samples = [json.loads(line) for line in f]
-    
-    print(f"Test samples: {len(samples)}")
-    
-    # 选择对应的worker函数
-    worker_map = {
-        "forward": evaluate_forward_worker,
-        "reverse": evaluate_reverse_worker,
-        "mcq_i2d": evaluate_mcq_i2d_worker,
-        "mcq_d2i": evaluate_mcq_d2i_worker
-    }
-    worker_fn = worker_map[args.task]
-    
-    chunks = split_data(samples, args.num_gpus)
-    result_queue = mp.Queue()
-    progress_queue = mp.Queue()
-    processes = []
-    
-    # 启动进度监控
-    monitor = mp.Process(target=progress_monitor, args=(progress_queue, len(samples), args.num_gpus))
-    monitor.start()
-    
-    for gpu_id in range(args.num_gpus):
-        if not chunks[gpu_id]:
-            continue
-        p = mp.Process(target=worker_fn, 
-                      args=(gpu_id, base_model_path, str(adapter_path), chunks[gpu_id], result_queue, progress_queue))
-        p.start()
-        processes.append(p)
-        print(f"  GPU {gpu_id}: {len(chunks[gpu_id])} samples")
-    
-    all_results = []
-    for _ in range(len(processes)):
-        gpu_id, results = result_queue.get()
-        all_results.extend(results)
-    
-    for p in processes:
-        p.join()
-    
-    monitor.join(timeout=5)
-    if monitor.is_alive():
-        monitor.terminate()
-    
-    exact_matches = sum(1 for r in all_results if r["exact_match"])
-    accuracy = 100 * exact_matches / len(all_results)
-    
-    print(f"\n{'='*60}")
-    print(f"Results: {exact_matches}/{len(all_results)} correct ({accuracy:.1f}%)")
-    print(f"{'='*60}")
-    
-    # 显示样本对比
-    print("\nSample predictions:")
-    for i, r in enumerate(all_results[:8]):
-        status = "✓" if r["exact_match"] else "✗"
+    if args.task == "all":
+        data_dir = Path(args.data_dir)
+        
+        # Forward
+        forward_file = data_dir / "forward_test.jsonl"
+        if forward_file.exists():
+            all_results["forward"] = evaluate_forward(model, processor, str(forward_file), args.max_samples)
+        
+        # Reverse
+        reverse_file = data_dir / "reverse_test.jsonl"
+        if reverse_file.exists():
+            all_results["reverse"] = evaluate_reverse(model, processor, str(reverse_file), args.max_samples)
+        
+        # MCQ I2D
+        mcq_i2d_file = data_dir / "mcq_i2d_test.jsonl"
+        if mcq_i2d_file.exists():
+            all_results["mcq_i2d"] = evaluate_mcq_i2d(model, processor, str(mcq_i2d_file), args.max_samples)
+        
+        # MCQ D2I
+        mcq_d2i_file = data_dir / "mcq_d2i_test.jsonl"
+        if mcq_d2i_file.exists():
+            all_results["mcq_d2i"] = evaluate_mcq_d2i(model, processor, str(mcq_d2i_file), args.max_samples)
+        
+    else:
         if args.task == "forward":
-            print(f"  {status} Expected: {r['expected'][:50]}")
-            print(f"    Predicted: {r['predicted'][:50]}")
+            all_results["forward"] = evaluate_forward(model, processor, args.data_file, args.max_samples)
         elif args.task == "reverse":
-            print(f"  {status} Desc: {r['description'][:30]}... | Expected: {r['expected']} | Pred: {r['predicted']}")
-            if not r["exact_match"]:
-                print(f"      Raw: {r['raw_response'][:60]}")
+            all_results["reverse"] = evaluate_reverse(model, processor, args.data_file, args.max_samples)
         elif args.task == "mcq_i2d":
-            print(f"  {status} Correct: {chr(65+r['correct_index'])}. {r['correct_answer'][:30]}")
-            print(f"    Predicted: {chr(65+r['predicted_index']) if r['predicted_index']>=0 else '?'}. {r['predicted_answer'][:30] if r['predicted_index']>=0 else 'N/A'}")
+            all_results["mcq_i2d"] = evaluate_mcq_i2d(model, processor, args.data_file, args.max_samples)
         elif args.task == "mcq_d2i":
-            print(f"  {status} Desc: {r['description'][:30]}... | Correct: {chr(65+r['correct_index'])} | Pred: {chr(65+r['predicted_index']) if r['predicted_index']>=0 else '?'}")
+            all_results["mcq_d2i"] = evaluate_mcq_d2i(model, processor, args.data_file, args.max_samples)
     
-    output_file = output_dir / f"eval_{args.task}_results.json"
-    output_dir.mkdir(parents=True, exist_ok=True)
-    with open(output_file, 'w') as f:
-        json.dump({
-            "task": args.task,
-            "accuracy": accuracy,
-            "correct": exact_matches,
-            "total": len(all_results),
-            "samples": all_results
-        }, f, indent=2, ensure_ascii=False)
+    # 打印总结
+    print("\n" + "="*60)
+    print("评测结果总结")
+    print("="*60)
     
-    print(f"\nResults saved to: {output_file}")
+    for task in ["forward", "reverse", "mcq_i2d", "mcq_d2i"]:
+        if task in all_results:
+            r = all_results[task]
+            print(f"  {task.upper():12s}: {r['correct']}/{r['total']} = {r['accuracy']:.2%}")
+    
+    # 保存结果
+    if args.output_file:
+        output_path = args.output_file
+    else:
+        output_dir = Path(args.model_path).parent
+        output_path = output_dir / "eval_results_v3.json"
+    
+    # 保存时只保存摘要，不保存详细结果
+    summary = {
+        "timestamp": all_results["timestamp"],
+        "model_path": args.model_path,
+        "task": args.task
+    }
+    for task in ["forward", "reverse", "mcq_i2d", "mcq_d2i"]:
+        if task in all_results:
+            summary[task] = {
+                "accuracy": all_results[task]["accuracy"],
+                "correct": all_results[task]["correct"],
+                "total": all_results[task]["total"]
+            }
+    
+    with open(output_path, "w") as f:
+        json.dump(summary, f, indent=2)
+    print(f"\n结果已保存到: {output_path}")
 
 
 if __name__ == "__main__":
-    mp.set_start_method('spawn', force=True)
     main()
