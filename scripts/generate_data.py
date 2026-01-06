@@ -584,10 +584,10 @@ def generate_training_data(entities: list, output_dir: Path, seed: int):
         print(f"  {name}: {len(samples)} samples")
     
     # 生成 MCQ 测试数据
-    generate_mcq_data(entities, test_ids, output_dir)
+    generate_mcq_data(entities, output_dir)
 
 
-def generate_mcq_data(entities: list, test_ids: list, output_dir: Path):
+def generate_mcq_data(entities: list, output_dir: Path):
     """生成选择题测试数据"""
     images_dir = output_dir / "images"
     n_choices = 4
@@ -595,7 +595,7 @@ def generate_mcq_data(entities: list, test_ids: list, output_dir: Path):
     mcq_i2d = []  # Image → Description
     mcq_d2i = []  # Description → Image
     
-    for idx in test_ids:
+    for idx in range(len(entities)):
         e = entities[idx]
         img_path = str(images_dir / f"face_{e['id'].split('_')[1]}.png")
         

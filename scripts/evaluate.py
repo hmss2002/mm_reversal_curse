@@ -3,20 +3,59 @@
 ==============================================================================
 多 GPU 并行评估脚本 - 支持全部4种测试
 ==============================================================================
+
 测试项：
   1. forward  - I2D Generation: [Image] connector → description
   2. reverse  - D2I Classification: description connector [Image] → Correct/Wrong
   3. mcq_i2d  - 给图片选描述
   4. mcq_d2i  - 给描述选图片
 
-用法：
-  python scripts/evaluate.py --config configs/config.yaml --task forward --num_gpus 8
-  python scripts/evaluate.py --config configs/config.yaml --task reverse --num_gpus 8
-  python scripts/evaluate.py --config configs/config.yaml --task mcq_i2d --num_gpus 8
-  python scripts/evaluate.py --config configs/config.yaml --task mcq_d2i --num_gpus 8
+==============================================================================
+快速开始
+==============================================================================
+
+# 1. 切换到项目目录并激活虚拟环境
+cd /work/mm_reversal_curse
+source .venv/bin/activate
+
+# 2. 评估 Forward 方向（Image → Description 生成）
+python scripts/evaluate.py --config configs/config.yaml --task forward --checkpoint outputs/forward_trained/best --num_gpus 8
+
+# 3. 评估 Reverse 方向（Description + Image → Correct/Wrong 分类）
+python scripts/evaluate.py --config configs/config.yaml --task reverse --checkpoint outputs/forward_trained/best --num_gpus 8
+
+# 4. 评估 MCQ I2D（给图片选描述）
+python scripts/evaluate.py --config configs/config.yaml --task mcq_i2d --checkpoint outputs/forward_trained/best --num_gpus 8
+
+# 5. 评估 MCQ D2I（给描述选图片）
+python scripts/evaluate.py --config configs/config.yaml --task mcq_d2i --checkpoint outputs/forward_trained/best --num_gpus 8
+
+# 6. 一键运行全部4项测试（用 bash 循环）
+for task in forward reverse mcq_i2d mcq_d2i; do
+    echo "=== Evaluating $task ===" 
+    python scripts/evaluate.py --config configs/config.yaml --task $task --checkpoint outputs/forward_trained/best --num_gpus 8
+done
+
+==============================================================================
+输出结构
+==============================================================================
+
+outputs/forward_trained/  或  outputs/reverse_trained/
+└── eval_results_v2.json   # 评估结果（准确率、详细预测等）
+
+==============================================================================
+预期结果（验证 Reversal Curse）
+==============================================================================
+
+| 测试项               | Forward 训练后预期 | 说明               |
+|---------------------|-------------------|-------------------|
+| Forward Generation  | ~100%             | 模型学会了 I→D      |
+| Reverse Classification | ~50%           | 随机二分类，没学会    |
+| MCQ I2D             | ~100%             | 同 Forward 方向     |
+| MCQ D2I             | ~25%              | 随机四选一，没学会    |
+
 ==============================================================================
 """
-
 import os
 import sys
 import json

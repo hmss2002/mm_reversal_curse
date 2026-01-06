@@ -9,31 +9,53 @@
   - Forward 任务：自动使用混合训练（防止灾难性遗忘）
   - Reverse 任务：普通训练
 
-用法：
-  # Forward 训练（自动混合保持任务）
-  deepspeed --num_gpus=8 scripts/train.py --config configs/config.yaml --task forward
-  
-  # Reverse 训练
-  deepspeed --num_gpus=8 scripts/train.py --config configs/config.yaml --task reverse
-  
-  # 可选：调整 Forward 的保持任务比例
-  deepspeed --num_gpus=8 scripts/train.py --config configs/config.yaml --task forward --retention_ratio 0.2
+==============================================================================
+快速开始
+==============================================================================
 
-输出：
-  outputs/forward_trained/  或  outputs/reverse_trained/
-    ├── best/                   # 最佳 checkpoint
-    ├── final/                  # 最终 checkpoint
-    └── training_history.json   # 训练历史
+# 1. 切换到项目目录并激活虚拟环境
+cd /work/mm_reversal_curse
+source .venv/bin/activate
+
+# 2. Forward 训练（推荐先运行这个验证 Reversal Curse）
+rm -rf outputs/forward_trained  # 清除之前的结果
+deepspeed --num_gpus=8 scripts/train.py --config configs/config.yaml --task forward
+
+# 3. Reverse 训练（可选）
+rm -rf outputs/reverse_trained
+deepspeed --num_gpus=8 scripts/train.py --config configs/config.yaml --task reverse
+
+# 4. 调整 Forward 的保持任务比例（默认 0.3 即 30%）
+deepspeed --num_gpus=8 scripts/train.py --config configs/config.yaml --task forward --retention_ratio 0.2
+
+==============================================================================
+输出结构
+==============================================================================
+
+outputs/forward_trained/  或  outputs/reverse_trained/
+├── best/                   # 最佳 checkpoint（验证 loss 最低）
+│   ├── adapter_config.json
+│   └── adapter_model.safetensors
+├── final/                  # 最终 checkpoint
+└── training_history.json   # 训练历史（loss、epoch 等）
+
+==============================================================================
+训练配置（configs/config.yaml）
+==============================================================================
+
+- model: Qwen3-VL-8B-Instruct
+- LoRA: r=16, alpha=32, targets=[q_proj, k_proj, v_proj, o_proj]
+- Early Stopping: patience=3（验证 loss 连续3次不下降则停止）
+- 最大 epoch: 1000
 
 ==============================================================================
 """
-
+import warnings
 import os
 import sys
 import json
 import yaml
 import argparse
-import warnings
 from pathlib import Path
 
 import torch
