@@ -3,7 +3,7 @@
 ==============================================================================
 多 GPU 并行评估脚本
 ==============================================================================
-使用 8 GPU 并行评估，大幅加速推理（比单 GPU device_map='auto' 快 8 倍）
+使用 8 GPU 并行评估，大幅加速推理
 
 用法：
   python scripts/evaluate.py --config configs/config.yaml --task forward --num_gpus 8
@@ -21,6 +21,7 @@ import torch
 import torch.multiprocessing as mp
 import yaml
 from PIL import Image
+from tqdm import tqdm
 
 warnings.filterwarnings("ignore")
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -49,12 +50,12 @@ def load_model_on_gpu(base_model_path: str, adapter_path: str, gpu_id: int):
     return model, processor
 
 
-def evaluate_forward_worker(gpu_id, base_model_path, adapter_path, samples, result_queue):
+def evaluate_forward_worker(gpu_id, base_model_path, adapter_path, samples, result_queue, progress_queue):
     """Worker：评估 Forward 任务"""
     model, processor = load_model_on_gpu(base_model_path, adapter_path, gpu_id)
     
     results = []
-    for sample in samples:
+    for i, sample in enumerate(samples):
         image = Image.open(sample["image_path"]).convert("RGB")
         
         # Forward评估：使用connector作为question
@@ -88,6 +89,9 @@ def evaluate_forward_worker(gpu_id, base_model_path, adapter_path, samples, resu
             "predicted": response,
             "exact_match": is_match
         })
+        
+        # 发送进度更新
+        progress_queue.put((gpu_id, i + 1, len(samples)))
     
     result_queue.put((gpu_id, results))
 
@@ -98,6 +102,27 @@ def split_data(samples, num_gpus):
     for i, sample in enumerate(samples):
         chunks[i % num_gpus].append(sample)
     return chunks
+
+
+def progress_monitor(progress_queue, total_samples, num_gpus):
+    """进度监控进程"""
+    gpu_progress = {i: 0 for i in range(num_gpus)}
+    pbar = tqdm(total=total_samples, desc="Evaluating", unit="sample")
+    
+    completed = 0
+    while completed < total_samples:
+        try:
+            gpu_id, current, total = progress_queue.get(timeout=60)
+            old_progress = gpu_progress[gpu_id]
+            gpu_progress[gpu_id] = current
+            increment = current - old_progress
+            if increment > 0:
+                pbar.update(increment)
+                completed += increment
+        except:
+            break
+    
+    pbar.close()
 
 
 def main():
@@ -130,13 +155,18 @@ def main():
     
     chunks = split_data(samples, args.num_gpus)
     result_queue = mp.Queue()
+    progress_queue = mp.Queue()
     processes = []
+    
+    # 启动进度监控
+    monitor = mp.Process(target=progress_monitor, args=(progress_queue, len(samples), args.num_gpus))
+    monitor.start()
     
     for gpu_id in range(args.num_gpus):
         if not chunks[gpu_id]:
             continue
         p = mp.Process(target=evaluate_forward_worker, 
-                      args=(gpu_id, base_model_path, adapter_path, chunks[gpu_id], result_queue))
+                      args=(gpu_id, base_model_path, str(adapter_path), chunks[gpu_id], result_queue, progress_queue))
         p.start()
         processes.append(p)
         print(f"  GPU {gpu_id}: {len(chunks[gpu_id])} samples")
@@ -145,10 +175,13 @@ def main():
     for _ in range(len(processes)):
         gpu_id, results = result_queue.get()
         all_results.extend(results)
-        print(f"✓ GPU {gpu_id} completed")
     
     for p in processes:
         p.join()
+    
+    monitor.join(timeout=5)
+    if monitor.is_alive():
+        monitor.terminate()
     
     exact_matches = sum(1 for r in all_results if r["exact_match"])
     accuracy = 100 * exact_matches / len(all_results)
@@ -156,6 +189,13 @@ def main():
     print(f"\n{'='*60}")
     print(f"Results: {exact_matches}/{len(all_results)} correct ({accuracy:.1f}%)")
     print(f"{'='*60}")
+    
+    # 显示几个样本对比
+    print("\nSample predictions:")
+    for i, r in enumerate(all_results[:5]):
+        status = "✓" if r["exact_match"] else "✗"
+        print(f"  {status} Expected: {r['expected'][:50]}")
+        print(f"    Predicted: {r['predicted'][:50]}")
     
     output_file = output_dir / f"eval_{args.task}_results.json"
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -168,7 +208,7 @@ def main():
             "samples": all_results[:10]
         }, f, indent=2)
     
-    print(f"Results saved to: {output_file}")
+    print(f"\nResults saved to: {output_file}")
 
 
 if __name__ == "__main__":
