@@ -1,261 +1,174 @@
 #!/usr/bin/env python3
 """
-Parallel Evaluation script for 8-GPU distributed evaluation.
-Uses DeepSpeed inference or multi-process for 8x parallelism.
+==============================================================================
+多 GPU 并行评估脚本
+==============================================================================
+使用 8 GPU 并行评估，大幅加速推理（比单 GPU device_map='auto' 快 8 倍）
+
+用法：
+  python scripts/evaluate.py --config configs/config.yaml --task forward --num_gpus 8
+==============================================================================
 """
-import sys
+
 import os
+import sys
 import json
 import argparse
+import warnings
+from pathlib import Path
+
 import torch
 import torch.multiprocessing as mp
-from pathlib import Path
-from tqdm import tqdm
+import yaml
 from PIL import Image
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from src.utils import load_config
+warnings.filterwarnings("ignore")
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
-def load_model_on_gpu(model_path, checkpoint_path, gpu_id):
-    """Load model with LoRA on specific GPU."""
-    import torch
+def load_model_on_gpu(base_model_path: str, adapter_path: str, gpu_id: int):
+    """在指定 GPU 上加载模型"""
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
+    
     from transformers import AutoProcessor, AutoModelForImageTextToText
     from peft import PeftModel
     
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
-    
-    processor = AutoProcessor.from_pretrained(model_path)
+    processor = AutoProcessor.from_pretrained(base_model_path, trust_remote_code=True)
     model = AutoModelForImageTextToText.from_pretrained(
-        model_path,
+        base_model_path,
         torch_dtype=torch.float16,
+        trust_remote_code=True,
         device_map="cuda:0"
     )
-    model = PeftModel.from_pretrained(model, checkpoint_path)
-    model.eval()
     
+    if adapter_path and Path(adapter_path).exists():
+        model = PeftModel.from_pretrained(model, adapter_path)
+        model = model.merge_and_unload()
+    
+    model.eval()
     return model, processor
 
 
-def evaluate_forward_worker(gpu_id, model_path, checkpoint_path, samples, result_queue):
-    """Worker function for forward evaluation."""
-    model, processor = load_model_on_gpu(model_path, checkpoint_path, gpu_id)
+def evaluate_forward_worker(gpu_id, base_model_path, adapter_path, samples, result_queue):
+    """Worker：评估 Forward 任务"""
+    model, processor = load_model_on_gpu(base_model_path, adapter_path, gpu_id)
     
     results = []
     for sample in samples:
         image = Image.open(sample["image_path"]).convert("RGB")
         
+        # Forward评估：使用connector作为question
+        question = sample.get("connector", sample.get("question", ""))
+        
         messages = [{
             "role": "user",
             "content": [
                 {"type": "image", "image": image},
-                {"type": "text", "text": sample.get("instruction", "Who is this person?")}
+                {"type": "text", "text": question}
             ]
         }]
         
-        text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-        inputs = processor(text=text, images=image, return_tensors="pt").to("cuda:0")
+        text = processor.apply_chat_template(messages, add_generation_prompt=True, tokenize=False)
+        inputs = processor(text=[text], images=[image], return_tensors="pt", padding=True)
+        inputs = {k: v.to("cuda:0") for k, v in inputs.items()}
         
         with torch.no_grad():
-            outputs = model.generate(**inputs, max_new_tokens=64, do_sample=False)
+            outputs = model.generate(**inputs, max_new_tokens=200, do_sample=False)
         
-        generated = processor.decode(outputs[0], skip_special_tokens=True)
-        if "assistant" in generated:
-            response = generated.split("assistant")[-1].strip()
-        else:
-            response = generated
+        response = processor.decode(outputs[0], skip_special_tokens=True)
+        if "assistant" in response.lower():
+            response = response.split("assistant")[-1].strip()
         
-        target = sample["description"]
-        is_correct = target.lower() in response.lower()
+        expected = sample.get("description", sample.get("answer", ""))
+        is_match = response.strip() == expected.strip()
         
         results.append({
-            "entity_id": sample["entity_id"],
-            "target": target,
-            "prediction": response,
-            "correct": is_correct
+            "image": sample["image_path"],
+            "expected": expected,
+            "predicted": response,
+            "exact_match": is_match
         })
     
-    result_queue.put((gpu_id, "forward", results))
+    result_queue.put((gpu_id, results))
 
 
-def evaluate_reverse_worker(gpu_id, model_path, checkpoint_path, samples, result_queue):
-    """Worker function for reverse evaluation (MCQA)."""
-    model, processor = load_model_on_gpu(model_path, checkpoint_path, gpu_id)
-    
-    results = []
-    labels = ["A", "B", "C", "D"]
-    for sample in samples:
-        # Load all choice images (choices is now a list of paths)
-        images = []
-        for choice_path in sample["choices"]:
-            img = Image.open(choice_path).convert("RGB")
-            images.append(img)
-        
-        # Build multi-image message
-        question = f"Which image shows {sample['description']}? Choose A, B, C, or D."
-        content = [{"type": "text", "text": question + "\n\n"}]
-        for i, img in enumerate(images):
-            content.append({"type": "image", "image": img})
-            content.append({"type": "text", "text": f" ({labels[i]})\n"})
-        
-        messages = [{"role": "user", "content": content}]
-        
-        text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-        inputs = processor(text=text, images=images, return_tensors="pt").to("cuda:0")
-        
-        with torch.no_grad():
-            outputs = model.generate(**inputs, max_new_tokens=10, do_sample=False)
-        
-        generated = processor.decode(outputs[0], skip_special_tokens=True)
-        if "assistant" in generated:
-            response = generated.split("assistant")[-1].strip()
-        else:
-            response = generated
-        
-        # Extract letter answer
-        pred_letter = None
-        for char in response.upper():
-            if char in "ABCD":
-                pred_letter = char
-                break
-        
-        target = labels[sample["correct_idx"]]
-        is_correct = pred_letter == target
-        
-        results.append({
-            "entity_id": sample["entity_id"],
-            "description": sample["description"],
-            "target": target,
-            "prediction": pred_letter,
-            "raw_response": response,
-            "correct": is_correct
-        })
-    
-    result_queue.put((gpu_id, "reverse", results))
+def split_data(samples, num_gpus):
+    """将样本均匀分配到各 GPU"""
+    chunks = [[] for _ in range(num_gpus)]
+    for i, sample in enumerate(samples):
+        chunks[i % num_gpus].append(sample)
+    return chunks
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, required=True)
+    parser.add_argument("--task", type=str, required=True)
     parser.add_argument("--checkpoint", type=str, default=None)
+    parser.add_argument("--num_gpus", type=int, default=8)
     args = parser.parse_args()
     
-    config = load_config(args.config)
+    with open(args.config) as f:
+        config = yaml.safe_load(f)
     
-    model_path = config.model.name
-    checkpoint_path = args.checkpoint or f"{config.experiment.output_dir}/checkpoints/final"
-    data_dir = Path(config.data.output_dir)
+    base_model_path = config["model"]["name_or_path"]
+    data_dir = Path(config["data"]["output_dir"])
+    output_dir = Path(config["training"]["output_dir"]) / f"{args.task}_trained"
+    adapter_path = args.checkpoint or (output_dir / "best")
     
-    num_gpus = torch.cuda.device_count()
-    print(f"=== Parallel Evaluation with {num_gpus} GPUs ===")
+    print("=" * 60)
+    print(f"Parallel Evaluation: {args.task.upper()}")
+    print(f"Checkpoint: {adapter_path}")
+    print(f"GPUs: {args.num_gpus}")
+    print("=" * 60)
     
-    # Load datasets
-    forward_data = []
-    with open(data_dir / "eval_forward.jsonl") as f:
-        for line in f:
-            forward_data.append(json.loads(line.strip()))
-    reverse_data = []
-    with open(data_dir / "eval_reverse.jsonl") as f:
-        for line in f:
-            reverse_data.append(json.loads(line.strip()))
+    test_file = data_dir / f"{args.task}_test.jsonl"
+    with open(test_file) as f:
+        samples = [json.loads(line) for line in f]
     
-    print(f"Forward samples: {len(forward_data)}")
-    print(f"Reverse samples: {len(reverse_data)}")
+    print(f"Test samples: {len(samples)}")
     
-    # Split data across GPUs
-    def split_data(data, n_gpus):
-        chunks = [[] for _ in range(n_gpus)]
-        for i, item in enumerate(data):
-            chunks[i % n_gpus].append(item)
-        return chunks
-    
-    forward_chunks = split_data(forward_data, num_gpus)
-    reverse_chunks = split_data(reverse_data, num_gpus)
-    
+    chunks = split_data(samples, args.num_gpus)
     result_queue = mp.Queue()
-    
-    # Forward evaluation
-    print("\n=== Forward Evaluation (Image → Description) ===")
     processes = []
-    for gpu_id in range(num_gpus):
-        if forward_chunks[gpu_id]:
-            p = mp.Process(
-                target=evaluate_forward_worker,
-                args=(gpu_id, model_path, checkpoint_path, forward_chunks[gpu_id], result_queue)
-            )
-            p.start()
-            processes.append(p)
     
-    forward_results = []
+    for gpu_id in range(args.num_gpus):
+        if not chunks[gpu_id]:
+            continue
+        p = mp.Process(target=evaluate_forward_worker, 
+                      args=(gpu_id, base_model_path, adapter_path, chunks[gpu_id], result_queue))
+        p.start()
+        processes.append(p)
+        print(f"  GPU {gpu_id}: {len(chunks[gpu_id])} samples")
+    
+    all_results = []
     for _ in range(len(processes)):
-        gpu_id, task_type, results = result_queue.get()
-        forward_results.extend(results)
-        print(f"  GPU {gpu_id}: {len(results)} samples done")
+        gpu_id, results = result_queue.get()
+        all_results.extend(results)
+        print(f"✓ GPU {gpu_id} completed")
     
     for p in processes:
         p.join()
     
-    forward_correct = sum(1 for r in forward_results if r["correct"])
-    forward_acc = 100 * forward_correct / len(forward_results)
-    print(f"Forward Accuracy: {forward_correct}/{len(forward_results)} = {forward_acc:.1f}%")
+    exact_matches = sum(1 for r in all_results if r["exact_match"])
+    accuracy = 100 * exact_matches / len(all_results)
     
-    # Reverse evaluation
-    print("\n=== Reverse Evaluation (Description → Image MCQA) ===")
-    processes = []
-    for gpu_id in range(num_gpus):
-        if reverse_chunks[gpu_id]:
-            p = mp.Process(
-                target=evaluate_reverse_worker,
-                args=(gpu_id, model_path, checkpoint_path, reverse_chunks[gpu_id], result_queue)
-            )
-            p.start()
-            processes.append(p)
+    print(f"\n{'='*60}")
+    print(f"Results: {exact_matches}/{len(all_results)} correct ({accuracy:.1f}%)")
+    print(f"{'='*60}")
     
-    reverse_results = []
-    for _ in range(len(processes)):
-        gpu_id, task_type, results = result_queue.get()
-        reverse_results.extend(results)
-        print(f"  GPU {gpu_id}: {len(results)} samples done")
-    
-    for p in processes:
-        p.join()
-    
-    reverse_correct = sum(1 for r in reverse_results if r["correct"])
-    reverse_acc = 100 * reverse_correct / len(reverse_results)
-    print(f"Reverse Accuracy: {reverse_correct}/{len(reverse_results)} = {reverse_acc:.1f}%")
-    print(f"Random Baseline: 25%")
-    
-    # Save results
-    output_dir = Path(config.experiment.output_dir)
-    with open(output_dir / "eval_results.json", 'w') as f:
+    output_file = output_dir / f"eval_{args.task}_results.json"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    with open(output_file, 'w') as f:
         json.dump({
-            "forward": {
-                "accuracy": forward_acc,
-                "correct": forward_correct,
-                "total": len(forward_results),
-                "details": forward_results[:10]  # Save first 10 for inspection
-            },
-            "reverse": {
-                "accuracy": reverse_acc,
-                "correct": reverse_correct,
-                "total": len(reverse_results),
-                "random_baseline": 25.0,
-                "details": reverse_results[:10]
-            }
+            "task": args.task,
+            "accuracy": accuracy,
+            "correct": exact_matches,
+            "total": len(all_results),
+            "samples": all_results[:10]
         }, f, indent=2)
     
-    # Print summary
-    print("\n" + "="*60)
-    print("EXPERIMENT RESULTS")
-    print("="*60)
-    print(f"Forward (Image → Text):  {forward_acc:.1f}%")
-    print(f"Reverse (Text → Image):  {reverse_acc:.1f}% (random: 25%)")
-    print("="*60)
-    
-    if forward_acc > 90 and reverse_acc < 35:
-        print("✓ REVERSAL CURSE CONFIRMED")
-    else:
-        print("? Results inconclusive")
+    print(f"Results saved to: {output_file}")
 
 
 if __name__ == "__main__":

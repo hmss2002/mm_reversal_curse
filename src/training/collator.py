@@ -20,9 +20,15 @@ class DataCollator:
             if key in non_tensor_keys:
                 batch[key] = [f[key] for f in features]
             elif key == "image_grid_thw":
-                # For multi-image samples, image_grid_thw is [num_images, 3]
-                # Concat along first dim to get [total_images, 3]
-                batch[key] = torch.cat([f[key] for f in features], dim=0)
+                # image_grid_thw can be [3] for single image or [num_images, 3] for multi-image
+                # Need to ensure each is 2D before concatenating
+                thws = []
+                for f in features:
+                    t = f[key]
+                    if t.dim() == 1:
+                        t = t.unsqueeze(0)  # [3] -> [1, 3]
+                    thws.append(t)
+                batch[key] = torch.cat(thws, dim=0)  # [total_images, 3]
             elif key == "pixel_values":
                 # For multi-image samples, pixel_values is [num_patches, hidden_dim]
                 # Concat along first dim to get [total_patches, hidden_dim]

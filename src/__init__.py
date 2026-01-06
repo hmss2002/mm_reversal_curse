@@ -1,2 +1,3 @@
-"""Multi-Modal Reversal Curse Experiment Framework"""
-__version__ = "0.1.0"
+"""
+多模态 Reversal Curse 实验
+"""
