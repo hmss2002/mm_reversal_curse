@@ -125,8 +125,8 @@ def evaluate_forward(model, processor, data_file: str, max_samples: int = None):
 
 def evaluate_reverse(model, processor, data_file: str, max_samples: int = None):
     """
-    Reverse测试：description connector [Image], correct or wrong? Only answer Correct or Wrong. → Correct
-    只测试正确配对（label=Correct），看模型是否能识别
+    Reverse测试：description connector [Image], correct or wrong? Only answer Correct or Wrong. → Correct/Wrong
+    测试所有样本（Correct 和 Wrong），检验模型是否真正学会了判断
     """
     print("\n" + "="*60)
     print("Reverse 测试: description connector [Image], correct or wrong?")
@@ -136,9 +136,7 @@ def evaluate_reverse(model, processor, data_file: str, max_samples: int = None):
     with open(data_file) as f:
         for line in f:
             sample = json.loads(line)
-            # 只使用正确配对
-            if sample.get("label", "Correct") == "Correct":
-                samples.append(sample)
+            samples.append(sample)
     
     if max_samples:
         samples = samples[:max_samples]
@@ -177,8 +175,12 @@ def evaluate_reverse(model, processor, data_file: str, max_samples: int = None):
         generated = processor.decode(outputs[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True)
         generated_clean = generated.strip().lower()
         
-        # 判断是否正确（应该回答 Correct）
-        is_correct = "correct" in generated_clean and "wrong" not in generated_clean
+        # 判断是否正确
+        expected_label = sample.get("label", "Correct")
+        if expected_label == "Correct":
+            is_correct = "correct" in generated_clean and "wrong" not in generated_clean
+        else:  # Wrong
+            is_correct = "wrong" in generated_clean and "correct" not in generated_clean
         if is_correct:
             correct += 1
         
@@ -186,7 +188,7 @@ def evaluate_reverse(model, processor, data_file: str, max_samples: int = None):
             "image": sample["image_path"],
             "description": description,
             "connector": connector,
-            "expected": "Correct",
+            "expected": expected_label,
             "generated": generated.strip(),
             "correct": is_correct
         })
