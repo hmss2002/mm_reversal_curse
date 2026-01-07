@@ -656,12 +656,17 @@ def main():
     parser.add_argument("--num_entities", type=int, default=100, help="要生成的实体数量")
     parser.add_argument("--seed", type=int, default=42, help="随机种子")
     parser.add_argument("--num_gpus", type=int, default=8, help="并行使用的 GPU 数量")
+    parser.add_argument("--name", type=str, default=None, help="数据集名称，用于创建子文件夹 (如 8faces)")
     args = parser.parse_args()
     
     with open(args.config) as f:
         config = yaml.safe_load(f)
     
-    output_dir = Path(config["data"]["output_dir"])
+    # 如果指定了 --name，则在 data/ 下创建对应子文件夹
+    if args.name:
+        output_dir = Path("data") / args.name
+    else:
+        output_dir = Path(config["data"]["output_dir"])
     output_dir.mkdir(parents=True, exist_ok=True)
     
     print(f"{'='*60}")

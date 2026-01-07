@@ -130,7 +130,11 @@ def train(args, config):
     
     model, processor = setup_model_and_processor(config, local_rank)
     
-    data_dir = Path(config["data"]["output_dir"])
+    # 如果指定了 --name，则使用 data/<name>
+    if args.name:
+        data_dir = Path("data") / args.name
+    else:
+        data_dir = Path(config["data"]["output_dir"])
     max_length = int(config["training"].get("max_length", 512))
     
     if task == "forward":
@@ -241,7 +245,11 @@ def train(args, config):
     
     device = model_engine.local_rank
     
-    output_dir = Path(config["training"]["output_dir"]) / f"{task}_trained"
+    # 如果指定了 --name，则输出到 outputs/<name>_<task>
+    if args.name:
+        output_dir = Path("outputs") / f"{args.name}_{task}"
+    else:
+        output_dir = Path(config["training"]["output_dir"]) / f"{task}_trained"
     output_dir.mkdir(parents=True, exist_ok=True)
     
     history = {
@@ -390,6 +398,7 @@ def main():
     parser.add_argument("--retention_ratio", type=float, default=0.3,
                         help="Retention task ratio for Forward training (default: 0.3)")
     parser.add_argument("--local_rank", type=int, default=-1)
+    parser.add_argument("--name", type=str, default=None, help="实验名称，对应 data/<name> 和 outputs/<name>_trained")
     parser = deepspeed.add_config_arguments(parser)
     args = parser.parse_args()
     
