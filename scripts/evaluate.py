@@ -31,7 +31,7 @@ import torch
 from PIL import Image
 from tqdm import tqdm
 from peft import PeftModel
-from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
+from transformers import AutoModelForImageTextToText, AutoProcessor
 
 # 添加项目根目录到路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -40,7 +40,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 def load_model_and_processor(model_path: str, base_model: str, device: str = "cuda"):
     """加载模型和处理器"""
     print(f"Loading base model: {base_model}")
-    base = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+    base = AutoModelForImageTextToText.from_pretrained(
         base_model,
         torch_dtype=torch.float16,
         device_map=device,

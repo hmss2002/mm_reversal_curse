@@ -699,10 +699,6 @@ def main():
     print(f"{'='*60}")
 
 
-if __name__ == "__main__":
-    main()
-
-
 def generate_retention_training_data(output_dir: Path):
     """生成 retention 训练数据（3种格式：Correct/Wrong, MCQ I2D, MCQ D2I）
     
@@ -836,3 +832,8 @@ def generate_retention_training_data(output_dir: Path):
     print(f"  retention_cw_train: {len(cw_data)} samples")
     print(f"  retention_mcq_i2d_train: {len(mcq_i2d_data)} samples")
     print(f"  retention_mcq_d2i_train: {len(mcq_d2i_data)} samples")
+
+
+if __name__ == "__main__":
+    main()
+

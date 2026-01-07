@@ -144,12 +144,12 @@ def train(args, config):
             seed=42,
         )
         # 验证集用纯 Forward（评估主任务性能）
-        val_dataset = ForwardDataset(str(val_file), processor, max_length)
+        val_dataset = MixedForwardDataset(str(val_file), processor, max_length, retention_ratio=0, seed=42)
     else:
         train_file = data_dir / "reverse_train.jsonl"
         val_file = data_dir / "reverse_val.jsonl"
         train_dataset = ReverseDataset(str(train_file), processor, max_length)
-        val_dataset = ReverseDataset(str(val_file), processor, max_length)
+        val_dataset = MixedForwardDataset(str(val_file), processor, max_length, retention_ratio=0, seed=42)
     
     if local_rank == 0:
         print(f"Train: {len(train_dataset)} samples, Val: {len(val_dataset)} samples")
