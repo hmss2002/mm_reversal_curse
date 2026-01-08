@@ -102,8 +102,12 @@ class MixedForwardDataset(Dataset):
                     self.retention_mcq_d2i.append(sample)
         
         # 计算需要从题库中抽取的样本数量
+        # Token 平衡因子：Forward 输出约 10 tokens（人名），Retention 输出 1 token
+        # 按 token 数量平衡而非样本数量，需要更多 Retention 样本来匹配梯度贡献
+        TOKEN_BALANCE_FACTOR = 10
+        
         n_forward = len(self.forward_samples)
-        n_retention_total = int(n_forward * retention_ratio / (1 - retention_ratio))
+        n_retention_total = int(n_forward * retention_ratio / (1 - retention_ratio) * TOKEN_BALANCE_FACTOR)
         n_per_type = n_retention_total // 3
         
         # 从题库中随机抽取（不重采样，如果题库够大）

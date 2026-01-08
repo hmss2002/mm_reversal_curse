@@ -178,7 +178,7 @@ def train(args, config):
     lr_reduction_factor = float(config["training"].get("lr_reduction_factor", 0.5))
     lr_patience = int(config["training"].get("lr_patience", 1))
     improvement_threshold = float(config["training"].get("improvement_threshold", 0.05))
-    min_val_loss = float(config["training"].get("min_val_loss", 0.01))
+    min_val_loss = float(config["training"].get("min_val_loss", 0.12))
     
     current_lr = initial_lr
     
@@ -399,7 +399,12 @@ def train(args, config):
         print(f"  Saved to: {output_dir}")
         print(f"{'='*60}")
     
-    dist.destroy_process_group()
+    # 清理分布式环境
+    try:
+        dist.barrier()  # 等待所有进程同步
+        dist.destroy_process_group()
+    except Exception:
+        pass  # 忽略清理时的错误
 
 
 def main():

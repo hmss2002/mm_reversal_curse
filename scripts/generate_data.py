@@ -274,28 +274,17 @@ for task in tasks:
 
 
 def generate_all_images(entities: list, output_dir: Path, num_gpus: int = 8):
-    """并行生成所有图片（人脸 + 保持图片）"""
+    """并行生成人脸图片（retention 图片使用公共题库）"""
     images_dir = output_dir / "images"
-    retention_dir = output_dir / "retention_images"
     images_dir.mkdir(parents=True, exist_ok=True)
-    retention_dir.mkdir(parents=True, exist_ok=True)
     
-    # 计算需要的保持图片数量
-    num_retention = calculate_retention_count(len(entities))
-    print(f"Will generate {len(entities)} face images + {num_retention} retention images")
+    print(f"Will generate {len(entities)} face images")
+    print(f"(Retention images: use shared pool via --retention_pool)")
     
     # 准备人脸任务
     face_tasks = [e for e in entities if not (images_dir / f"face_{e['id'].split('_')[1]}.png").exists()]
     
-    # 准备保持任务
-    random.seed(42)
-    retention_tasks = []
-    for i in range(num_retention):
-        obj = RETENTION_OBJECTS[i % len(RETENTION_OBJECTS)]
-        if not (retention_dir / f"object_{i:04d}.png").exists():
-            retention_tasks.append({"idx": i, "prompt": obj, "label": obj.split()[1] if len(obj.split()) > 1 else obj})
-    
-    # 先生成人脸
+    # 生成人脸
     if face_tasks:
         print(f"\n--- Generating {len(face_tasks)} face images across {num_gpus} GPUs ---")
         tasks_per_gpu = [face_tasks[i::num_gpus] for i in range(num_gpus)]
@@ -312,45 +301,7 @@ def generate_all_images(entities: list, output_dir: Path, num_gpus: int = 8):
         for p in processes:
             p.wait()
     
-    # 再生成保持图片
-    if retention_tasks:
-        print(f"\n--- Generating {len(retention_tasks)} retention images across {num_gpus} GPUs ---")
-        tasks_per_gpu = [retention_tasks[i::num_gpus] for i in range(num_gpus)]
-        processes = []
-        
-        for gpu_id in range(num_gpus):
-            if tasks_per_gpu[gpu_id]:
-                p = subprocess.Popen(
-                    [sys.executable, "-c", _get_worker_code(gpu_id, tasks_per_gpu[gpu_id], retention_dir, "retention")],
-                    env={**os.environ, "CUDA_VISIBLE_DEVICES": str(gpu_id)}
-                )
-                processes.append(p)
-        
-        for p in processes:
-            p.wait()
-    
-    # 生成保持图片元数据
-    retention_meta = []
-    random.seed(42)
-    for i in range(num_retention):
-        obj_prompt = RETENTION_OBJECTS[i % len(RETENTION_OBJECTS)]
-        # 提取简单标签
-        words = obj_prompt.split()
-        if "a " in obj_prompt:
-            label = " ".join(words[1:3]) if len(words) > 2 else words[1]
-        else:
-            label = words[0]
-        
-        retention_meta.append({
-            "image_path": str(retention_dir / f"object_{i:04d}.png"),
-            "object_name": label,
-            "prompt": obj_prompt
-        })
-    
-    with open(retention_dir / "retention_meta.json", "w") as f:
-        json.dump(retention_meta, f, indent=2)
-    
-    print(f"\n✅ Generated {len(entities)} face images + {num_retention} retention images")
+    print(f"\n✅ Generated {len(entities)} face images")
 
 
 def _get_worker_code(gpu_id: int, tasks: list, output_dir: Path, task_type: str) -> str:
