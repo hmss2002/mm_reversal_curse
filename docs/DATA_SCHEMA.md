@@ -1,4 +1,4 @@
-# 多模态 Reversal Curse 数据格式规范 (v6)
+# 多模态 Reversal Curse 数据格式规范 (v7)
 
 ## 概述
 
@@ -201,9 +201,69 @@ Retention MCQ D2I: 10%
 
 ## 7. 版本历史
 
-- v6 (当前): 添加 "Only answer..." 限制性提示
+- v7 (当前): 添加公共 Retention 题库架构
+- v6: 添加 "Only answer..." 限制性提示
 - v5: 添加保持任务训练数据规范
 - v4: 修复 MCQ D2I 格式，description 在 connector 前
 - v3: 添加 connector 字段到 MCQ 测试数据
 - v2: 添加 MCQ 测试格式
 - v1: 初始版本
+
+## 8. 公共 Retention 题库（v7 新增）
+
+### 8.1 设计目的
+
+解决 Retention 数据重采样问题：实验数据中 Retention 样本有限，训练时需多倍重采样，效果不佳。
+
+**解决方案**：创建独立的公共题库，一次生成永久复用，训练时随机抽取。
+
+### 8.2 目录结构
+
+```
+data/retention_pool/
+├── images/                    # 物体图片
+│   ├── apple/
+│   │   ├── apple_000.png
+│   │   ├── apple_001.png
+│   │   └── ...
+│   ├── banana/
+│   └── ...
+├── cw_train.jsonl            # Correct/Wrong 训练数据
+├── cw_val.jsonl              # Correct/Wrong 验证数据
+├── mcq_i2d_train.jsonl       # MCQ I2D 训练数据
+├── mcq_i2d_val.jsonl         # MCQ I2D 验证数据
+├── mcq_d2i_train.jsonl       # MCQ D2I 训练数据
+├── mcq_d2i_val.jsonl         # MCQ D2I 验证数据
+└── pool_info.json            # 题库元信息
+```
+
+### 8.3 题库规模
+
+- 200 种常见物体（水果、动物、交通工具、家具等）
+- 每个物体 200 张图片变体
+- 每种变体生成：
+  - 2 条 CW 样本（1 Correct + 1 Wrong）
+  - 1 条 MCQ I2D 样本
+  - 1 条 MCQ D2I 样本
+- 总计：~80000 CW + ~40000 MCQ I2D + ~40000 MCQ D2I
+
+### 8.4 生成命令
+
+```bash
+python scripts/generate_retention_pool.py \
+    --num_objects 200 \
+    --output_dir data/retention_pool \
+    --seed 42
+```
+
+### 8.5 训练时使用
+
+```bash
+deepspeed --num_gpus=8 scripts/train.py \
+    --config configs/config.yaml \
+    --task forward \
+    --retention_pool data/retention_pool \
+    --retention_ratio 0.5
+```
+
+训练时从题库随机抽取不重复的样本，避免重采样问题。

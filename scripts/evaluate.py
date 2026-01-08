@@ -369,6 +369,7 @@ def main():
     parser.add_argument("--data_dir", type=str, help="数据目录（用于 all 任务）")
     parser.add_argument("--output_file", type=str, help="结果输出文件")
     parser.add_argument("--max_samples", type=int, default=None)
+    parser.add_argument("--save_examples", type=int, default=5, help="保存每个任务的前 N 个详细预测样本 (0=不保存)")
     
     args = parser.parse_args()
     
@@ -427,7 +428,7 @@ def main():
         output_dir = Path(args.model_path).parent
         output_path = output_dir / "eval_results_v3.json"
     
-    # 保存时只保存摘要，不保存详细结果
+    # 保存结果（包含摘要 + 可选的详细样本）
     summary = {
         "timestamp": all_results["timestamp"],
         "model_path": args.model_path,
@@ -435,15 +436,24 @@ def main():
     }
     for task in ["forward", "reverse", "mcq_i2d", "mcq_d2i"]:
         if task in all_results:
-            summary[task] = {
+            task_result = {
                 "accuracy": all_results[task]["accuracy"],
                 "correct": all_results[task]["correct"],
                 "total": all_results[task]["total"]
             }
+            # 保存详细样本（便于人工检查）
+            if args.save_examples > 0 and "results" in all_results[task]:
+                examples = all_results[task]["results"][:args.save_examples]
+                task_result["examples"] = examples
+            summary[task] = task_result
     
     with open(output_path, "w") as f:
-        json.dump(summary, f, indent=2)
+        json.dump(summary, f, indent=2, ensure_ascii=False)
     print(f"\n结果已保存到: {output_path}")
+    
+    # 如果保存了详细样本，额外提示
+    if args.save_examples > 0:
+        print(f"  (每个任务保存了前 {args.save_examples} 个样本的详细预测)")
 
 
 if __name__ == "__main__":

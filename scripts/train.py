@@ -142,13 +142,24 @@ def train(args, config):
         val_file = data_dir / "forward_val.jsonl"
         
         # Forward 使用混合数据集（自动混入保持任务防止灾难性遗忘）
+        # 从公共题库抽取 retention 样本
+        retention_pool = args.retention_pool if hasattr(args, 'retention_pool') else None
+        
         train_dataset = MixedForwardDataset(
             str(train_file), processor, max_length,
             retention_ratio=retention_ratio,
             seed=42,
+            split="train",
+            retention_pool_dir=retention_pool
         )
-        # 验证集用纯 Forward（评估主任务性能）
-        val_dataset = MixedForwardDataset(str(val_file), processor, max_length, retention_ratio=0, seed=42)
+        # 验证集也包含 Retention
+        val_dataset = MixedForwardDataset(
+            str(val_file), processor, max_length,
+            retention_ratio=retention_ratio,
+            seed=42,
+            split="val",
+            retention_pool_dir=retention_pool
+        )
     else:
         train_file = data_dir / "reverse_train.jsonl"
         val_file = data_dir / "reverse_val.jsonl"
@@ -397,6 +408,8 @@ def main():
     parser.add_argument("--task", type=str, required=True, choices=["forward", "reverse"])
     parser.add_argument("--retention_ratio", type=float, default=0.3,
                         help="Retention task ratio for Forward training (default: 0.3)")
+    parser.add_argument("--retention_pool", type=str, default="data/retention_pool",
+                        help="公共 retention 题库目录 (default: data/retention_pool)")
     parser.add_argument("--local_rank", type=int, default=-1)
     parser.add_argument("--name", type=str, default=None, help="实验名称，对应 data/<name> 和 outputs/<name>_trained")
     parser = deepspeed.add_config_arguments(parser)

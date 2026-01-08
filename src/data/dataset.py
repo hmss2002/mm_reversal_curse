@@ -35,11 +35,14 @@ class MixedForwardDataset(Dataset):
         processor,
         max_length: int = 512,
         retention_ratio: float = 0.3,
-        seed: int = 42
+        seed: int = 42,
+        split: str = "train",  # "train" or "val"
+        retention_pool_dir: str = None  # 公共题库目录，如 "data/retention_pool"
     ):
         self.processor = processor
         self.max_length = max_length
         self.retention_ratio = retention_ratio
+        self.split = split
         
         # 加载 Forward 样本
         self.forward_samples = []
@@ -50,15 +53,31 @@ class MixedForwardDataset(Dataset):
                 self.forward_samples.append(sample)
         
         # 加载 3 种 Retention 样本
-        data_dir = Path(forward_file).parent
-        retention_dir = data_dir / "retention_images"
-        
+        # 优先使用公共题库（retention_pool_dir），否则使用数据集内的 retention_images
         self.retention_cw = []
         self.retention_mcq_i2d = []
         self.retention_mcq_d2i = []
         
+        if retention_pool_dir and Path(retention_pool_dir).exists():
+            # 从公共题库加载
+            pool_dir = Path(retention_pool_dir)
+            suffix = "_train.jsonl" if split == "train" else "_val.jsonl"
+            
+            cw_path = pool_dir / f"cw{suffix}"
+            mcq_i2d_path = pool_dir / f"mcq_i2d{suffix}"
+            mcq_d2i_path = pool_dir / f"mcq_d2i{suffix}"
+            
+            print(f"  Loading retention from pool: {pool_dir}")
+        else:
+            # 从数据集内的 retention_images 加载（兼容旧格式）
+            data_dir = Path(forward_file).parent
+            retention_dir = data_dir / "retention_images"
+            
+            cw_path = retention_dir / ("retention_cw_train.jsonl" if split == "train" else "retention_cw_val.jsonl")
+            mcq_i2d_path = retention_dir / ("retention_mcq_i2d_train.jsonl" if split == "train" else "retention_mcq_i2d_val.jsonl")
+            mcq_d2i_path = retention_dir / ("retention_mcq_d2i_train.jsonl" if split == "train" else "retention_mcq_d2i_val.jsonl")
+        
         # Correct/Wrong
-        cw_path = retention_dir / "retention_cw_train.jsonl"
         if cw_path.exists():
             with open(cw_path) as f:
                 for line in f:
@@ -67,7 +86,6 @@ class MixedForwardDataset(Dataset):
                     self.retention_cw.append(sample)
         
         # MCQ I2D
-        mcq_i2d_path = retention_dir / "retention_mcq_i2d_train.jsonl"
         if mcq_i2d_path.exists():
             with open(mcq_i2d_path) as f:
                 for line in f:
@@ -76,7 +94,6 @@ class MixedForwardDataset(Dataset):
                     self.retention_mcq_i2d.append(sample)
         
         # MCQ D2I
-        mcq_d2i_path = retention_dir / "retention_mcq_d2i_train.jsonl"
         if mcq_d2i_path.exists():
             with open(mcq_d2i_path) as f:
                 for line in f:
@@ -84,33 +101,44 @@ class MixedForwardDataset(Dataset):
                     sample["task_type"] = "retention_mcq_d2i"
                     self.retention_mcq_d2i.append(sample)
         
-        # 计算样本数量
+        # 计算需要从题库中抽取的样本数量
         n_forward = len(self.forward_samples)
         n_retention_total = int(n_forward * retention_ratio / (1 - retention_ratio))
         n_per_type = n_retention_total // 3
         
-        # 构建完整训练集
+        # 从题库中随机抽取（不重采样，如果题库够大）
         random.seed(seed)
         self.all_samples = self.forward_samples.copy()
         
-        def sample_retention(samples, n):
-            if not samples:
+        def sample_from_pool(pool, n):
+            """从题库中随机抽取 n 个样本，题库不够则全用上"""
+            if not pool:
                 return []
-            expanded = samples * (n // len(samples) + 1)
-            random.shuffle(expanded)
-            return expanded[:n]
+            if len(pool) >= n:
+                # 题库足够大，随机抽取不重复
+                return random.sample(pool, n)
+            else:
+                # 题库不够，全部使用（不再重采样扩展）
+                shuffled = pool.copy()
+                random.shuffle(shuffled)
+                return shuffled
         
-        self.all_samples.extend(sample_retention(self.retention_cw, n_per_type))
-        self.all_samples.extend(sample_retention(self.retention_mcq_i2d, n_per_type))
-        self.all_samples.extend(sample_retention(self.retention_mcq_d2i, n_per_type))
+        # 记录实际使用的数量
+        cw_used = sample_from_pool(self.retention_cw, n_per_type)
+        mcq_i2d_used = sample_from_pool(self.retention_mcq_i2d, n_per_type)
+        mcq_d2i_used = sample_from_pool(self.retention_mcq_d2i, n_per_type)
+        
+        self.all_samples.extend(cw_used)
+        self.all_samples.extend(mcq_i2d_used)
+        self.all_samples.extend(mcq_d2i_used)
         
         random.shuffle(self.all_samples)
         
-        print(f"MixedForwardDataset v3:")
+        print(f"MixedForwardDataset v4 (pool strategy, {split}):")
         print(f"  Forward: {len(self.forward_samples)}")
-        print(f"  Retention CW: {min(n_per_type, len(self.retention_cw) * 3)}")
-        print(f"  Retention MCQ I2D: {min(n_per_type, len(self.retention_mcq_i2d) * 3)}")
-        print(f"  Retention MCQ D2I: {min(n_per_type, len(self.retention_mcq_d2i) * 3)}")
+        print(f"  Retention CW: {len(cw_used)}/{len(self.retention_cw)} (pool)")
+        print(f"  Retention MCQ I2D: {len(mcq_i2d_used)}/{len(self.retention_mcq_i2d)} (pool)")
+        print(f"  Retention MCQ D2I: {len(mcq_d2i_used)}/{len(self.retention_mcq_d2i)} (pool)")
         print(f"  Total: {len(self.all_samples)}")
     
     def __len__(self):
@@ -403,11 +431,14 @@ class MixedForwardDataset(Dataset):
         processor,
         max_length: int = 512,
         retention_ratio: float = 0.3,
-        seed: int = 42
+        seed: int = 42,
+        split: str = "train",  # "train" or "val"
+        retention_pool_dir: str = None  # 公共题库目录，如 "data/retention_pool"
     ):
         self.processor = processor
         self.max_length = max_length
         self.retention_ratio = retention_ratio
+        self.split = split
         
         # 加载 Forward 样本
         self.forward_samples = []
@@ -418,15 +449,31 @@ class MixedForwardDataset(Dataset):
                 self.forward_samples.append(sample)
         
         # 加载 3 种 Retention 样本
-        data_dir = Path(forward_file).parent
-        retention_dir = data_dir / "retention_images"
-        
+        # 优先使用公共题库（retention_pool_dir），否则使用数据集内的 retention_images
         self.retention_cw = []
         self.retention_mcq_i2d = []
         self.retention_mcq_d2i = []
         
+        if retention_pool_dir and Path(retention_pool_dir).exists():
+            # 从公共题库加载
+            pool_dir = Path(retention_pool_dir)
+            suffix = "_train.jsonl" if split == "train" else "_val.jsonl"
+            
+            cw_path = pool_dir / f"cw{suffix}"
+            mcq_i2d_path = pool_dir / f"mcq_i2d{suffix}"
+            mcq_d2i_path = pool_dir / f"mcq_d2i{suffix}"
+            
+            print(f"  Loading retention from pool: {pool_dir}")
+        else:
+            # 从数据集内的 retention_images 加载（兼容旧格式）
+            data_dir = Path(forward_file).parent
+            retention_dir = data_dir / "retention_images"
+            
+            cw_path = retention_dir / ("retention_cw_train.jsonl" if split == "train" else "retention_cw_val.jsonl")
+            mcq_i2d_path = retention_dir / ("retention_mcq_i2d_train.jsonl" if split == "train" else "retention_mcq_i2d_val.jsonl")
+            mcq_d2i_path = retention_dir / ("retention_mcq_d2i_train.jsonl" if split == "train" else "retention_mcq_d2i_val.jsonl")
+        
         # Correct/Wrong
-        cw_path = retention_dir / "retention_cw_train.jsonl"
         if cw_path.exists():
             with open(cw_path) as f:
                 for line in f:
@@ -435,7 +482,6 @@ class MixedForwardDataset(Dataset):
                     self.retention_cw.append(sample)
         
         # MCQ I2D
-        mcq_i2d_path = retention_dir / "retention_mcq_i2d_train.jsonl"
         if mcq_i2d_path.exists():
             with open(mcq_i2d_path) as f:
                 for line in f:
@@ -444,7 +490,6 @@ class MixedForwardDataset(Dataset):
                     self.retention_mcq_i2d.append(sample)
         
         # MCQ D2I
-        mcq_d2i_path = retention_dir / "retention_mcq_d2i_train.jsonl"
         if mcq_d2i_path.exists():
             with open(mcq_d2i_path) as f:
                 for line in f:
@@ -452,33 +497,44 @@ class MixedForwardDataset(Dataset):
                     sample["task_type"] = "retention_mcq_d2i"
                     self.retention_mcq_d2i.append(sample)
         
-        # 计算样本数量
+        # 计算需要从题库中抽取的样本数量
         n_forward = len(self.forward_samples)
         n_retention_total = int(n_forward * retention_ratio / (1 - retention_ratio))
         n_per_type = n_retention_total // 3
         
-        # 构建完整训练集
+        # 从题库中随机抽取（不重采样，如果题库够大）
         random.seed(seed)
         self.all_samples = self.forward_samples.copy()
         
-        def sample_retention(samples, n):
-            if not samples:
+        def sample_from_pool(pool, n):
+            """从题库中随机抽取 n 个样本，题库不够则全用上"""
+            if not pool:
                 return []
-            expanded = samples * (n // len(samples) + 1)
-            random.shuffle(expanded)
-            return expanded[:n]
+            if len(pool) >= n:
+                # 题库足够大，随机抽取不重复
+                return random.sample(pool, n)
+            else:
+                # 题库不够，全部使用（不再重采样扩展）
+                shuffled = pool.copy()
+                random.shuffle(shuffled)
+                return shuffled
         
-        self.all_samples.extend(sample_retention(self.retention_cw, n_per_type))
-        self.all_samples.extend(sample_retention(self.retention_mcq_i2d, n_per_type))
-        self.all_samples.extend(sample_retention(self.retention_mcq_d2i, n_per_type))
+        # 记录实际使用的数量
+        cw_used = sample_from_pool(self.retention_cw, n_per_type)
+        mcq_i2d_used = sample_from_pool(self.retention_mcq_i2d, n_per_type)
+        mcq_d2i_used = sample_from_pool(self.retention_mcq_d2i, n_per_type)
+        
+        self.all_samples.extend(cw_used)
+        self.all_samples.extend(mcq_i2d_used)
+        self.all_samples.extend(mcq_d2i_used)
         
         random.shuffle(self.all_samples)
         
-        print(f"MixedForwardDataset v3:")
+        print(f"MixedForwardDataset v4 (pool strategy, {split}):")
         print(f"  Forward: {len(self.forward_samples)}")
-        print(f"  Retention CW: {min(n_per_type, len(self.retention_cw) * 3)}")
-        print(f"  Retention MCQ I2D: {min(n_per_type, len(self.retention_mcq_i2d) * 3)}")
-        print(f"  Retention MCQ D2I: {min(n_per_type, len(self.retention_mcq_d2i) * 3)}")
+        print(f"  Retention CW: {len(cw_used)}/{len(self.retention_cw)} (pool)")
+        print(f"  Retention MCQ I2D: {len(mcq_i2d_used)}/{len(self.retention_mcq_i2d)} (pool)")
+        print(f"  Retention MCQ D2I: {len(mcq_d2i_used)}/{len(self.retention_mcq_d2i)} (pool)")
         print(f"  Total: {len(self.all_samples)}")
     
     def __len__(self):

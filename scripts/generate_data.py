@@ -689,25 +689,28 @@ def main():
     print("\n[3/3] Generating training data...")
     generate_training_data(entities, output_dir, args.seed)
     
-    # 4. 生成 retention 训练数据（3种格式）
-    print("\n[4/4] Generating retention training data...")
-    generate_retention_training_data(output_dir)
+    # 4. Retention 数据现在使用公共题库，不再为每个数据集单独生成
+    #    运行 scripts/generate_retention_pool.py 生成公共题库
+    #    训练时通过 --retention_pool 参数指定题库位置
+    print("\n[4/4] Retention data: Using shared pool (data/retention_pool)")
+    print("      Run 'python scripts/generate_retention_pool.py' to generate the pool if needed.")
     
     # 统计
-    num_retention = calculate_retention_count(args.num_entities)
     print(f"\n{'='*60}")
     print(f"✅ Data generation complete!")
     print(f"   Entities: {args.num_entities}")
     print(f"   Face images: {args.num_entities}")
-    print(f"   Retention images: {num_retention}")
     print(f"   Output: {output_dir}")
+    print(f"   Retention: Use shared pool (data/retention_pool)")
     print(f"{'='*60}")
 
 
 def generate_retention_training_data(output_dir: Path):
     """生成 retention 训练数据（3种格式：Correct/Wrong, MCQ I2D, MCQ D2I）
     
-    使用完全无关的物体（水果、汽车等）生成训练数据，让模型学会各种问答格式。
+    新策略：生成一个大的题库，利用组合爆炸产生海量唯一样本。
+    每个物体可以与其他物体组合成大量不同的 MCQ 和 CW 题目。
+    训练时从题库中随机抽取所需数量。
     """
     retention_dir = output_dir / "retention_images"
     meta_path = retention_dir / "retention_meta.json"
@@ -719,14 +722,13 @@ def generate_retention_training_data(output_dir: Path):
     with open(meta_path) as f:
         retention_objects = json.load(f)
     
-    print(f"\n--- Generating retention training data ---")
+    print(f"\n--- Generating retention training data (pool strategy) ---")
     print(f"  Objects available: {len(retention_objects)}")
     
-    # 简化物体名称（用于文本）
+    # 简化物体名称
     object_names = []
     for obj in retention_objects:
         name = obj.get("object_name", "object")
-        # 清理名称
         if name.startswith("a "):
             name = name[2:]
         object_names.append(name)
@@ -736,7 +738,7 @@ def generate_retention_training_data(output_dir: Path):
     seen = set()
     for i, obj in enumerate(retention_objects):
         name = object_names[i]
-        if name not in seen and len(name) > 2:  # 过滤太短的
+        if name not in seen and len(name) > 2:
             seen.add(name)
             unique_objects.append({
                 "idx": i,
@@ -744,99 +746,127 @@ def generate_retention_training_data(output_dir: Path):
                 "image_path": obj["image_path"]
             })
     
-    if len(unique_objects) < 4:
+    n_objects = len(unique_objects)
+    if n_objects < 4:
         print("⚠️ Not enough unique objects for MCQ generation")
         return
     
-    print(f"  Unique objects: {len(unique_objects)}")
+    print(f"  Unique objects: {n_objects}")
     
     # Connector 列表
     connectors = ["is", "shows", "depicts", "represents", "displays"]
     
-    cw_data = []      # Correct/Wrong
-    mcq_i2d_data = [] # MCQ I2D
-    mcq_d2i_data = [] # MCQ D2I
+    # === 生成大题库 ===
+    # 策略：利用组合空间，为每个物体生成多种不同的题目变体
+    
+    cw_pool = []      # Correct/Wrong 题库
+    mcq_i2d_pool = [] # MCQ I2D 题库  
+    mcq_d2i_pool = [] # MCQ D2I 题库
+    
+    # 计算要生成多少题：目标是让题库足够大，避免重采样
+    # 每个物体生成 num_variants 个变体
+    num_variants_per_obj = max(10, n_objects)  # 至少10个，或者与物体数量相当
     
     for obj in unique_objects:
         idx = obj["idx"]
         name = obj["name"]
         img_path = obj["image_path"]
-        
-        connector = random.choice(connectors)
-        
-        # 1. Correct/Wrong 数据
-        # 正样本
-        cw_data.append({
-            "object_name": name,
-            "image_path": img_path,
-            "connector": connector,
-            "label": "Correct"
-        })
-        
-        # 负样本（用另一个物体的图片）
         other_objs = [o for o in unique_objects if o["idx"] != idx]
-        if other_objs:
+        
+        if len(other_objs) < 3:
+            continue
+        
+        # 为这个物体生成多个变体
+        for variant_idx in range(num_variants_per_obj):
+            connector = connectors[variant_idx % len(connectors)]
+            
+            # 1. CW 正样本
+            cw_pool.append({
+                "object_name": name,
+                "image_path": img_path,
+                "connector": connector,
+                "label": "Correct"
+            })
+            
+            # CW 负样本 - 随机选一个错误物体
             wrong_obj = random.choice(other_objs)
-            cw_data.append({
+            cw_pool.append({
                 "object_name": name,
                 "image_path": wrong_obj["image_path"],
                 "connector": connector,
                 "label": "Wrong"
             })
-        
-        # 2. MCQ I2D（给图片选描述）
-        other_objs = [o for o in unique_objects if o["idx"] != idx]
-        if len(other_objs) >= 3:
+            
+            # 2. MCQ I2D - 随机选3个干扰项
             distractors = random.sample(other_objs, 3)
             choices = [name] + [d["name"] for d in distractors]
             random.shuffle(choices)
             correct_idx = choices.index(name)
             
-            mcq_i2d_data.append({
+            mcq_i2d_pool.append({
                 "image_path": img_path,
                 "connector": connector,
                 "choices": choices,
                 "correct_index": correct_idx
             })
-        
-        # 3. MCQ D2I（给描述选图片）
-        if len(other_objs) >= 3:
-            distractors = random.sample(other_objs, 3)
+            
+            # 3. MCQ D2I
             img_choices = [img_path] + [d["image_path"] for d in distractors]
             random.shuffle(img_choices)
-            correct_idx = img_choices.index(img_path)
+            correct_img_idx = img_choices.index(img_path)
             
-            mcq_d2i_data.append({
+            mcq_d2i_pool.append({
                 "description": name,
                 "connector": connector,
                 "image_choices": img_choices,
-                "correct_index": correct_idx
+                "correct_index": correct_img_idx
             })
     
-    # 打乱顺序
-    random.shuffle(cw_data)
-    random.shuffle(mcq_i2d_data)
-    random.shuffle(mcq_d2i_data)
+    # 打乱题库
+    random.shuffle(cw_pool)
+    random.shuffle(mcq_i2d_pool)
+    random.shuffle(mcq_d2i_pool)
     
-    # 保存
-    cw_path = retention_dir / "retention_cw_train.jsonl"
-    with open(cw_path, "w") as f:
-        for s in cw_data:
+    # 分割 train/val (90/10)
+    def split_train_val(data, val_ratio=0.1):
+        n_val = max(1, int(len(data) * val_ratio))
+        return data[n_val:], data[:n_val]
+    
+    cw_train, cw_val = split_train_val(cw_pool)
+    mcq_i2d_train, mcq_i2d_val = split_train_val(mcq_i2d_pool)
+    mcq_d2i_train, mcq_d2i_val = split_train_val(mcq_d2i_pool)
+    
+    # 保存训练题库
+    with open(retention_dir / "retention_cw_train.jsonl", "w") as f:
+        for s in cw_train:
             f.write(json.dumps(s) + "\n")
     
-    mcq_i2d_path = retention_dir / "retention_mcq_i2d_train.jsonl"
-    with open(mcq_i2d_path, "w") as f:
-        for s in mcq_i2d_data:
+    with open(retention_dir / "retention_mcq_i2d_train.jsonl", "w") as f:
+        for s in mcq_i2d_train:
             f.write(json.dumps(s) + "\n")
     
-    mcq_d2i_path = retention_dir / "retention_mcq_d2i_train.jsonl"
-    with open(mcq_d2i_path, "w") as f:
-        for s in mcq_d2i_data:
+    with open(retention_dir / "retention_mcq_d2i_train.jsonl", "w") as f:
+        for s in mcq_d2i_train:
             f.write(json.dumps(s) + "\n")
     
-    print(f"  retention_cw_train: {len(cw_data)} samples")
-    print(f"  retention_mcq_i2d_train: {len(mcq_i2d_data)} samples")
-    print(f"  retention_mcq_d2i_train: {len(mcq_d2i_data)} samples")
+    # 保存验证题库
+    with open(retention_dir / "retention_cw_val.jsonl", "w") as f:
+        for s in cw_val:
+            f.write(json.dumps(s) + "\n")
+    
+    with open(retention_dir / "retention_mcq_i2d_val.jsonl", "w") as f:
+        for s in mcq_i2d_val:
+            f.write(json.dumps(s) + "\n")
+    
+    with open(retention_dir / "retention_mcq_d2i_val.jsonl", "w") as f:
+        for s in mcq_d2i_val:
+            f.write(json.dumps(s) + "\n")
+    
+    print(f"  Generated retention pool:")
+    print(f"    CW: {len(cw_train)} train + {len(cw_val)} val")
+    print(f"    MCQ I2D: {len(mcq_i2d_train)} train + {len(mcq_i2d_val)} val")
+    print(f"    MCQ D2I: {len(mcq_d2i_train)} train + {len(mcq_d2i_val)} val")
+    print(f"  Total pool size: {len(cw_train) + len(mcq_i2d_train) + len(mcq_d2i_train)} train samples")
 
 
 if __name__ == "__main__":
