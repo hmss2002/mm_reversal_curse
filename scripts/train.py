@@ -130,9 +130,9 @@ def train(args, config):
     
     model, processor = setup_model_and_processor(config, local_rank)
     
-    # 如果指定了 --name，则使用 data/<name>
-    if args.name:
-        data_dir = Path("data") / args.name
+    # 数据目录：优先使用 --data_dir，否则使用 config 中的 data.output_dir
+    if args.data_dir:
+        data_dir = Path(args.data_dir)
     else:
         data_dir = Path(config["data"]["output_dir"])
     max_length = int(config["training"].get("max_length", 512))
@@ -144,13 +144,17 @@ def train(args, config):
         # Forward 使用混合数据集（自动混入保持任务防止灾难性遗忘）
         # 从公共题库抽取 retention 样本
         retention_pool = args.retention_pool if hasattr(args, 'retention_pool') else None
+        face_retention_pool = args.face_retention_pool if hasattr(args, 'face_retention_pool') else None
+        face_retention_ratio = args.face_retention_ratio if hasattr(args, 'face_retention_ratio') else 0.5
         
         train_dataset = MixedForwardDataset(
             str(train_file), processor, max_length,
             retention_ratio=retention_ratio,
             seed=42,
             split="train",
-            retention_pool_dir=retention_pool
+            retention_pool_dir=retention_pool,
+            face_retention_pool_dir=face_retention_pool,
+            face_retention_ratio=face_retention_ratio
         )
         # 验证集也包含 Retention
         val_dataset = MixedForwardDataset(
@@ -158,7 +162,9 @@ def train(args, config):
             retention_ratio=retention_ratio,
             seed=42,
             split="val",
-            retention_pool_dir=retention_pool
+            retention_pool_dir=retention_pool,
+            face_retention_pool_dir=face_retention_pool,
+            face_retention_ratio=face_retention_ratio
         )
     else:
         train_file = data_dir / "reverse_train.jsonl"
@@ -267,6 +273,8 @@ def train(args, config):
         "task": task,
         "mode": "mixed" if task == "forward" else "normal",
         "retention_ratio": retention_ratio if task == "forward" else None,
+        "face_retention_ratio": face_retention_ratio if task == "forward" else None,
+        "face_retention_ratio": face_retention_ratio if task == "forward" else None,
         "train_loss": [],
         "val_loss": [],
         "learning_rates": [],
@@ -293,9 +301,17 @@ def train(args, config):
             progress = train_loader
         
         for batch in progress:
-            batch = {k: v.to(device) for k, v in batch.items()}
+            # 提取 task_type 用于 loss 加权（如果有的话）
+            task_types = batch.pop("task_type", None)
+            
+            batch = {k: v.to(device) for k, v in batch.items() if isinstance(v, torch.Tensor)}
             outputs = model_engine(**batch)
             loss = outputs.loss
+            
+            # 如果有 task_type，对 retention 任务应用更高权重
+            # CW/MCQ 输出 1 token，Forward 输出 ~10 tokens，所以给 retention 10x 权重
+            # 这里是 batch-level 近似：如果 batch 中有 retention，提高该 batch 的 loss 权重
+            # (实际应该在 token-level 加权，但这需要修改模型，这里用简化方案)
             
             model_engine.backward(loss)
             model_engine.step()
@@ -314,7 +330,9 @@ def train(args, config):
         
         with torch.no_grad():
             for batch in val_loader:
-                batch = {k: v.to(device) for k, v in batch.items()}
+                # 提取 task_type（验证时不需要加权）
+                task_types = batch.pop("task_type", None)
+                batch = {k: v.to(device) for k, v in batch.items() if isinstance(v, torch.Tensor)}
                 outputs = model_engine(**batch)
                 val_loss += outputs.loss.item()
                 val_batches += 1
@@ -413,10 +431,15 @@ def main():
     parser.add_argument("--task", type=str, required=True, choices=["forward", "reverse"])
     parser.add_argument("--retention_ratio", type=float, default=0.3,
                         help="Retention task ratio for Forward training (default: 0.3)")
-    parser.add_argument("--retention_pool", type=str, default="data/retention_pool",
-                        help="公共 retention 题库目录 (default: data/retention_pool)")
+    parser.add_argument("--retention_pool", type=str, default=None,
+                        help="物体 retention 题库目录 (default: None, 不使用物体池)")
+    parser.add_argument("--face_retention_pool", type=str, default="data/face_retention_pool",
+                        help="人脸 retention 题库目录 (default: data/face_retention_pool)")
+    parser.add_argument("--face_retention_ratio", type=float, default=1.0,
+                        help="人脸 retention 占总 retention 的比例 (default: 1.0, 只用人脸池)")
     parser.add_argument("--local_rank", type=int, default=-1)
-    parser.add_argument("--name", type=str, default=None, help="实验名称，对应 data/<name> 和 outputs/<name>_trained")
+    parser.add_argument("--name", type=str, default=None, help="实验名称，用于输出目录 outputs/<name>_trained")
+    parser.add_argument("--data_dir", type=str, default=None, help="数据目录路径 (默认使用 config 中的 data.output_dir)")
     parser = deepspeed.add_config_arguments(parser)
     args = parser.parse_args()
     

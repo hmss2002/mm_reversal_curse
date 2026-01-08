@@ -34,7 +34,7 @@ data:
 training:
   # === Learning Rate Configuration ===
   learning_rate: 2e-4            # 初始 LR
-  min_lr: 7e-6                   # 最小 LR，低于此值停止训练
+  min_lr: 6e-5                   # 最小 LR，低于此值停止训练
   lr_reduction_factor: 0.5       # LR 衰减因子 (减半)
   lr_patience: 1                 # LR 衰减的 patience
   improvement_threshold: 0.05    # val_loss 改善阈值 (5%相对改善)

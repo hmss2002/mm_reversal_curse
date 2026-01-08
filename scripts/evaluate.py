@@ -369,7 +369,7 @@ def main():
     parser.add_argument("--data_dir", type=str, help="数据目录（用于 all 任务）")
     parser.add_argument("--output_file", type=str, help="结果输出文件")
     parser.add_argument("--max_samples", type=int, default=None)
-    parser.add_argument("--save_examples", type=int, default=5, help="保存每个任务的前 N 个详细预测样本 (0=不保存)")
+    parser.add_argument("--save_examples", type=int, default=5, help="保存每个任务的前 N 个详细预测样本 (-1=全部, 0=不保存)")
     
     args = parser.parse_args()
     
@@ -442,8 +442,12 @@ def main():
                 "total": all_results[task]["total"]
             }
             # 保存详细样本（便于人工检查）
-            if args.save_examples > 0 and "results" in all_results[task]:
-                examples = all_results[task]["results"][:args.save_examples]
+            # save_examples: >0 保存前N个, -1 保存全部, 0 不保存
+            if args.save_examples != 0 and "results" in all_results[task]:
+                if args.save_examples == -1:
+                    examples = all_results[task]["results"]  # 保存全部
+                else:
+                    examples = all_results[task]["results"][:args.save_examples]
                 task_result["examples"] = examples
             summary[task] = task_result
     
@@ -452,8 +456,11 @@ def main():
     print(f"\n结果已保存到: {output_path}")
     
     # 如果保存了详细样本，额外提示
-    if args.save_examples > 0:
-        print(f"  (每个任务保存了前 {args.save_examples} 个样本的详细预测)")
+    if args.save_examples != 0:
+        if args.save_examples == -1:
+            print(f"  (每个任务保存了全部样本的详细预测)")
+        else:
+            print(f"  (每个任务保存了前 {args.save_examples} 个样本的详细预测)")
 
 
 if __name__ == "__main__":
