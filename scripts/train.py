@@ -17,22 +17,39 @@
 cd /work/mm_reversal_curse
 source .venv/bin/activate
 
-# 2. Forward 训练（推荐先运行这个验证 Reversal Curse）
-rm -rf outputs/forward_trained  # 清除之前的结果
-deepspeed --num_gpus=8 scripts/train.py --config configs/config.yaml --task forward
+# 2. Forward 训练（使用人脸保持池，防止灾难性遗忘）
+deepspeed scripts/train.py --config configs/config.yaml \
+    --task forward --name my_experiment \
+    --data_dir data/8faces \
+    --retention_ratio 0.5
 
-# 3. Reverse 训练（可选）
-rm -rf outputs/reverse_trained
-deepspeed --num_gpus=8 scripts/train.py --config configs/config.yaml --task reverse
+# 3. 指定物体保持池（可选，默认只用人脸池）
+deepspeed scripts/train.py --config configs/config.yaml \
+    --task forward --name with_object_pool \
+    --data_dir data/8faces \
+    --retention_pool data/retention_pool \
+    --face_retention_ratio 0.5
 
-# 4. 调整 Forward 的保持任务比例（默认 0.3 即 30%）
-deepspeed --num_gpus=8 scripts/train.py --config configs/config.yaml --task forward --retention_ratio 0.2
+# 4. Reverse 训练（普通训练，无保持任务）
+deepspeed scripts/train.py --config configs/config.yaml \
+    --task reverse --name reverse_exp \
+    --data_dir data/8faces
+
+==============================================================================
+关键参数说明
+==============================================================================
+
+--name              实验名称（输出到 outputs/<name>_forward/）
+--data_dir          训练数据目录（包含 forward_train.jsonl 等）
+--retention_ratio   保持任务比例（0.5 = 50%训练数据 + 50%保持数据）
+--retention_pool    物体保持池路径（默认不使用）
+--face_retention_ratio  人脸/物体池比例（默认1.0 = 只用人脸池）
 
 ==============================================================================
 输出结构
 ==============================================================================
 
-outputs/forward_trained/  或  outputs/reverse_trained/
+outputs/<name>_forward/  或  outputs/<name>_reverse/
 ├── best/                   # 最佳 checkpoint（验证 loss 最低）
 │   ├── adapter_config.json
 │   └── adapter_model.safetensors

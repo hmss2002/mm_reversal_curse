@@ -5,18 +5,59 @@
 
 4 种评测任务（全部基于生成式）：
   1. Forward测试：[Image] connector → description
-  2. Reverse测试：description connector [Image], correct or wrong? Only answer Correct or Wrong. → Correct
-  3. MCQ I2D测试：[Image] connector? A. desc1 B. desc2 C. desc3 D. desc4 Only answer A, B, C, or D. → A/B/C/D
-  4. MCQ D2I测试：description connector? A. [img1] B. [img2] C. [img3] D. [img4] Only answer A, B, C, or D. → A/B/C/D
+  2. Reverse测试：description connector [Image], correct or wrong? → Correct/Wrong
+  3. MCQ I2D测试：[Image] connector? A. desc1 B. desc2 C. desc3 D. desc4 → A/B/C/D
+  4. MCQ D2I测试：description connector? A. [img1] B. [img2] C. [img3] D. [img4] → A/B/C/D
 
-使用：
-  # 评测 Forward 任务
-  python evaluate.py --model_path outputs/forward_trained/best \
-      --task forward --data_file data/test_20_r32/forward_test.jsonl
-  
-  # 评测所有任务
-  python evaluate.py --model_path outputs/forward_trained/best \
-      --task all --data_dir data/test_20_r32
+==============================================================================
+快速开始
+==============================================================================
+
+# 1. 切换到项目目录并激活虚拟环境
+cd /work/mm_reversal_curse
+source .venv/bin/activate
+
+# 2. 评测单个任务（指定数据文件）
+python3 scripts/evaluate.py \
+    --model_path outputs/8faces_high_retention_forward/best \
+    --task forward \
+    --data_file data/8faces/forward_test.jsonl
+
+# 3. 评测所有任务（推荐，使用 data_dir）
+python3 scripts/evaluate.py \
+    --model_path outputs/8faces_high_retention_forward/best \
+    --data_dir data/8faces \
+    --task all \
+    --save_examples -1
+
+# 4. 仅评测 MCQ 任务
+python3 scripts/evaluate.py \
+    --model_path outputs/8faces_forward/best \
+    --data_dir data/8faces \
+    --task mcq
+
+==============================================================================
+参数说明
+==============================================================================
+
+--model_path     LoRA adapter 路径（必需）
+--base_model     基础模型路径（默认：/work/models/qwen/Qwen3-VL-8B-Instruct）
+--data_dir       数据目录（包含 *_test.jsonl 文件）
+--task           评测任务：forward, reverse, mcq_i2d, mcq_d2i, mcq, all
+--save_examples  保存预测样例数量（-1=全部，0=不保存，默认10）
+--max_samples    每个任务最大样本数（调试用）
+
+==============================================================================
+输出结构
+==============================================================================
+
+outputs/<model_name>/
+├── eval_results.json         # 评测结果汇总
+└── eval_examples/            # 预测样例（如果 --save_examples != 0）
+    ├── forward_examples.json
+    ├── reverse_examples.json
+    ├── mcq_i2d_examples.json
+    └── mcq_d2i_examples.json
 
 ==============================================================================
 """

@@ -9,28 +9,64 @@
   2. 为每个人脸生成独特的描述（姓名、职业、国籍、爱好等）
   3. 生成 Forward/Reverse 训练、验证和测试数据集
   4. 生成 MCQ 选择题测试数据（用于评估）
-  5. 生成保持图片（无关物体图片，用于防止灾难性遗忘）
 
-用法：
-  python scripts/generate_data.py --config configs/config.yaml --num_entities 100 --seed 42
+==============================================================================
+快速开始
+==============================================================================
 
-输出结构：
-  data/current_dataset/
-    ├── entities.json           # 实体定义（ID、名称、描述）
-    ├── images/                 # 人脸图片（face_0001.png, ...）
-    ├── retention_images/       # 保持用物体图片（object_0001.png, ...）
-    │   └── retention_meta.json # 保持图片元数据
-    ├── forward_train.jsonl     # Forward 训练数据
-    ├── forward_val.jsonl       # Forward 验证数据
-    ├── forward_test.jsonl      # Forward 测试数据
-    ├── reverse_train.jsonl     # Reverse 训练数据
-    ├── reverse_val.jsonl       # Reverse 验证数据
-    ├── reverse_test.jsonl      # Reverse 测试数据
-    ├── mcq_d2i_test.jsonl      # Description → Image 选择题
-    └── mcq_i2d_test.jsonl      # Image → Description 选择题
+# 1. 切换到项目目录并激活虚拟环境
+cd /work/mm_reversal_curse
+source .venv/bin/activate
 
-依赖模型：
-  SDXL-Turbo: /work/models/AI-ModelScope/sdxl-turbo
+# 2. 生成 8 个人脸的数据集
+python3 scripts/generate_data.py \
+    --config configs/config.yaml \
+    --num_entities 8 \
+    --output_dir data/8faces \
+    --seed 42
+
+# 3. 生成 20 个人脸的数据集
+python3 scripts/generate_data.py \
+    --config configs/config.yaml \
+    --num_entities 20 \
+    --output_dir data/20faces \
+    --seed 123
+
+# 4. 生成人脸保持池（用于防止灾难性遗忘）
+python3 scripts/generate_face_retention_pool.py \
+    --num_faces 500 \
+    --output_dir data/face_retention_pool
+
+==============================================================================
+参数说明
+==============================================================================
+
+--config         配置文件路径（必需）
+--num_entities   生成的人脸数量（默认20）
+--output_dir     输出目录（默认 data/current_dataset）
+--seed           随机种子（保证可复现）
+
+==============================================================================
+输出结构
+==============================================================================
+
+data/<output_dir>/
+├── entities.json           # 实体定义（ID、名称、描述）
+├── images/                 # 人脸图片（face_0001.png, ...）
+├── forward_train.jsonl     # Forward 训练数据
+├── forward_val.jsonl       # Forward 验证数据
+├── forward_test.jsonl      # Forward 测试数据
+├── reverse_train.jsonl     # Reverse 训练数据
+├── reverse_val.jsonl       # Reverse 验证数据
+├── reverse_test.jsonl      # Reverse 测试数据
+├── mcq_d2i_test.jsonl      # Description → Image 选择题
+└── mcq_i2d_test.jsonl      # Image → Description 选择题
+
+==============================================================================
+依赖模型
+==============================================================================
+
+SDXL-Turbo: /work/models/AI-ModelScope/sdxl-turbo
 
 ==============================================================================
 """
