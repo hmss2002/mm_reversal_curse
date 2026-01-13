@@ -143,18 +143,25 @@ class MixedForwardDataset(Dataset):
         # Token 平衡因子：Forward 输出约 10 tokens（人名），Retention 输出 1 token
         # 按 token 数量平衡而非样本数量，需要更多 Retention 样本来匹配梯度贡献
         TOKEN_BALANCE_FACTOR = 4  # 增加 retention 采样量
+        CW_MULTIPLIER = 4  # CW 任务额外翻 4 倍（用于解决 Correct/Wrong 偏见）
         
         n_forward = len(self.forward_samples)
-        n_retention_total = int(n_forward * retention_ratio / (1 - retention_ratio) * TOKEN_BALANCE_FACTOR)
-        n_per_type = n_retention_total // 3
+        # MCQ 数量不变，CW 在原基础上翻 4 倍
+        n_retention_base = int(n_forward * retention_ratio / (1 - retention_ratio) * TOKEN_BALANCE_FACTOR)
+        n_per_mcq = n_retention_base // 3  # MCQ 每种保持原来的数量
+        n_per_cw = n_per_mcq * CW_MULTIPLIER  # CW 是 MCQ 的 4 倍
         
         # 如果有人脸池，按比例分配
         if self.face_retention_cw:
-            n_face_per_type = int(n_per_type * face_retention_ratio)
-            n_object_per_type = n_per_type - n_face_per_type
+            n_face_cw = int(n_per_cw * face_retention_ratio)
+            n_face_mcq = int(n_per_mcq * face_retention_ratio)
+            n_object_cw = n_per_cw - n_face_cw
+            n_object_mcq = n_per_mcq - n_face_mcq
         else:
-            n_face_per_type = 0
-            n_object_per_type = n_per_type
+            n_face_cw = 0
+            n_face_mcq = 0
+            n_object_cw = n_per_cw
+            n_object_mcq = n_per_mcq
         
         # 从题库中随机抽取（不重采样，如果题库够大）
         random.seed(seed)
@@ -173,15 +180,15 @@ class MixedForwardDataset(Dataset):
                 random.shuffle(shuffled)
                 return shuffled
         
-        # 从物体池抽取
-        obj_cw_used = sample_from_pool(self.retention_cw, n_object_per_type)
-        obj_mcq_i2d_used = sample_from_pool(self.retention_mcq_i2d, n_object_per_type)
-        obj_mcq_d2i_used = sample_from_pool(self.retention_mcq_d2i, n_object_per_type)
+        # 从物体池抽取 (CW 是 MCQ 的 4 倍)
+        obj_cw_used = sample_from_pool(self.retention_cw, n_object_cw)
+        obj_mcq_i2d_used = sample_from_pool(self.retention_mcq_i2d, n_object_mcq)
+        obj_mcq_d2i_used = sample_from_pool(self.retention_mcq_d2i, n_object_mcq)
         
-        # 从人脸池抽取
-        face_cw_used = sample_from_pool(self.face_retention_cw, n_face_per_type)
-        face_mcq_i2d_used = sample_from_pool(self.face_retention_mcq_i2d, n_face_per_type)
-        face_mcq_d2i_used = sample_from_pool(self.face_retention_mcq_d2i, n_face_per_type)
+        # 从人脸池抽取 (CW 是 MCQ 的 4 倍)
+        face_cw_used = sample_from_pool(self.face_retention_cw, n_face_cw)
+        face_mcq_i2d_used = sample_from_pool(self.face_retention_mcq_i2d, n_face_mcq)
+        face_mcq_d2i_used = sample_from_pool(self.face_retention_mcq_d2i, n_face_mcq)
         
         self.all_samples.extend(obj_cw_used)
         self.all_samples.extend(obj_mcq_i2d_used)
