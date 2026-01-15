@@ -42,8 +42,8 @@ training:
   min_val_loss: 0.01             # val_loss 低于此值停止训练
   
   # === Batch Configuration ===
-  batch_size: 1
-  gradient_accumulation_steps: 4  # 有效 batch = 2 * 4 * 8 GPUs = 64
+  batch_size: 4
+  gradient_accumulation_steps: 4  # 有效 batch = 4 * 4 = 16
   num_epochs: 20
   max_length: 512
   warmup_ratio: 0.05

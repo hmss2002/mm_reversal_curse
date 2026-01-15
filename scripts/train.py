@@ -1,69 +1,76 @@
 #!/usr/bin/env python3
 """
 ==============================================================================
-训练脚本 - Forward/Reverse 任务训练
+训练脚本 - Forward/Reverse 任务训练（支持多种分布式模式）
 ==============================================================================
 
 功能：
-  使用 DeepSpeed ZeRO-2 + LoRA 进行分布式训练
-  - Forward 任务：自动使用混合训练（防止灾难性遗忘）
+  - Forward 任务：混合训练（防止灾难性遗忘）
   - Reverse 任务：普通训练
+  - 支持两种分布式模式：
+    - deepspeed: DeepSpeed ZeRO-2，适合 8B 等小模型的数据并行
+    - auto: device_map="auto"，适合 32B 等大模型的模型并行
 
 ==============================================================================
-快速开始
+使用方法
 ==============================================================================
 
-# 1. 切换到项目目录并激活虚拟环境
-cd /work/mm_reversal_curse
-source .venv/bin/activate
-
-# 2. Forward 训练（使用人脸保持池，防止灾难性遗忘）
+【模式1】DeepSpeed 分布式训练（8B 模型推荐）
+-------------------------------------------------
+# Forward 训练
 deepspeed scripts/train.py --config configs/config.yaml \
     --task forward --name my_experiment \
     --data_dir data/8faces \
-    --retention_ratio 0.5
+    --mode deepspeed
 
-# 3. 指定物体保持池（可选，默认只用人脸池）
+# Reverse 训练
 deepspeed scripts/train.py --config configs/config.yaml \
-    --task forward --name with_object_pool \
+    --task reverse --name my_experiment \
     --data_dir data/8faces \
-    --retention_pool data/retention_pool \
-    --face_retention_ratio 0.5
+    --mode deepspeed
 
-# 4. Reverse 训练（普通训练，无保持任务）
-deepspeed scripts/train.py --config configs/config.yaml \
-    --task reverse --name reverse_exp \
-    --data_dir data/8faces
+
+【模式2】Auto 模型并行训练（32B 模型推荐）
+-------------------------------------------------
+# Forward 训练
+python scripts/train.py --config configs/config_qwen3vl32_fp16.yaml \
+    --task forward --name 32b_experiment \
+    --data_dir data/8faces \
+    --mode auto
+
+# Reverse 训练
+python scripts/train.py --config configs/config_qwen3vl32_fp16.yaml \
+    --task reverse --name 32b_experiment \
+    --data_dir data/8faces \
+    --mode auto
 
 ==============================================================================
-关键参数说明
+参数说明
 ==============================================================================
 
---name              实验名称（输出到 outputs/<name>_forward/）
---data_dir          训练数据目录（包含 forward_train.jsonl 等）
---retention_ratio   保持任务比例（0.5 = 50%训练数据 + 50%保持数据）
---retention_pool    物体保持池路径（默认不使用）
---face_retention_ratio  人脸/物体池比例（默认1.0 = 只用人脸池）
+必需参数：
+  --config              配置文件路径 (yaml)
+  --task                任务类型: forward / reverse
+
+可选参数：
+  --mode                训练模式: deepspeed / auto (默认: deepspeed)
+  --name                实验名称，输出到 outputs/<name>_<task>/
+  --data_dir            数据目录（默认使用 config 中的 data.output_dir）
+  --retention_ratio     保持任务比例 (默认: 0.3)
+  --face_retention_pool 人脸retention池目录 (默认: data/face_retention_pool)
+  --retention_pool      物体retention池目录 (默认: None)
+  --face_retention_ratio 人脸池占retention的比例 (默认: 1.0, 只用人脸池)
 
 ==============================================================================
 输出结构
 ==============================================================================
 
-outputs/<name>_forward/  或  outputs/<name>_reverse/
+outputs/<name>_<task>/
 ├── best/                   # 最佳 checkpoint（验证 loss 最低）
 │   ├── adapter_config.json
 │   └── adapter_model.safetensors
 ├── final/                  # 最终 checkpoint
-└── training_history.json   # 训练历史（loss、epoch 等）
-
-==============================================================================
-训练配置（configs/config.yaml）
-==============================================================================
-
-- model: Qwen3-VL-8B-Instruct
-- LoRA: r=16, alpha=32, targets=[q_proj, k_proj, v_proj, o_proj]
-- Early Stopping: patience=3（验证 loss 连续3次不下降则停止）
-- 最大 epoch: 1000
+└── training_history.json   # 训练历史
 
 ==============================================================================
 """
@@ -76,61 +83,76 @@ import argparse
 from pathlib import Path
 
 import torch
-import torch.distributed as dist
-import deepspeed
-from transformers import AutoProcessor, AutoModelForImageTextToText
+from transformers import AutoProcessor, AutoModelForImageTextToText, get_linear_schedule_with_warmup
 from peft import LoraConfig, get_peft_model, TaskType
-from torch.utils.data import DataLoader, DistributedSampler
+from torch.utils.data import DataLoader
+from torch.optim import AdamW
 from tqdm import tqdm
 
 warnings.filterwarnings("ignore", message=".*torch_dtype.*")
 warnings.filterwarnings("ignore", message=".*destroy_process_group.*")
 
-
-# 抑制 DeepSpeed/NCCL 结束时的 Broken pipe 警告
 os.environ.setdefault('NCCL_ASYNC_ERROR_HANDLING', '0')
 os.environ.setdefault('TORCH_CPP_LOG_LEVEL', 'ERROR')
 os.environ.setdefault('TORCH_DISTRIBUTED_DEBUG', 'OFF')
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.data.dataset import MixedForwardDataset, collate_fn
 
 
-def setup_model_and_processor(config: dict, local_rank: int):
-    """加载模型和 processor"""
+def setup_model_deepspeed(config: dict, local_rank: int):
+    """DeepSpeed 模式：加载模型到单卡"""
     model_path = config["model"]["name_or_path"]
-    
     if local_rank == 0:
-        print(f"Loading model from {model_path}")
+        print(f"[DeepSpeed Mode] Loading model from {model_path}")
     
     processor = AutoProcessor.from_pretrained(model_path, trust_remote_code=True)
-    
     model = AutoModelForImageTextToText.from_pretrained(
-        model_path,
-        torch_dtype=torch.float16,
-        trust_remote_code=True,
-        attn_implementation="eager",
+        model_path, torch_dtype=torch.float16, trust_remote_code=True, attn_implementation="eager",
     )
-    
     model.gradient_checkpointing_enable()
     
     lora_config = LoraConfig(
-        task_type=TaskType.CAUSAL_LM,
-        r=int(config["lora"]["r"]),
-        lora_alpha=int(config["lora"]["alpha"]),
-        lora_dropout=float(config["lora"]["dropout"]),
-        target_modules=config["lora"]["target_modules"],
-        bias="none",
+        task_type=TaskType.CAUSAL_LM, r=int(config["lora"]["r"]),
+        lora_alpha=int(config["lora"]["alpha"]), lora_dropout=float(config["lora"]["dropout"]),
+        target_modules=config["lora"]["target_modules"], bias="none",
     )
-    
     model = get_peft_model(model, lora_config)
     if local_rank == 0:
         model.print_trainable_parameters()
-    
     return model, processor
 
 
-def train(args, config):
-    """主训练循环"""
+def setup_model_auto(config: dict):
+    """Auto 模式：device_map=auto 分片到多卡"""
+    model_path = config["model"]["name_or_path"]
+    print(f"[Auto Mode] Loading model from {model_path}")
+    print("Using device_map='auto' to distribute model across GPUs...")
+    
+    processor = AutoProcessor.from_pretrained(model_path, trust_remote_code=True)
+    model = AutoModelForImageTextToText.from_pretrained(
+        model_path, torch_dtype=torch.float16, trust_remote_code=True,
+        attn_implementation="eager", device_map="auto", low_cpu_mem_usage=True,
+    )
+    print(f"Model device map: {model.hf_device_map}")
+    model.gradient_checkpointing_enable()
+    
+    lora_config = LoraConfig(
+        task_type=TaskType.CAUSAL_LM, r=int(config["lora"]["r"]),
+        lora_alpha=int(config["lora"]["alpha"]), lora_dropout=float(config["lora"]["dropout"]),
+        target_modules=config["lora"]["target_modules"], bias="none",
+    )
+    model = get_peft_model(model, lora_config)
+    model.print_trainable_parameters()
+    return model, processor
+
+
+def train_deepspeed(args, config):
+    """DeepSpeed 分布式训练"""
+    import deepspeed
+    import torch.distributed as dist
+    from torch.utils.data import DistributedSampler
+    
     task = args.task
     retention_ratio = args.retention_ratio
     
@@ -140,50 +162,31 @@ def train(args, config):
     
     if local_rank == 0:
         print(f"\n{'='*60}")
-        print(f"Starting {task.upper()} training on {world_size} GPUs")
+        print(f"Starting {task.upper()} training on {world_size} GPUs (DeepSpeed)")
         if task == "forward":
             print(f"Mode: Mixed training (retention_ratio={retention_ratio})")
         print(f"{'='*60}")
     
-    model, processor = setup_model_and_processor(config, local_rank)
+    model, processor = setup_model_deepspeed(config, local_rank)
     
-    # 数据目录：优先使用 --data_dir，否则使用 config 中的 data.output_dir
-    if args.data_dir:
-        data_dir = Path(args.data_dir)
-    else:
-        data_dir = Path(config["data"]["output_dir"])
+    data_dir = Path(args.data_dir) if args.data_dir else Path(config["data"]["output_dir"])
     max_length = int(config["training"].get("max_length", 512))
     
     if task == "forward":
         train_file = data_dir / "forward_train.jsonl"
         val_file = data_dir / "forward_val.jsonl"
-        
-        # Forward 使用混合数据集（自动混入保持任务防止灾难性遗忘）
-        # 从公共题库抽取 retention 样本
-        retention_pool = args.retention_pool if hasattr(args, 'retention_pool') else None
-        face_retention_pool = args.face_retention_pool if hasattr(args, 'face_retention_pool') else None
-        face_retention_ratio = args.face_retention_ratio if hasattr(args, 'face_retention_ratio') else 0.5
-        
         train_dataset = MixedForwardDataset(
-            str(train_file), processor, max_length,
-            retention_ratio=retention_ratio,
-            seed=42,
-            split="train",
-            retention_pool_dir=retention_pool,
-            face_retention_pool_dir=face_retention_pool,
-            face_retention_ratio=face_retention_ratio
+            str(train_file), processor, max_length, retention_ratio=retention_ratio, seed=42,
+            split="train", retention_pool_dir=args.retention_pool,
+            face_retention_pool_dir=args.face_retention_pool, face_retention_ratio=args.face_retention_ratio
         )
-        # 验证集也包含 Retention
         val_dataset = MixedForwardDataset(
-            str(val_file), processor, max_length,
-            retention_ratio=retention_ratio,
-            seed=42,
-            split="val",
-            retention_pool_dir=retention_pool,
-            face_retention_pool_dir=face_retention_pool,
-            face_retention_ratio=face_retention_ratio
+            str(val_file), processor, max_length, retention_ratio=retention_ratio, seed=42,
+            split="val", retention_pool_dir=args.retention_pool,
+            face_retention_pool_dir=args.face_retention_pool, face_retention_ratio=args.face_retention_ratio
         )
     else:
+        from src.data.dataset import ReverseDataset
         train_file = data_dir / "reverse_train.jsonl"
         val_file = data_dir / "reverse_val.jsonl"
         train_dataset = ReverseDataset(str(train_file), processor, max_length)
@@ -192,278 +195,222 @@ def train(args, config):
     if local_rank == 0:
         print(f"Train: {len(train_dataset)} samples, Val: {len(val_dataset)} samples")
     
-    batch_size = int(config["training"]["batch_size"])
+    batch_size = int(config["training"].get("batch_size", config["training"].get("per_device_train_batch_size", 1)))
     grad_accum = int(config["training"].get("gradient_accumulation_steps", 1))
     num_epochs = int(config["training"]["num_epochs"])
-    
     initial_lr = float(config["training"]["learning_rate"])
     min_lr = float(config["training"].get("min_lr", 1e-6))
-    lr_reduction_factor = float(config["training"].get("lr_reduction_factor", 0.5))
-    lr_patience = int(config["training"].get("lr_patience", 1))
-    improvement_threshold = float(config["training"].get("improvement_threshold", 0.05))
-    min_val_loss = float(config["training"].get("min_val_loss", 0.12))
-    
     current_lr = initial_lr
     
-    train_sampler = DistributedSampler(
-        train_dataset, num_replicas=world_size, rank=local_rank, shuffle=True, seed=42
-    )
+    train_sampler = DistributedSampler(train_dataset, num_replicas=world_size, rank=local_rank, shuffle=True, seed=42)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, sampler=train_sampler, collate_fn=collate_fn, num_workers=0, pin_memory=True)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn, num_workers=0, pin_memory=True)
     
-    train_loader = DataLoader(
-        train_dataset, batch_size=batch_size, sampler=train_sampler,
-        collate_fn=collate_fn, num_workers=0, pin_memory=True
-    )
-    
-    val_loader = DataLoader(
-        val_dataset, batch_size=batch_size, shuffle=False,
-        collate_fn=collate_fn, num_workers=0, pin_memory=True
-    )
-    
-    steps_per_epoch = len(train_loader) // grad_accum
-    total_steps = steps_per_epoch * num_epochs
-    warmup_ratio = float(config["training"].get("warmup_ratio", 0.05))
-    warmup_steps = int(total_steps * warmup_ratio)
-    
-    if local_rank == 0:
-        print(f"Batch: {batch_size} x {grad_accum} x {world_size} = {batch_size * grad_accum * world_size}")
-        print(f"Initial LR: {initial_lr}, Min LR: {min_lr}")
-        print(f"LoRA r={config['lora']['r']}, alpha={config['lora']['alpha']}")
-        print()
+    warmup_steps = int(len(train_loader) * num_epochs * float(config["training"].get("warmup_ratio", 0.05)) / grad_accum)
     
     ds_config = {
         "train_micro_batch_size_per_gpu": batch_size,
         "gradient_accumulation_steps": grad_accum,
-        "optimizer": {
-            "type": "AdamW",
-            "params": {
-                "lr": current_lr,
-                "betas": [0.9, 0.999],
-                "eps": 1e-8,
-                "weight_decay": float(config["training"].get("weight_decay", 0.01)),
-                "torch_adam": True
-            }
-        },
-        "scheduler": {
-            "type": "WarmupLR",
-            "params": {
-                "warmup_min_lr": 0,
-                "warmup_max_lr": current_lr,
-                "warmup_num_steps": warmup_steps
-            }
-        },
-        "fp16": {
-            "enabled": True,
-            "loss_scale": 0,
-            "loss_scale_window": 1000,
-            "initial_scale_power": 16,
-            "hysteresis": 2,
-            "min_loss_scale": 1
-        },
-        "zero_optimization": {
-            "stage": 2,
-            "contiguous_gradients": True,
-            "overlap_comm": True,
-            "reduce_scatter": True,
-            "reduce_bucket_size": 5e7,
-            "allgather_bucket_size": 5e7
-        },
-        "gradient_clipping": 1.0,
-        "steps_per_print": 9999999,
-        "wall_clock_breakdown": False
+        "optimizer": {"type": "AdamW", "params": {"lr": current_lr, "betas": [0.9, 0.999], "eps": 1e-8, "weight_decay": float(config["training"].get("weight_decay", 0.01)), "torch_adam": True}},
+        "scheduler": {"type": "WarmupLR", "params": {"warmup_min_lr": 0, "warmup_max_lr": current_lr, "warmup_num_steps": warmup_steps}},
+        "fp16": {"enabled": True, "loss_scale": 0, "loss_scale_window": 1000, "initial_scale_power": 16, "hysteresis": 2, "min_loss_scale": 1},
+        "zero_optimization": {"stage": 2, "contiguous_gradients": True, "overlap_comm": True, "reduce_scatter": True, "reduce_bucket_size": 5e7, "allgather_bucket_size": 5e7},
+        "gradient_clipping": 1.0, "steps_per_print": 9999999, "wall_clock_breakdown": False
     }
     
-    model_parameters = [p for p in model.parameters() if p.requires_grad]
-    model_engine, optimizer, _, lr_scheduler = deepspeed.initialize(
-        args=args, model=model, model_parameters=model_parameters, config=ds_config
-    )
-    
+    model_engine, optimizer, _, _ = deepspeed.initialize(args=args, model=model, model_parameters=[p for p in model.parameters() if p.requires_grad], config=ds_config)
     device = model_engine.local_rank
     
-    # 如果指定了 --name，则输出到 outputs/<name>_<task>
-    if args.name:
-        output_dir = Path("outputs") / f"{args.name}_{task}"
-    else:
-        output_dir = Path(config["training"]["output_dir"]) / f"{task}_trained"
+    output_dir = Path("outputs") / f"{args.name}_{task}" if args.name else Path(config["training"]["output_dir"]) / f"{task}_trained"
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    history = {
-        "task": task,
-        "mode": "mixed" if task == "forward" else "normal",
-        "retention_ratio": retention_ratio if task == "forward" else None,
-        "face_retention_ratio": face_retention_ratio if task == "forward" else None,
-        "face_retention_ratio": face_retention_ratio if task == "forward" else None,
-        "train_loss": [],
-        "val_loss": [],
-        "learning_rates": [],
-        "epochs": []
-    }
+    history = {"task": task, "mode": "deepspeed", "train_loss": [], "val_loss": [], "epochs": []}
     best_val_loss = float('inf')
-    prev_val_loss = None
-    patience_counter = 0
-    should_stop = False
     
     for epoch in range(num_epochs):
-        if should_stop:
-            break
-        
         train_sampler.set_epoch(epoch)
-        
         model_engine.train()
-        epoch_loss = 0.0
-        num_batches = 0
+        epoch_loss, num_batches = 0.0, 0
         
-        if local_rank == 0:
-            progress = tqdm(train_loader, desc=f"Epoch {epoch+1}/{num_epochs} (lr={current_lr:.2e})")
-        else:
-            progress = train_loader
-        
+        progress = tqdm(train_loader, desc=f"Epoch {epoch+1}/{num_epochs}") if local_rank == 0 else train_loader
         for batch in progress:
-            # 提取 task_type 用于 loss 加权（如果有的话）
-            task_types = batch.pop("task_type", None)
-            
+            batch.pop("task_type", None)
             batch = {k: v.to(device) for k, v in batch.items() if isinstance(v, torch.Tensor)}
-            outputs = model_engine(**batch)
-            loss = outputs.loss
-            
-            # 如果有 task_type，对 retention 任务应用更高权重
-            # CW/MCQ 输出 1 token，Forward 输出 ~10 tokens，所以给 retention 10x 权重
-            # 这里是 batch-level 近似：如果 batch 中有 retention，提高该 batch 的 loss 权重
-            # (实际应该在 token-level 加权，但这需要修改模型，这里用简化方案)
-            
+            loss = model_engine(**batch).loss
             model_engine.backward(loss)
             model_engine.step()
-            
             epoch_loss += loss.item()
             num_batches += 1
-            
             if local_rank == 0:
                 progress.set_postfix({"loss": f"{loss.item():.4f}"})
         
         avg_train_loss = epoch_loss / num_batches
         
         model_engine.eval()
-        val_loss = 0.0
-        val_batches = 0
-        
+        val_loss, val_batches = 0.0, 0
         with torch.no_grad():
             for batch in val_loader:
-                # 提取 task_type（验证时不需要加权）
-                task_types = batch.pop("task_type", None)
+                batch.pop("task_type", None)
                 batch = {k: v.to(device) for k, v in batch.items() if isinstance(v, torch.Tensor)}
-                outputs = model_engine(**batch)
-                val_loss += outputs.loss.item()
+                val_loss += model_engine(**batch).loss.item()
                 val_batches += 1
-        
-        avg_val_loss = val_loss / val_batches if val_batches > 0 else 0.0
+        avg_val_loss = val_loss / val_batches if val_batches > 0 else 0
         
         history["train_loss"].append(avg_train_loss)
         history["val_loss"].append(avg_val_loss)
-        history["learning_rates"].append(current_lr)
         history["epochs"].append(epoch + 1)
         
         if local_rank == 0:
-            ratio = avg_val_loss / avg_train_loss if avg_train_loss > 0 else 1.0
-            print(f"  → Train: {avg_train_loss:.4f}, Val: {avg_val_loss:.4f} (ratio: {ratio:.2f})")
-            
-            if avg_val_loss < min_val_loss:
-                print(f"\n✅ val_loss {avg_val_loss:.4f} < {min_val_loss}, converged!")
-                if avg_val_loss < best_val_loss:
-                    best_val_loss = avg_val_loss
-                    history["best_epoch"] = epoch + 1
-                    history["best_val_loss"] = best_val_loss
-                    
-                    best_dir = output_dir / "best"
-                    best_dir.mkdir(exist_ok=True)
-                    model_engine.module.save_pretrained(str(best_dir))
-                    print(f"  💾 Saved best model")
-                should_stop = True
-                continue
-            
-            if prev_val_loss is not None:
-                improvement = (prev_val_loss - avg_val_loss) / prev_val_loss
-                print(f"  Improvement: {improvement*100:.2f}%")
-                
-                if improvement < improvement_threshold:
-                    patience_counter += 1
-                    print(f"  ⚡ Plateau ({patience_counter}/{lr_patience})")
-                    
-                    if patience_counter >= lr_patience:
-                        new_lr = current_lr * lr_reduction_factor
-                        
-                        if new_lr < min_lr:
-                            print(f"\n🛑 LR {new_lr:.2e} < min_lr, stopping")
-                            should_stop = True
-                            continue
-                        
-                        current_lr = new_lr
-                        patience_counter = 0
-                        
-                        for param_group in optimizer.param_groups:
-                            param_group['lr'] = current_lr
-                        
-                        print(f"  📉 LR → {current_lr:.2e}")
-                else:
-                    patience_counter = 0
-            
+            print(f"  → Train: {avg_train_loss:.4f}, Val: {avg_val_loss:.4f}")
             if avg_val_loss < best_val_loss:
                 best_val_loss = avg_val_loss
-                history["best_epoch"] = epoch + 1
-                history["best_val_loss"] = best_val_loss
-                
-                best_dir = output_dir / "best"
-                best_dir.mkdir(exist_ok=True)
-                model_engine.module.save_pretrained(str(best_dir))
+                (output_dir / "best").mkdir(exist_ok=True)
+                model_engine.module.save_pretrained(str(output_dir / "best"))
                 print(f"  💾 Saved best (val_loss={best_val_loss:.4f})")
-            
-            prev_val_loss = avg_val_loss
-            print()
     
     if local_rank == 0:
-        final_dir = output_dir / "final"
-        final_dir.mkdir(exist_ok=True)
-        model_engine.module.save_pretrained(str(final_dir))
-        
+        (output_dir / "final").mkdir(exist_ok=True)
+        model_engine.module.save_pretrained(str(output_dir / "final"))
         with open(output_dir / "training_history.json", "w") as f:
             json.dump(history, f, indent=2)
-        
-        print(f"\n{'='*60}")
-        print(f"✓ Training Complete ({task})")
-        if task == "forward":
-            print(f"  Mode: Mixed (retention_ratio={retention_ratio})")
-        print(f"  Best: epoch {history.get('best_epoch', 'N/A')}, val_loss={history.get('best_val_loss', 0):.4f}")
-        print(f"  Saved to: {output_dir}")
-        print(f"{'='*60}")
+        print(f"\n✓ Training Complete! Saved to: {output_dir}")
     
-    # 清理分布式环境
     try:
-        dist.barrier()  # 等待所有进程同步
+        dist.barrier()
         dist.destroy_process_group()
     except Exception:
-        pass  # 忽略清理时的错误
+        pass
+
+
+def train_auto(args, config):
+    """Auto 模式：单进程多卡训练"""
+    task = args.task
+    retention_ratio = args.retention_ratio
+    
+    print(f"\n{'='*60}")
+    print(f"Starting {task.upper()} training (Auto mode, device_map='auto')")
+    print(f"{'='*60}")
+    
+    model, processor = setup_model_auto(config)
+    
+    data_dir = Path(args.data_dir) if args.data_dir else Path(config["data"]["output_dir"])
+    max_length = int(config["training"].get("max_length", 512))
+    
+    if task == "forward":
+        train_file = data_dir / "forward_train.jsonl"
+        val_file = data_dir / "forward_val.jsonl"
+        train_dataset = MixedForwardDataset(
+            str(train_file), processor, max_length, retention_ratio=retention_ratio, seed=42,
+            split="train", retention_pool_dir=None, face_retention_pool_dir=args.face_retention_pool, face_retention_ratio=1.0
+        )
+        val_dataset = MixedForwardDataset(
+            str(val_file), processor, max_length, retention_ratio=retention_ratio, seed=42,
+            split="val", retention_pool_dir=None, face_retention_pool_dir=args.face_retention_pool, face_retention_ratio=1.0
+        )
+    else:
+        from src.data.dataset import ReverseDataset
+        train_file = data_dir / "reverse_train.jsonl"
+        val_file = data_dir / "reverse_val.jsonl"
+        train_dataset = ReverseDataset(str(train_file), processor, max_length)
+        val_dataset = ReverseDataset(str(val_file), processor, max_length)
+    
+    batch_size = int(config["training"].get("batch_size", config["training"].get("per_device_train_batch_size", 1)))
+    grad_accum = int(config["training"]["gradient_accumulation_steps"])
+    num_epochs = int(config["training"]["num_epochs"])
+    current_lr = float(config["training"]["learning_rate"])
+    
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn, num_workers=0)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn, num_workers=0)
+    
+    print(f"Train: {len(train_dataset)}, Val: {len(val_dataset)}, Batch: {batch_size}, Epochs: {num_epochs}")
+    
+    optimizer = AdamW([p for p in model.parameters() if p.requires_grad], lr=current_lr, weight_decay=float(config["training"].get("weight_decay", 0.01)))
+    scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=int(config["training"].get("warmup_steps", 0)), num_training_steps=len(train_loader) * num_epochs // grad_accum)
+    
+    output_dir = Path("outputs") / f"{args.name}_{task}" if args.name else Path(config["training"]["output_dir"]) / f"{task}_trained"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    history = {"task": task, "mode": "auto", "train_loss": [], "val_loss": [], "epochs": []}
+    best_val_loss = float('inf')
+    device = next(model.parameters()).device
+    
+    for epoch in range(num_epochs):
+        model.train()
+        epoch_loss, num_batches = 0.0, 0
+        optimizer.zero_grad()
+        
+        progress = tqdm(train_loader, desc=f"Epoch {epoch+1}/{num_epochs}")
+        for step, batch in enumerate(progress):
+            batch = {k: v.to(device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}
+            batch.pop("task_type", None)
+            loss = model(**batch).loss / grad_accum
+            loss.backward()
+            if (step + 1) % grad_accum == 0:
+                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                optimizer.step()
+                scheduler.step()
+                optimizer.zero_grad()
+            epoch_loss += loss.item() * grad_accum
+            num_batches += 1
+
+            # 实时显示loss和学习率
+            progress.set_postfix({"loss": f"{loss.item() * grad_accum:.4f}", "lr": f"{scheduler.get_last_lr()[0]:.2e}"})
+        
+        avg_train_loss = epoch_loss / num_batches
+        
+        model.eval()
+        val_loss, val_batches = 0.0, 0
+        with torch.no_grad():
+            for batch in val_loader:
+                batch = {k: v.to(device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}
+                batch.pop("task_type", None)
+                val_loss += model(**batch).loss.item()
+                val_batches += 1
+        avg_val_loss = val_loss / val_batches if val_batches > 0 else 0
+        
+        print(f"Epoch {epoch+1} - Train: {avg_train_loss:.4f}, Val: {avg_val_loss:.4f}")
+        history["train_loss"].append(avg_train_loss)
+        history["val_loss"].append(avg_val_loss)
+        history["epochs"].append(epoch + 1)
+        
+        if avg_val_loss < best_val_loss:
+            best_val_loss = avg_val_loss
+            model.save_pretrained(output_dir / "best")
+            print(f"  -> Saved best (val_loss={best_val_loss:.4f})")
+    
+    model.save_pretrained(output_dir / "final")
+    with open(output_dir / "training_history.json", "w") as f:
+        json.dump(history, f, indent=2)
+    print(f"\n✓ Training complete! Output: {output_dir}")
 
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="训练脚本")
     parser.add_argument("--config", type=str, required=True)
     parser.add_argument("--task", type=str, required=True, choices=["forward", "reverse"])
-    parser.add_argument("--retention_ratio", type=float, default=0.3,
-                        help="Retention task ratio for Forward training (default: 0.3)")
-    parser.add_argument("--retention_pool", type=str, default=None,
-                        help="物体 retention 题库目录 (default: None, 不使用物体池)")
-    parser.add_argument("--face_retention_pool", type=str, default="data/face_retention_pool",
-                        help="人脸 retention 题库目录 (default: data/face_retention_pool)")
-    parser.add_argument("--face_retention_ratio", type=float, default=1.0,
-                        help="人脸 retention 占总 retention 的比例 (default: 1.0, 只用人脸池)")
+    parser.add_argument("--mode", type=str, default="deepspeed", choices=["deepspeed", "auto"])
+    parser.add_argument("--name", type=str, default=None)
+    parser.add_argument("--data_dir", type=str, default=None)
+    parser.add_argument("--retention_ratio", type=float, default=0.3)
+    parser.add_argument("--face_retention_pool", type=str, default="data/face_retention_pool")
+    parser.add_argument("--retention_pool", type=str, default=None)
+    parser.add_argument("--face_retention_ratio", type=float, default=1.0)
     parser.add_argument("--local_rank", type=int, default=-1)
-    parser.add_argument("--name", type=str, default=None, help="实验名称，用于输出目录 outputs/<name>_trained")
-    parser.add_argument("--data_dir", type=str, default=None, help="数据目录路径 (默认使用 config 中的 data.output_dir)")
-    parser = deepspeed.add_config_arguments(parser)
-    args = parser.parse_args()
     
+    try:
+        import deepspeed
+        parser = deepspeed.add_config_arguments(parser)
+    except ImportError:
+        pass
+    
+    args = parser.parse_args()
     with open(args.config) as f:
         config = yaml.safe_load(f)
     
-    train(args, config)
+    if args.mode == "deepspeed":
+        train_deepspeed(args, config)
+    else:
+        train_auto(args, config)
 
 
 if __name__ == "__main__":

@@ -677,10 +677,10 @@ def main():
     generate_training_data(entities, output_dir, args.seed)
     
     # 4. Retention 数据现在使用公共题库，不再为每个数据集单独生成
-    #    运行 scripts/generate_retention_pool.py 生成公共题库
+    #    运行 scripts/generate_face_retention_pool.py or generate_object_retention_pool.py 生成公共题库
     #    训练时通过 --retention_pool 参数指定题库位置
     print("\n[4/4] Retention data: Using shared pool (data/retention_pool)")
-    print("      Run 'python scripts/generate_retention_pool.py' to generate the pool if needed.")
+    print("      Run 'python scripts/generate_face_retention_pool.py --num_entities 4' to generate the pool if needed.")
     
     # 统计
     print(f"\n{'='*60}")

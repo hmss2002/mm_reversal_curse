@@ -1,17 +1,63 @@
 #!/usr/bin/env python3
 """
 ==============================================================================
-Retention 题库生成脚本（一次性生成，永久复用）
+物体 Retention 题库生成脚本
 ==============================================================================
 
-生成一个大型 retention 题库，包含：
-- 大量物体图片
-- 海量 CW / MCQ I2D / MCQ D2I 题目
+功能：
+  生成物体 retention 池，用于训练时防止灾难性遗忘。
+  - 8 GPU 并行生成物体图片（SDXL-Turbo）
+  - 自动生成 CW / MCQ I2D / MCQ D2I 题目
+  - 包含约 2000+ 种常见物体（颜色、大小、材质变体）
 
-以后训练任意数量实体时，都从这个题库随机抽取。
+==============================================================================
+使用方法
+==============================================================================
 
-使用：
-  python scripts/generate_retention_pool.py --num_objects 200 --output_dir data/retention_pool
+# 生成物体 retention 池
+python scripts/generate_object_retention_pool.py \
+    --num_objects 200 \
+    --output_dir data/object_retention_pool \
+    --num_gpus 8
+
+# 指定随机种子
+python scripts/generate_object_retention_pool.py \
+    --num_objects 100 \
+    --output_dir data/object_retention_pool \
+    --seed 123
+
+==============================================================================
+参数说明
+==============================================================================
+
+  --num_objects     要生成的物体数量 (默认: 200)
+  --output_dir      输出目录 (默认: data/retention_pool)
+  --num_gpus        使用的 GPU 数量 (默认: 8)
+  --seed            随机种子 (默认: 42)
+
+==============================================================================
+输出结构
+==============================================================================
+
+data/object_retention_pool/
+├── objects.json         # 物体描述元信息
+├── pool_meta.json       # 生成参数记录
+├── images/              # 物体图片 (object_0000.png, ...)
+├── cw_train.jsonl       # Correct/Wrong 训练数据
+├── cw_val.jsonl         # Correct/Wrong 验证数据
+├── mcq_i2d_train.jsonl  # MCQ Image→Description 训练数据
+├── mcq_i2d_val.jsonl    # MCQ Image→Description 验证数据
+├── mcq_d2i_train.jsonl  # MCQ Description→Image 训练数据
+└── mcq_d2i_val.jsonl    # MCQ Description→Image 验证数据
+
+==============================================================================
+注意事项
+==============================================================================
+
+  - 物体池与人脸池是独立的，可以同时使用也可以只用其中一个
+  - 训练时通过 --retention_pool 参数指定物体池路径
+  - 默认只使用人脸池（--face_retention_ratio=1.0）
+  - 物体池包含约 2000+ 种常见物体（颜色、大小、材质变体）
 
 ==============================================================================
 """

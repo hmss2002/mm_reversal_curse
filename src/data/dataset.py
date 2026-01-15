@@ -18,6 +18,7 @@
 ==============================================================================
 """
 
+import os
 import json
 import random
 from pathlib import Path
@@ -45,6 +46,22 @@ class MixedForwardDataset(Dataset):
         self.max_length = max_length
         self.retention_ratio = retention_ratio
         self.split = split
+
+        # 存储目录路径
+        self.retention_pool_dir = retention_pool_dir
+        self.face_retention_pool_dir = face_retention_pool_dir
+        
+        # 计算base_dir：人脸retention池的基础目录
+        if face_retention_pool_dir:
+            self.face_base_dir = face_retention_pool_dir
+        else:
+            self.face_base_dir = None
+        
+        # 物体retention池的基础目录
+        if retention_pool_dir:
+            self.object_base_dir = retention_pool_dir
+        else:
+            self.object_base_dir = None
         
         # 加载 Forward 样本
         self.forward_samples = []
@@ -282,8 +299,8 @@ class MixedForwardDataset(Dataset):
         image_choices = sample["image_choices"]
         correct_index = sample["correct_index"]
         
-        # 加载所有图片
-        images = [Image.open(p).convert("RGB") for p in image_choices]
+        # 加载所有图片（使用相对路径）
+        images = [Image.open(os.path.join(self.object_base_dir, p)).convert("RGB") for p in image_choices]
         
         # 格式：description connector? A. [img1] B. [img2] C. [img3] D. [img4] Only answer A, B, C, or D.
         question = f"{description} {connector}?"
@@ -307,10 +324,14 @@ class MixedForwardDataset(Dataset):
     
     def _process_face_retention_mcq_i2d(self, sample):
         """Face Retention MCQ I2D: [Image] connector? A. desc1 B. desc2... → A/B/C/D"""
-        image = Image.open(sample["image_path"]).convert("RGB")
+        image = Image.open(os.path.join(self.face_base_dir, sample["image"])).convert("RGB")
         connector = sample.get("connector", "is")
-        choices = sample["choices"]
-        correct_index = sample["correct_index"]
+        
+        # 适配新数据格式：options={A:desc1, B:desc2...}, answer=A/B/C/D
+        options = sample["options"]
+        choices = [options["A"], options["B"], options["C"], options["D"]]
+        answer_letter = sample["answer"]
+        correct_index = ord(answer_letter) - 65  # A->0, B->1, C->2, D->3
         
         # 格式与物体 retention 一致
         question = f"{connector}? A. {choices[0]} B. {choices[1]} C. {choices[2]} D. {choices[3]} Only answer A, B, C, or D."
@@ -322,11 +343,16 @@ class MixedForwardDataset(Dataset):
         """Face Retention MCQ D2I: description connector? A. [img1] B. [img2]... → A/B/C/D"""
         description = sample["description"]
         connector = sample.get("connector", "is")
-        image_choices = sample["image_choices"]
-        correct_index = sample["correct_index"]
+        
+        # 适配新数据格式：options={A:img1, B:img2...}, answer=A/B/C/D
+        options = sample["options"]
+        image_paths = [options["A"], options["B"], options["C"], options["D"]]
+        answer_letter = sample["answer"]
+        correct_index = ord(answer_letter) - 65
         
         # 加载所有图片
-        images = [Image.open(p).convert("RGB") for p in image_choices]
+        # 加载所有图片（使用相对路径）
+        images = [Image.open(os.path.join(self.face_base_dir, p)).convert("RGB") for p in image_paths]
         
         # 格式与物体 retention 一致
         question = f"{description} {connector}?"
@@ -337,7 +363,7 @@ class MixedForwardDataset(Dataset):
     
     def _process_face_retention_cw(self, sample):
         """Face Retention CW: description connector [Image], correct or wrong? → Correct/Wrong"""
-        image = Image.open(sample["image_path"]).convert("RGB")
+        image = Image.open(os.path.join(self.face_base_dir, sample["image"])).convert("RGB")
         description = sample["description"]
         connector = sample.get("connector", "is")
         label = sample["label"]
@@ -350,10 +376,14 @@ class MixedForwardDataset(Dataset):
     
     def _process_face_retention_mcq_i2d(self, sample):
         """Face Retention MCQ I2D: [Image] connector? A. desc1 B. desc2... → A/B/C/D"""
-        image = Image.open(sample["image_path"]).convert("RGB")
+        image = Image.open(os.path.join(self.face_base_dir, sample["image"])).convert("RGB")
         connector = sample.get("connector", "is")
-        choices = sample["choices"]
-        correct_index = sample["correct_index"]
+        
+        # 适配新数据格式：options={A:desc1, B:desc2...}, answer=A/B/C/D
+        options = sample["options"]
+        choices = [options["A"], options["B"], options["C"], options["D"]]
+        answer_letter = sample["answer"]
+        correct_index = ord(answer_letter) - 65  # A->0, B->1, C->2, D->3
         
         # 格式与物体 retention 一致
         question = f"{connector}? A. {choices[0]} B. {choices[1]} C. {choices[2]} D. {choices[3]} Only answer A, B, C, or D."
@@ -365,11 +395,15 @@ class MixedForwardDataset(Dataset):
         """Face Retention MCQ D2I: description connector? A. [img1] B. [img2]... → A/B/C/D"""
         description = sample["description"]
         connector = sample.get("connector", "is")
-        image_choices = sample["image_choices"]
-        correct_index = sample["correct_index"]
         
-        # 加载所有图片
-        images = [Image.open(p).convert("RGB") for p in image_choices]
+        # 适配新数据格式：options={A:img1, B:img2...}, answer=A/B/C/D
+        options = sample["options"]
+        image_paths = [options["A"], options["B"], options["C"], options["D"]]
+        answer_letter = sample["answer"]
+        correct_index = ord(answer_letter) - 65
+        
+        # 加载所有图片（使用相对路径）
+        images = [Image.open(os.path.join(self.face_base_dir, p)).convert("RGB") for p in image_paths]
         
         # 格式与物体 retention 一致
         question = f"{description} {connector}?"

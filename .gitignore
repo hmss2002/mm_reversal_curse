@@ -58,13 +58,15 @@ legacy/
 # Generated Data (regenerate with generate_data.py)
 # ======================
 data/current_dataset/
-data/*/
+data/*_retention_pool/
+data/*/images/
+data/*/*.jsonl
+data/*/entities.json
 
-# ======================
-# OS Files
-# ======================
-.DS_Store
-Thumbs.db
+# Keep config files
+!*.yaml
+!*.json
+!configs/
 
 # ======================
 # Jupyter Notebook
@@ -81,6 +83,16 @@ Thumbs.db
 *.bak
 wandb/
 nohup.out
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ======================
+# System & Runtime
+# ======================
+*.lock
+.coverage
+htmlcov/
 
 # ======================
 # Pickle files
