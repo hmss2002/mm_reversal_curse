@@ -78,19 +78,24 @@ from transformers import AutoModelForImageTextToText, AutoProcessor
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
-def load_model_and_processor(model_path: str, base_model: str, device: str = "cuda"):
+def load_model_and_processor(model_path: str, base_model: str, device_map: str = "cuda"):
     """加载模型和处理器"""
     print(f"Loading base model: {base_model}")
     base = AutoModelForImageTextToText.from_pretrained(
         base_model,
         torch_dtype=torch.float16,
-        device_map=device,
+        device_map=device_map,
         trust_remote_code=True
     )
     
-    print(f"Loading LoRA adapter: {model_path}")
-    model = PeftModel.from_pretrained(base, model_path)
-    model.eval()
+    if model_path and str(model_path).lower() not in {"none", "null"}:
+        print(f"Loading LoRA adapter: {model_path}")
+        model = PeftModel.from_pretrained(base, model_path)
+        model.eval()
+    else:
+        print("No LoRA adapter provided; evaluating base model only")
+        model = base
+        model.eval()
     
     processor = AutoProcessor.from_pretrained(base_model, trust_remote_code=True)
     
@@ -402,8 +407,9 @@ def evaluate_mcq_d2i(model, processor, data_file: str, max_samples: int = None):
 
 def main():
     parser = argparse.ArgumentParser(description="多模态 Reversal Curse 评测")
-    parser.add_argument("--model_path", type=str, required=True, help="LoRA adapter 路径")
+    parser.add_argument("--model_path", type=str, default=None, help="LoRA adapter 路径（可选；不提供则仅评测 base_model）")
     parser.add_argument("--base_model", type=str, default="/work/models/qwen/Qwen3-VL-8B-Instruct")
+    parser.add_argument("--device_map", type=str, default="cuda", help="Transformers device_map: cuda|auto|balanced 等（32B 建议 auto）")
     parser.add_argument("--task", type=str, choices=["forward", "reverse", "mcq_i2d", "mcq_d2i", "all"],
                        default="all", help="评测任务类型")
     parser.add_argument("--data_file", type=str, help="单任务数据文件")
@@ -415,7 +421,7 @@ def main():
     args = parser.parse_args()
     
     # 加载模型
-    model, processor = load_model_and_processor(args.model_path, args.base_model)
+    model, processor = load_model_and_processor(args.model_path, args.base_model, args.device_map)
     
     all_results = {"timestamp": datetime.now().isoformat()}
     
@@ -466,13 +472,19 @@ def main():
     if args.output_file:
         output_path = args.output_file
     else:
-        output_dir = Path(args.model_path).parent
+        if args.model_path:
+            output_dir = Path(args.model_path).parent
+        else:
+            output_dir = Path("outputs") / "base_model_eval"
+        output_dir.mkdir(parents=True, exist_ok=True)
         output_path = output_dir / "eval_results_v3.json"
     
     # 保存结果（包含摘要 + 可选的详细样本）
     summary = {
         "timestamp": all_results["timestamp"],
         "model_path": args.model_path,
+        "base_model": args.base_model,
+        "device_map": args.device_map,
         "task": args.task
     }
     for task in ["forward", "reverse", "mcq_i2d", "mcq_d2i"]:

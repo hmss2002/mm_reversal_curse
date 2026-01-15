@@ -1,0 +1,53 @@
+# ==============================================================================
+# NOTE: V100 建议使用 FP16；本配置切到 Qwen3-VL-32B-Instruct
+# 多模态 Reversal Curse 实验配置文件
+# ==============================================================================
+# 
+# 用途：控制数据生成、训练和评估的参数
+# 
+# 训练命令：
+#   普通训练：deepspeed --num_gpus=8 scripts/train.py --config configs/config.yaml --task forward
+#   混合训练：deepspeed --num_gpus=8 scripts/train_mixed.py --config configs/config.yaml --task forward --retention_ratio 0.3
+#
+# ==============================================================================
+
+experiment:
+  name: "reversal_curse_v3"
+  seed: 42
+
+model:
+  name_or_path: "/work/models/qwen/Qwen3-VL-32B-Instruct"
+
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.05
+  target_modules:
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+
+data:
+  # 数据目录（generate_data.py 输出位置）
+  output_dir: "data/current_dataset"
+
+training:
+  # === Learning Rate Configuration ===
+  learning_rate: 2e-4            # 初始 LR
+  min_lr: 6e-5                   # 最小 LR，低于此值停止训练
+  lr_reduction_factor: 0.5       # LR 衰减因子 (减半)
+  lr_patience: 1                 # LR 衰减的 patience
+  improvement_threshold: 0.05    # val_loss 改善阈值 (5%相对改善)
+  min_val_loss: 0.01             # val_loss 低于此值停止训练
+  
+  # === Batch Configuration ===
+  batch_size: 1
+  gradient_accumulation_steps: 4  # 有效 batch = 2 * 4 * 8 GPUs = 64
+  num_epochs: 20
+  max_length: 512
+  warmup_ratio: 0.05
+  weight_decay: 0.01
+  
+  # 模型输出目录
+  output_dir: "outputs"
