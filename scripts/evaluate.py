@@ -206,12 +206,21 @@ def evaluate_reverse_distributed(model, processor, samples, accelerator):
             else:
                 is_correct = "wrong" in generated_clean and "correct" not in generated_clean
             
+            # 解析预测标签
+            if "correct" in generated_clean and "wrong" not in generated_clean:
+                predicted_label = "Correct"
+            elif "wrong" in generated_clean and "correct" not in generated_clean:
+                predicted_label = "Wrong"
+            else:
+                predicted_label = None
+            
             results.append({
                 "image": sample["image_path"],
                 "description": description,
                 "connector": connector,
                 "expected": expected_label,
                 "generated": generated.strip(),
+                "predicted": predicted_label,
                 "correct": is_correct
             })
     
@@ -365,6 +374,78 @@ def compute_metrics(results):
     return {"accuracy": accuracy, "correct": correct, "total": total, "results": results}
 
 
+def compute_reverse_metrics(results):
+    """
+    计算 Reverse 任务的关键指标：
+    - TPR (True Positive Rate): P(model=Correct | (I,T)+)  正例中预测为Correct的比例
+    - FPR (False Positive Rate): P(model=Correct | (I,T)-) 负例中预测为Correct的比例  
+    - Separation: TPR - FPR (越大越好，说明模型在区分正负样本)
+    """
+    correct = sum(1 for r in results if r["correct"])
+    total = len(results)
+    accuracy = correct / total if total > 0 else 0
+    
+    # 计算 TPR / FPR / Separation
+    pos_total = sum(1 for r in results if r["expected"] == "Correct")
+    neg_total = sum(1 for r in results if r["expected"] != "Correct")
+    pos_pred_correct = sum(1 for r in results if r["expected"] == "Correct" and r.get("predicted") == "Correct")
+    neg_pred_correct = sum(1 for r in results if r["expected"] != "Correct" and r.get("predicted") == "Correct")
+    
+    tpr = pos_pred_correct / pos_total if pos_total > 0 else 0
+    fpr = neg_pred_correct / neg_total if neg_total > 0 else 0
+    separation = tpr - fpr
+    
+    # 统计预测分布
+    pred_correct = sum(1 for r in results if r.get("predicted") == "Correct")
+    pred_wrong = sum(1 for r in results if r.get("predicted") == "Wrong")
+    pred_none = sum(1 for r in results if r.get("predicted") is None)
+    
+    return {
+        "accuracy": accuracy, 
+        "correct": correct, 
+        "total": total,
+        "tpr": tpr,
+        "fpr": fpr, 
+        "separation": separation,
+        "pos_total": pos_total,
+        "neg_total": neg_total,
+        "pos_pred_correct": pos_pred_correct,
+        "neg_pred_correct": neg_pred_correct,
+        "prediction_distribution": {
+            "Correct": pred_correct,
+            "Wrong": pred_wrong,
+            "Unknown": pred_none
+        },
+        "results": results
+    }
+
+
+def compute_mcq_metrics(results):
+    """
+    计算 MCQ 任务的指标，包括选项分布分析
+    """
+    correct = sum(1 for r in results if r["correct"])
+    total = len(results)
+    accuracy = correct / total if total > 0 else 0
+    
+    # 统计预测选项分布
+    pred_dist = {"A": 0, "B": 0, "C": 0, "D": 0, "Other": 0}
+    for r in results:
+        pred = r.get("predicted", "")
+        if pred in pred_dist:
+            pred_dist[pred] += 1
+        else:
+            pred_dist["Other"] += 1
+    
+    return {
+        "accuracy": accuracy,
+        "correct": correct,
+        "total": total,
+        "prediction_distribution": pred_dist,
+        "results": results
+    }
+
+
 def main():
     parser = argparse.ArgumentParser(description="多模态 Reversal Curse 评测 (8卡并行)")
     parser.add_argument("--model_path", type=str, default=None, help="LoRA adapter 路径")
@@ -433,9 +514,11 @@ def main():
             samples = load_samples(str(reverse_file), args.max_samples)
             results = evaluate_reverse_distributed(model, processor, samples, accelerator)
             if is_main:
-                metrics = compute_metrics(results)
+                metrics = compute_reverse_metrics(results)
                 all_results["reverse"] = metrics
                 print(f"Reverse Accuracy: {metrics['correct']}/{metrics['total']} = {metrics['accuracy']:.2%}")
+                print(f"  TPR: {metrics['tpr']:.2%} | FPR: {metrics['fpr']:.2%} | Separation: {metrics['separation']:.2%}")
+                print(f"  预测分布: Correct={metrics['prediction_distribution']['Correct']}, Wrong={metrics['prediction_distribution']['Wrong']}, Unknown={metrics['prediction_distribution']['Unknown']}")
         
         accelerator.wait_for_everyone()
         
@@ -449,9 +532,11 @@ def main():
             samples = load_samples(str(mcq_i2d_file), args.max_samples)
             results = evaluate_mcq_i2d_distributed(model, processor, samples, accelerator)
             if is_main:
-                metrics = compute_metrics(results)
+                metrics = compute_mcq_metrics(results)
                 all_results["mcq_i2d"] = metrics
                 print(f"MCQ I2D Accuracy: {metrics['correct']}/{metrics['total']} = {metrics['accuracy']:.2%}")
+                dist = metrics['prediction_distribution']
+                print(f"  选项分布: A={dist['A']}, B={dist['B']}, C={dist['C']}, D={dist['D']}")
         
         accelerator.wait_for_everyone()
         
@@ -465,9 +550,11 @@ def main():
             samples = load_samples(str(mcq_d2i_file), args.max_samples)
             results = evaluate_mcq_d2i_distributed(model, processor, samples, accelerator)
             if is_main:
-                metrics = compute_metrics(results)
+                metrics = compute_mcq_metrics(results)
                 all_results["mcq_d2i"] = metrics
                 print(f"MCQ D2I Accuracy: {metrics['correct']}/{metrics['total']} = {metrics['accuracy']:.2%}")
+                dist = metrics['prediction_distribution']
+                print(f"  选项分布: A={dist['A']}, B={dist['B']}, C={dist['C']}, D={dist['D']}")
     
     else:
         # 单任务评测
@@ -480,17 +567,17 @@ def main():
             samples = load_samples(args.data_file, args.max_samples)
             results = evaluate_reverse_distributed(model, processor, samples, accelerator)
             if is_main:
-                all_results["reverse"] = compute_metrics(results)
+                all_results["reverse"] = compute_reverse_metrics(results)
         elif args.task == "mcq_i2d":
             samples = load_samples(args.data_file, args.max_samples)
             results = evaluate_mcq_i2d_distributed(model, processor, samples, accelerator)
             if is_main:
-                all_results["mcq_i2d"] = compute_metrics(results)
+                all_results["mcq_i2d"] = compute_mcq_metrics(results)
         elif args.task == "mcq_d2i":
             samples = load_samples(args.data_file, args.max_samples)
             results = evaluate_mcq_d2i_distributed(model, processor, samples, accelerator)
             if is_main:
-                all_results["mcq_d2i"] = compute_metrics(results)
+                all_results["mcq_d2i"] = compute_mcq_metrics(results)
     
     # 只在主进程保存结果
     if is_main:
@@ -501,7 +588,10 @@ def main():
         for task in ["forward", "reverse", "mcq_i2d", "mcq_d2i"]:
             if task in all_results:
                 r = all_results[task]
-                print(f"  {task.upper():12s}: {r['correct']}/{r['total']} = {r['accuracy']:.2%}")
+                if task == "reverse":
+                    print(f"  {task.upper():12s}: {r['correct']}/{r['total']} = {r['accuracy']:.2%}  |  TPR={r['tpr']:.2%}, FPR={r['fpr']:.2%}, Sep={r['separation']:.2%}")
+                else:
+                    print(f"  {task.upper():12s}: {r['correct']}/{r['total']} = {r['accuracy']:.2%}")
         
         # 保存结果
         if args.output_file:
@@ -530,6 +620,16 @@ def main():
                     "correct": all_results[task]["correct"],
                     "total": all_results[task]["total"]
                 }
+                # 添加 reverse 任务的 TPR/FPR/Separation
+                if task == "reverse":
+                    task_result["tpr"] = all_results[task].get("tpr", 0)
+                    task_result["fpr"] = all_results[task].get("fpr", 0)
+                    task_result["separation"] = all_results[task].get("separation", 0)
+                    task_result["pos_total"] = all_results[task].get("pos_total", 0)
+                    task_result["neg_total"] = all_results[task].get("neg_total", 0)
+                # 添加预测分布
+                if "prediction_distribution" in all_results[task]:
+                    task_result["prediction_distribution"] = all_results[task]["prediction_distribution"]
                 if args.save_examples != 0 and "results" in all_results[task]:
                     if args.save_examples == -1:
                         examples = all_results[task]["results"]
@@ -538,6 +638,8 @@ def main():
                     task_result["examples"] = examples
                 summary[task] = task_result
         
+        # 自动创建输出目录
+        output_path.parent.mkdir(parents=True, exist_ok=True)
         with open(output_path, "w") as f:
             json.dump(summary, f, indent=2, ensure_ascii=False)
         print(f"\n结果已保存到: {output_path}")

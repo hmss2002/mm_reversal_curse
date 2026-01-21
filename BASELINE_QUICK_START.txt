@@ -1,0 +1,159 @@
+╔═══════════════════════════════════════════════════════════════════════╗
+║              Baseline模型评测 - 快速参考                              ║
+╚═══════════════════════════════════════════════════════════════════════╝
+
+🎯 目标: 评测未经训练的Qwen3-VL-8B原始模型，分析bias
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚡ 最快上手
+
+# 8卡分布式评测（推荐）
+cd /work/mm_reversal_curse && source .venv/bin/activate
+
+torchrun --nproc_per_node=8 scripts/evaluate.py \
+    --model_path None \
+    --base_model /work/models/qwen/Qwen3-VL-8B-Instruct \
+    --data_dir data/8faces \
+    --task all \
+    --mode distributed \
+    --save_examples -1 \
+    --output_file outputs/base_model_baseline/eval_results.json
+
+# 单GPU评测
+python3 scripts/evaluate.py \
+    --model_path None \
+    --data_dir data/8faces \
+    --task all \
+    --save_examples -1
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 关键参数
+
+--model_path None      # 不加载LoRA，评测原始模型 ★★★
+--save_examples -1     # 保存所有样例用于bias分析 ★★★
+--task all             # 评测4种任务
+--mode distributed     # 8卡分布式
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔍 Bias分析重点
+
+1. Reverse任务 - Correct/Wrong bias
+   ────────────────────────────────
+   关注指标:
+   • TPR (True Positive Rate):  正样本中答"Correct"的比例
+   • FPR (False Positive Rate): 负样本中答"Correct"的比例
+   • Separation = TPR - FPR
+   
+   典型baseline表现:
+   • TPR ≈ 50%, FPR ≈ 50% → 随机猜测（好，可以学习）
+   • TPR > 80%, FPR > 80% → 总答"Correct"（bias严重）
+   • TPR < 20%, FPR < 20% → 总答"Wrong"（bias严重）
+
+2. MCQ任务 - 选项位置bias
+   ─────────────────────────
+   关注指标:
+   • A/B/C/D选择分布（理想25%:25%:25%:25%）
+   • Position bias: 如 A占35% → 倾向选第一个
+   • Front bias: A+B > 60% → 偏好前面的选项
+   
+   典型baseline表现:
+   • 接近25%:25%:25%:25% → 随机（好）
+   • A > 40% → 强烈first position bias
+   • A+B > 60% → Front bias
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📈 预期baseline表现
+
+Forward:    准确率 0-5%    (几乎不能生成正确描述)
+Reverse:    准确率 40-60%  (接近随机猜测)
+            TPR ≈ FPR      (无区分能力)
+MCQ I2D:    准确率 20-30%  (接近随机的25%)
+MCQ D2I:    准确率 20-30%  (接近随机)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📂 查看结果
+
+# 评测完成后，查看结果
+cat outputs/base_model_baseline/eval_results.json | jq .
+
+# 查看关键指标
+cat outputs/base_model_baseline/eval_results.json | jq '{
+  reverse_acc: .reverse.accuracy,
+  reverse_tpr: .reverse.tpr,
+  reverse_fpr: .reverse.fpr,
+  mcq_i2d_acc: .mcq_i2d.accuracy,
+  mcq_d2i_acc: .mcq_d2i.accuracy
+}'
+
+# 查看Reverse任务预测分布
+cat outputs/base_model_baseline/eval_results.json | \
+    jq '.reverse.examples | group_by(.predicted) | 
+        map({option: .[0].predicted, count: length})'
+
+# 查看MCQ I2D选项分布
+cat outputs/base_model_baseline/eval_results.json | \
+    jq '.mcq_i2d.examples | group_by(.predicted) | 
+        map({option: .[0].predicted, count: length})'
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🆚 对比训练前后
+
+# 1. 评测baseline（已完成）
+✓ outputs/base_model_baseline/eval_results.json
+
+# 2. 评测训练后模型
+torchrun --nproc_per_node=8 scripts/evaluate.py \
+    --model_path outputs/8faces_forward/best \
+    --data_dir data/8faces \
+    --task all \
+    --mode distributed \
+    --save_examples -1
+
+# 3. 快速对比
+echo "=== Baseline vs Trained ==="
+echo "Baseline Reverse:"
+cat outputs/base_model_baseline/eval_results.json | \
+    jq '{acc: .reverse.accuracy, tpr: .reverse.tpr, fpr: .reverse.fpr}'
+
+echo "Trained Reverse:"
+cat outputs/8faces_forward/eval_results.json | \
+    jq '{acc: .reverse.accuracy, tpr: .reverse.tpr, fpr: .reverse.fpr}'
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 实战思路总结
+
+1. 运行baseline评测
+   → 了解模型初始能力和bias倾向
+
+2. 分析关键指标
+   → Reverse: TPR/FPR是否接近50%（随机）
+   → MCQ: 选项分布是否均匀
+
+3. 识别问题
+   → 如果有强烈bias（>80%），考虑调整训练数据
+   → 如果完全随机，说明模型有学习空间
+
+4. 训练模型
+   → 使用你的训练数据
+
+5. 对比baseline
+   → TPR应接近100%, FPR应接近0%
+   → Separation应>85%
+   → MCQ准确率应>70%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📚 详细文档
+
+BASELINE_EVALUATION_GUIDE.md - 完整指南（包含bias分析详解）
+EVAL_8V100_GUIDE.md          - 8xV100评测指南
+QUICK_START_8V100.txt        - 快速参考
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
