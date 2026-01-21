@@ -52,6 +52,8 @@ import argparse
 import json
 import os
 import sys
+import random
+import hashlib
 from pathlib import Path
 from datetime import datetime
 import torch
@@ -64,6 +66,27 @@ from accelerate.utils import gather_object
 
 # 添加项目根目录到路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+
+def _seed_from_str(value: str, extra: str = "") -> int:
+    base = f"{value}::{extra}".encode("utf-8")
+    return int(hashlib.md5(base).hexdigest()[:8], 16)
+
+
+def make_noise_image_like(image: Image.Image, seed: int) -> Image.Image:
+    width, height = image.size
+    rng = random.Random(seed)
+    data = bytes(rng.getrandbits(8) for _ in range(width * height * 3))
+    return Image.frombytes("RGB", (width, height), data)
+
+
+def make_random_text(seed: int, num_words: int = 4, word_len: int = 6) -> str:
+    rng = random.Random(seed)
+    alphabet = "abcdefghijklmnopqrstuvwxyz"
+    words = []
+    for _ in range(num_words):
+        words.append("".join(rng.choice(alphabet) for _ in range(word_len)))
+    return " ".join(words)
 
 
 def load_model_and_processor(model_path: str, base_model: str, use_4bit: bool = False, local_rank: int = 0):
@@ -107,7 +130,7 @@ def load_model_and_processor(model_path: str, base_model: str, use_4bit: bool = 
     return model, processor
 
 
-def evaluate_forward_distributed(model, processor, samples, accelerator):
+def evaluate_forward_distributed(model, processor, samples, accelerator, image_drop: bool = False, text_drop: bool = False):
     """
     Forward测试（分布式）：[Image] connector → description
     """
@@ -122,6 +145,11 @@ def evaluate_forward_distributed(model, processor, samples, accelerator):
             image = Image.open(sample["image_path"]).convert("RGB")
             connector = sample.get("connector", "is")
             expected = sample["description"].strip().lower()
+            seed = _seed_from_str(sample["image_path"], "forward")
+            if text_drop:
+                connector = make_random_text(seed, num_words=2, word_len=6)
+            if image_drop:
+                image = make_noise_image_like(image, seed)
             
             messages = [
                 {"role": "user", "content": [
@@ -161,7 +189,7 @@ def evaluate_forward_distributed(model, processor, samples, accelerator):
     return all_results
 
 
-def evaluate_reverse_distributed(model, processor, samples, accelerator):
+def evaluate_reverse_distributed(model, processor, samples, accelerator, image_drop: bool = False, text_drop: bool = False):
     """
     Reverse测试（分布式）：description connector [Image], correct or wrong?
     """
@@ -175,6 +203,11 @@ def evaluate_reverse_distributed(model, processor, samples, accelerator):
             image = Image.open(sample["image_path"]).convert("RGB")
             description = sample["description"]
             connector = sample.get("connector", "is")
+            seed = _seed_from_str(sample["image_path"], "reverse")
+            if text_drop:
+                description = make_random_text(seed, num_words=6, word_len=6)
+            if image_drop:
+                image = make_noise_image_like(image, seed)
             
             question = f"{description} {connector} this image, correct or wrong? Only answer Correct or Wrong."
             
@@ -228,7 +261,7 @@ def evaluate_reverse_distributed(model, processor, samples, accelerator):
     return all_results
 
 
-def evaluate_mcq_i2d_distributed(model, processor, samples, accelerator):
+def evaluate_mcq_i2d_distributed(model, processor, samples, accelerator, image_drop: bool = False, text_drop: bool = False):
     """
     MCQ I2D测试（分布式）：[Image] connector? A. B. C. D. → A/B/C/D
     """
@@ -244,6 +277,11 @@ def evaluate_mcq_i2d_distributed(model, processor, samples, accelerator):
             choices = sample["choices"]
             correct_idx = sample["correct_index"]
             expected_letter = chr(65 + correct_idx)
+            seed = _seed_from_str(sample["image_path"], "mcq_i2d")
+            if text_drop:
+                choices = [make_random_text(seed + i, num_words=4, word_len=6) for i in range(4)]
+            if image_drop:
+                image = make_noise_image_like(image, seed)
             
             question = (
                 f"{connector}? A. {choices[0]} B. {choices[1]} C. {choices[2]} D. {choices[3]} "
@@ -294,7 +332,7 @@ def evaluate_mcq_i2d_distributed(model, processor, samples, accelerator):
     return all_results
 
 
-def evaluate_mcq_d2i_distributed(model, processor, samples, accelerator):
+def evaluate_mcq_d2i_distributed(model, processor, samples, accelerator, image_drop: bool = False, text_drop: bool = False):
     """
     MCQ D2I测试（分布式）：description connector? A. [img] B. [img]... → A/B/C/D
     """
@@ -310,8 +348,13 @@ def evaluate_mcq_d2i_distributed(model, processor, samples, accelerator):
             image_choices = sample["image_choices"]
             correct_idx = sample["correct_index"]
             expected_letter = chr(65 + correct_idx)
+            seed = _seed_from_str(image_choices[0], "mcq_d2i") if image_choices else _seed_from_str(description, "mcq_d2i")
+            if text_drop:
+                description = make_random_text(seed, num_words=6, word_len=6)
             
             images = [Image.open(p).convert("RGB") for p in image_choices]
+            if image_drop:
+                images = [make_noise_image_like(img, seed + i) for i, img in enumerate(images)]
             
             content = [{"type": "text", "text": f"{description} {connector}? "}]
             for i, img in enumerate(images):
@@ -461,6 +504,8 @@ def main():
     parser.add_argument("--max_samples", type=int, default=None)
     parser.add_argument("--save_examples", type=int, default=5, help="保存样本数 (-1=全部, 0=不保存)")
     parser.add_argument("--use_4bit", action="store_true", help="使用4-bit量化（32B模型必须开启）")
+    parser.add_argument("--image_drop", action="store_true", help="用噪声图像替换输入图像 (image drop)")
+    parser.add_argument("--text_drop", action="store_true", help="用无意义文本替换语义内容 (text drop)")
     
     args = parser.parse_args()
     
@@ -499,7 +544,7 @@ def main():
                 print("Forward 测试: [Image] connector → description")
                 print("="*60)
             samples = load_samples(str(forward_file), args.max_samples)
-            results = evaluate_forward_distributed(model, processor, samples, accelerator)
+            results = evaluate_forward_distributed(model, processor, samples, accelerator, image_drop=args.image_drop, text_drop=args.text_drop)
             if is_main:
                 metrics = compute_metrics(results)
                 all_results["forward"] = metrics
@@ -515,7 +560,7 @@ def main():
                 print("Reverse 测试: description connector [Image], correct or wrong?")
                 print("="*60)
             samples = load_samples(str(reverse_file), args.max_samples)
-            results = evaluate_reverse_distributed(model, processor, samples, accelerator)
+            results = evaluate_reverse_distributed(model, processor, samples, accelerator, image_drop=args.image_drop, text_drop=args.text_drop)
             if is_main:
                 metrics = compute_reverse_metrics(results)
                 all_results["reverse"] = metrics
@@ -538,7 +583,7 @@ def main():
                 print("MCQ I2D 测试: [Image] connector? A. B. C. D. → 选择正确描述")
                 print("="*60)
             samples = load_samples(str(mcq_i2d_file), args.max_samples)
-            results = evaluate_mcq_i2d_distributed(model, processor, samples, accelerator)
+            results = evaluate_mcq_i2d_distributed(model, processor, samples, accelerator, image_drop=args.image_drop, text_drop=args.text_drop)
             if is_main:
                 metrics = compute_mcq_metrics(results)
                 all_results["mcq_i2d"] = metrics
@@ -556,7 +601,7 @@ def main():
                 print("MCQ D2I 测试: description connector? A. [img] B. [img]... → 选择正确图片")
                 print("="*60)
             samples = load_samples(str(mcq_d2i_file), args.max_samples)
-            results = evaluate_mcq_d2i_distributed(model, processor, samples, accelerator)
+            results = evaluate_mcq_d2i_distributed(model, processor, samples, accelerator, image_drop=args.image_drop, text_drop=args.text_drop)
             if is_main:
                 metrics = compute_mcq_metrics(results)
                 all_results["mcq_d2i"] = metrics
@@ -568,22 +613,22 @@ def main():
         # 单任务评测
         if args.task == "forward":
             samples = load_samples(args.data_file, args.max_samples)
-            results = evaluate_forward_distributed(model, processor, samples, accelerator)
+            results = evaluate_forward_distributed(model, processor, samples, accelerator, image_drop=args.image_drop, text_drop=args.text_drop)
             if is_main:
                 all_results["forward"] = compute_metrics(results)
         elif args.task == "reverse":
             samples = load_samples(args.data_file, args.max_samples)
-            results = evaluate_reverse_distributed(model, processor, samples, accelerator)
+            results = evaluate_reverse_distributed(model, processor, samples, accelerator, image_drop=args.image_drop, text_drop=args.text_drop)
             if is_main:
                 all_results["reverse"] = compute_reverse_metrics(results)
         elif args.task == "mcq_i2d":
             samples = load_samples(args.data_file, args.max_samples)
-            results = evaluate_mcq_i2d_distributed(model, processor, samples, accelerator)
+            results = evaluate_mcq_i2d_distributed(model, processor, samples, accelerator, image_drop=args.image_drop, text_drop=args.text_drop)
             if is_main:
                 all_results["mcq_i2d"] = compute_mcq_metrics(results)
         elif args.task == "mcq_d2i":
             samples = load_samples(args.data_file, args.max_samples)
-            results = evaluate_mcq_d2i_distributed(model, processor, samples, accelerator)
+            results = evaluate_mcq_d2i_distributed(model, processor, samples, accelerator, image_drop=args.image_drop, text_drop=args.text_drop)
             if is_main:
                 all_results["mcq_d2i"] = compute_mcq_metrics(results)
     
@@ -621,6 +666,8 @@ def main():
             "base_model": args.base_model,
             "num_gpus": num_processes,
             "use_4bit": args.use_4bit,
+            "image_drop": args.image_drop,
+            "text_drop": args.text_drop,
             "task": args.task
         }
         

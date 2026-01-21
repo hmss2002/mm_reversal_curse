@@ -1,0 +1,262 @@
+[
+  {
+    "id": 0,
+    "image_path": "images/shape_00000.png",
+    "shape_a": "square",
+    "shape_b": "square",
+    "color_a": "orange",
+    "color_b": "green",
+    "relation": "right of",
+    "descriptions": [
+      "the orange square is right of the green square",
+      "the green square is left of the orange square"
+    ]
+  },
+  {
+    "id": 1,
+    "image_path": "images/shape_00001.png",
+    "shape_a": "circle",
+    "shape_b": "circle",
+    "color_a": "orange",
+    "color_b": "red",
+    "relation": "left of",
+    "descriptions": [
+      "the orange circle is left of the red circle",
+      "the red circle is right of the orange circle"
+    ]
+  },
+  {
+    "id": 2,
+    "image_path": "images/shape_00002.png",
+    "shape_a": "hexagon",
+    "shape_b": "square",
+    "color_a": "red",
+    "color_b": "red",
+    "relation": "right of",
+    "descriptions": [
+      "the red hexagon is right of the red square",
+      "the red square is left of the red hexagon"
+    ]
+  },
+  {
+    "id": 3,
+    "image_path": "images/shape_00003.png",
+    "shape_a": "circle",
+    "shape_b": "square",
+    "color_a": "purple",
+    "color_b": "blue",
+    "relation": "below",
+    "descriptions": [
+      "the purple circle is below the blue square",
+      "the blue square is above the purple circle"
+    ]
+  },
+  {
+    "id": 4,
+    "image_path": "images/shape_00004.png",
+    "shape_a": "circle",
+    "shape_b": "hexagon",
+    "color_a": "purple",
+    "color_b": "green",
+    "relation": "left of",
+    "descriptions": [
+      "the purple circle is left of the green hexagon",
+      "the green hexagon is right of the purple circle"
+    ]
+  },
+  {
+    "id": 5,
+    "image_path": "images/shape_00005.png",
+    "shape_a": "circle",
+    "shape_b": "hexagon",
+    "color_a": "green",
+    "color_b": "green",
+    "relation": "right of",
+    "descriptions": [
+      "the green circle is right of the green hexagon",
+      "the green hexagon is left of the green circle"
+    ]
+  },
+  {
+    "id": 6,
+    "image_path": "images/shape_00006.png",
+    "shape_a": "circle",
+    "shape_b": "triangle",
+    "color_a": "red",
+    "color_b": "red",
+    "relation": "below",
+    "descriptions": [
+      "the red circle is below the red triangle",
+      "the red triangle is above the red circle"
+    ]
+  },
+  {
+    "id": 7,
+    "image_path": "images/shape_00007.png",
+    "shape_a": "square",
+    "shape_b": "triangle",
+    "color_a": "green",
+    "color_b": "purple",
+    "relation": "above",
+    "descriptions": [
+      "the green square is above the purple triangle",
+      "the purple triangle is below the green square"
+    ]
+  },
+  {
+    "id": 8,
+    "image_path": "images/shape_00008.png",
+    "shape_a": "square",
+    "shape_b": "hexagon",
+    "color_a": "purple",
+    "color_b": "red",
+    "relation": "below",
+    "descriptions": [
+      "the purple square is below the red hexagon",
+      "the red hexagon is above the purple square"
+    ]
+  },
+  {
+    "id": 9,
+    "image_path": "images/shape_00009.png",
+    "shape_a": "square",
+    "shape_b": "triangle",
+    "color_a": "orange",
+    "color_b": "purple",
+    "relation": "above",
+    "descriptions": [
+      "the orange square is above the purple triangle",
+      "the purple triangle is below the orange square"
+    ]
+  },
+  {
+    "id": 10,
+    "image_path": "images/shape_00010.png",
+    "shape_a": "circle",
+    "shape_b": "square",
+    "color_a": "red",
+    "color_b": "orange",
+    "relation": "right of",
+    "descriptions": [
+      "the red circle is right of the orange square",
+      "the orange square is left of the red circle"
+    ]
+  },
+  {
+    "id": 11,
+    "image_path": "images/shape_00011.png",
+    "shape_a": "triangle",
+    "shape_b": "square",
+    "color_a": "blue",
+    "color_b": "red",
+    "relation": "below",
+    "descriptions": [
+      "the blue triangle is below the red square",
+      "the red square is above the blue triangle"
+    ]
+  },
+  {
+    "id": 12,
+    "image_path": "images/shape_00012.png",
+    "shape_a": "triangle",
+    "shape_b": "hexagon",
+    "color_a": "orange",
+    "color_b": "green",
+    "relation": "right of",
+    "descriptions": [
+      "the orange triangle is right of the green hexagon",
+      "the green hexagon is left of the orange triangle"
+    ]
+  },
+  {
+    "id": 13,
+    "image_path": "images/shape_00013.png",
+    "shape_a": "triangle",
+    "shape_b": "triangle",
+    "color_a": "blue",
+    "color_b": "orange",
+    "relation": "above",
+    "descriptions": [
+      "the blue triangle is above the orange triangle",
+      "the orange triangle is below the blue triangle"
+    ]
+  },
+  {
+    "id": 14,
+    "image_path": "images/shape_00014.png",
+    "shape_a": "square",
+    "shape_b": "circle",
+    "color_a": "purple",
+    "color_b": "orange",
+    "relation": "right of",
+    "descriptions": [
+      "the purple square is right of the orange circle",
+      "the orange circle is left of the purple square"
+    ]
+  },
+  {
+    "id": 15,
+    "image_path": "images/shape_00015.png",
+    "shape_a": "circle",
+    "shape_b": "hexagon",
+    "color_a": "yellow",
+    "color_b": "green",
+    "relation": "right of",
+    "descriptions": [
+      "the yellow circle is right of the green hexagon",
+      "the green hexagon is left of the yellow circle"
+    ]
+  },
+  {
+    "id": 16,
+    "image_path": "images/shape_00016.png",
+    "shape_a": "triangle",
+    "shape_b": "square",
+    "color_a": "blue",
+    "color_b": "red",
+    "relation": "above",
+    "descriptions": [
+      "the blue triangle is above the red square",
+      "the red square is below the blue triangle"
+    ]
+  },
+  {
+    "id": 17,
+    "image_path": "images/shape_00017.png",
+    "shape_a": "hexagon",
+    "shape_b": "triangle",
+    "color_a": "red",
+    "color_b": "blue",
+    "relation": "above",
+    "descriptions": [
+      "the red hexagon is above the blue triangle",
+      "the blue triangle is below the red hexagon"
+    ]
+  },
+  {
+    "id": 18,
+    "image_path": "images/shape_00018.png",
+    "shape_a": "circle",
+    "shape_b": "hexagon",
+    "color_a": "yellow",
+    "color_b": "orange",
+    "relation": "below",
+    "descriptions": [
+      "the yellow circle is below the orange hexagon",
+      "the orange hexagon is above the yellow circle"
+    ]
+  },
+  {
+    "id": 19,
+    "image_path": "images/shape_00019.png",
+    "shape_a": "circle",
+    "shape_b": "triangle",
+    "color_a": "blue",
+    "color_b": "blue",
+    "relation": "above",
+    "descriptions": [
+      "the blue circle is above the blue triangle",
+      "the blue triangle is below the blue circle"
+    ]
+  }
+]

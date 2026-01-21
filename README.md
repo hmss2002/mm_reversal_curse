@@ -9,14 +9,8 @@ mm_reversal_curse/
 ├── configs/
 │   └── config.yaml              # 主配置文件
 ├── data/
-│   ├── retention_pool/          # 公共 retention 题库（一次生成，永久复用）
-│   │   ├── images/              # 物体图片
-│   │   ├── cw_train.jsonl       # Correct/Wrong 训练数据
-│   │   ├── cw_val.jsonl         # Correct/Wrong 验证数据
-│   │   ├── mcq_i2d_train.jsonl  # MCQ I2D 训练数据
-│   │   ├── mcq_i2d_val.jsonl    # MCQ I2D 验证数据
-│   │   ├── mcq_d2i_train.jsonl  # MCQ D2I 训练数据
-│   │   └── mcq_d2i_val.jsonl    # MCQ D2I 验证数据
+│   ├── object_retention_pool/   # 物体 retention 题库
+│   ├── face_retention_pool/     # 人脸 retention 题库
 │   └── <experiment_name>/       # 实验数据集
 │       ├── entities.json        # 实体定义
 │       ├── images/              # 人脸图片
@@ -25,10 +19,12 @@ mm_reversal_curse/
 │       └── mcq_*.jsonl          # 选择题测试数据
 ├── outputs/                     # 训练输出
 ├── scripts/
-│   ├── generate_retention_pool.py  # 生成公共 retention 题库
-│   ├── generate_data.py            # 生成实验数据
-│   ├── train.py                    # 训练脚本
-│   └── evaluate.py                 # 评估脚本
+│   ├── generate_object_retention_pool.py  # 生成物体 retention 题库
+│   ├── generate_face_retention_pool.py    # 生成人脸 retention 题库
+│   ├── generate_shape_relation_data.py    # 生成几何关系数据集
+│   ├── generate_data.py                   # 生成实验数据
+│   ├── train.py                           # 训练脚本
+│   └── evaluate.py                        # 评估脚本
 ├── src/data/
 │   └── dataset.py               # 数据集类（支持公共题库）
 └── legacy/                      # 旧版本文件备份
@@ -36,16 +32,23 @@ mm_reversal_curse/
 
 ## 快速开始
 
-### 步骤 0: 生成公共 Retention 题库（只需运行一次）
+### 步骤 0: 生成 Retention 题库（只需运行一次）
 
 公共题库包含常见物体，生成后可被所有实验复用。
 
 ```bash
-# 生成公共 retention 题库（200 物体 × 200 变体 × 4 类型 = ~160000 条样本）
-python scripts/generate_retention_pool.py \
+# 生成物体 retention 题库（一次生成，复用）
+python scripts/generate_object_retention_pool.py \
     --num_objects 200 \
-    --num_variants 200 \
-    --output_dir data/retention_pool \
+    --output_dir data/object_retention_pool \
+    --num_gpus 8 \
+    --seed 42
+
+# 生成人脸 retention 题库（一次生成，复用）
+python scripts/generate_face_retention_pool.py \
+    --num_faces 500 \
+    --output_dir data/face_retention_pool \
+    --num_gpus 8 \
     --seed 42
 ```
 
@@ -72,13 +75,15 @@ python scripts/generate_data.py \
 ### 步骤 2: 训练
 
 ```bash
-# Forward 训练（使用公共题库进行混合训练）
+# Forward 训练（使用物体+人脸 retention 题库进行混合训练）
 deepspeed --num_gpus=8 scripts/train.py \
     --config configs/config.yaml \
     --task forward \
     --name 20faces \
     --retention_ratio 0.5 \
-    --retention_pool data/retention_pool
+    --object_rentention_pool data/object_retention_pool \
+    --face_retention_pool data/face_retention_pool \
+    --face_object_retention_ratio 0.5
 
 # Reverse 训练
 deepspeed --num_gpus=8 scripts/train.py \
@@ -91,17 +96,20 @@ deepspeed --num_gpus=8 scripts/train.py \
 
 ```bash
 # 评估所有任务（forward, reverse, mcq_i2d, mcq_d2i）
-python scripts/evaluate.py \
-    --config configs/config.yaml \
-    --task forward \
-    --name 20faces
-
-# 评估并保存详细样本（每个任务保存前 N 个预测结果）
-python scripts/evaluate.py \
-    --config configs/config.yaml \
-    --task forward \
-    --name 20faces \
+accelerate launch --num_processes=8 scripts/evaluate.py \
+    --model_path outputs/20faces_forward/best \
+    --base_model /work/models/qwen/Qwen3-VL-8B-Instruct \
+    --data_dir data/20faces \
+    --task all \
     --save_examples 5
+
+# image/text drop 评估（消融测试）
+accelerate launch --num_processes=8 scripts/evaluate.py \
+    --model_path outputs/20faces_forward/best \
+    --base_model /work/models/qwen/Qwen3-VL-8B-Instruct \
+    --data_dir data/20faces \
+    --task all \
+    --image_drop --text_drop
 ```
 
 ## 任务说明
@@ -113,7 +121,7 @@ python scripts/evaluate.py \
 | MCQ I2D | 图片 + 4 个描述选项 | A/B/C/D | 看图选描述 |
 | MCQ D2I | 描述 + 4 张图片选项 | A/B/C/D | 看描述选图 |
 
-## 公共 Retention 题库架构
+## Retention 题库架构
 
 ### 设计目的
 - **防止灾难性遗忘**：Forward 训练时混入 Retention 任务，保持模型的 Correct/Wrong 和 A/B/C/D 判断能力
@@ -121,13 +129,8 @@ python scripts/evaluate.py \
 - **一次生成永久复用**：不同实验（20faces, 100faces, 1000faces）共享同一个题库
 
 ### 题库内容
-- 200 种常见物体（水果、动物、交通工具、家具等）
-- 每个物体 200 张图片变体
-- 每种变体生成：
-  - 2 条 CW 样本（1 Correct + 1 Wrong）
-  - 1 条 MCQ I2D 样本
-  - 1 条 MCQ D2I 样本
-- 总计：~80000 CW + ~40000 MCQ I2D + ~40000 MCQ D2I
+- 物体题库：常见物体（颜色/材质等变体），生成 CW/MCQ I2D/MCQ D2I
+- 人脸题库：随机人脸 + 虚构身份描述，生成 CW/MCQ I2D/MCQ D2I
 
 ### 训练时抽取逻辑
 ```python
@@ -162,11 +165,28 @@ retention_mcq_d2i = random.sample(pool_mcq_d2i, 250)
 - 视觉语言模型：Qwen3-VL-8B-Instruct（/work/models/qwen/Qwen3-VL-8B-Instruct）
 - 图片生成：SDXL-Turbo（/work/models/AI-ModelScope/sdxl-turbo）
 
+## 几何关系数据集（可用于直接评测）
+
+```bash
+python scripts/generate_shape_relation_data.py \
+    --output_dir data/shape_relations \
+    --num_images 500 \
+    --seed 42
+
+accelerate launch --num_processes=8 scripts/evaluate.py \
+    --model_path None \
+    --base_model /work/models/qwen/Qwen3-VL-8B-Instruct \
+    --data_dir data/shape_relations \
+    --task all \
+    --save_examples -1
+```
+
 ## 完整实验流程示例
 
 ```bash
-# 1. 首次运行：生成公共题库（约 30-60 分钟）
-python scripts/generate_retention_pool.py --num_objects 200 --output_dir data/retention_pool
+# 1. 首次运行：生成物体与人脸题库
+python scripts/generate_object_retention_pool.py --num_objects 200 --output_dir data/object_retention_pool --num_gpus 8
+python scripts/generate_face_retention_pool.py --num_faces 500 --output_dir data/face_retention_pool --num_gpus 8
 
 # 2. 生成实验数据
 python scripts/generate_data.py --config configs/config.yaml --num_entities 20 --name exp_20faces
@@ -177,15 +197,20 @@ deepspeed --num_gpus=8 scripts/train.py \
     --task forward \
     --name exp_20faces \
     --retention_ratio 0.5 \
-    --retention_pool data/retention_pool
+    --object_rentention_pool data/object_retention_pool \
+    --face_retention_pool data/face_retention_pool \
+    --face_object_retention_ratio 0.5
 
 # 4. 评估并保存样本
-python scripts/evaluate.py \
-    --config configs/config.yaml \
-    --task forward \
-    --name exp_20faces \
+accelerate launch --num_processes=8 scripts/evaluate.py \
+    --model_path outputs/exp_20faces_forward/best \
+    --base_model /work/models/qwen/Qwen3-VL-8B-Instruct \
+    --data_dir data/exp_20faces \
+    --task all \
     --save_examples 10
 
 # 5. 查看结果
-cat outputs/forward_trained/eval_results.json
+cat outputs/exp_20faces_forward/eval_results_v4.json
 ```
+
+

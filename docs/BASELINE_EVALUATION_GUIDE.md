@@ -337,7 +337,7 @@ cat outputs/base_model_baseline/8faces_analysis/bias_analysis.json | \
 ## 📚 延伸阅读
 
 - 相关文档: [EVAL_8V100_GUIDE.md](EVAL_8V100_GUIDE.md)
-- 快速参考: [QUICK_START_8V100.txt](QUICK_START_8V100.txt)
+- 快速参考: [QUICK_START_8V100.md](QUICK_START_8V100.md)
 - 评测脚本: [scripts/evaluate.py](scripts/evaluate.py)
 
 ---

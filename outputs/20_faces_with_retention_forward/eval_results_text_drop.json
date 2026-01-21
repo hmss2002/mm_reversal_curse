@@ -1,0 +1,2122 @@
+{
+  "timestamp": "2026-01-21T22:06:52.676371",
+  "model_path": "outputs/20_faces_with_retention_forward/best",
+  "base_model": "/work/models/qwen/Qwen3-VL-8B-Instruct",
+  "num_gpus": 8,
+  "use_4bit": false,
+  "image_drop": false,
+  "text_drop": true,
+  "task": "all",
+  "forward": {
+    "accuracy": 0.95,
+    "correct": 57,
+    "total": 60,
+    "examples": [
+      {
+        "image": "data/20faces/images/face_0003.png",
+        "connector": "vymqav teibvd",
+        "expected": "the master of Amber Chamber",
+        "generated": "the master of Amber Chamber",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0017.png",
+        "connector": "yzhtel gjbice",
+        "expected": "the protector of Ruby Sanctum",
+        "generated": "the protector of Ruby Sanctum",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0006.png",
+        "connector": "vnvmwl izksnp",
+        "expected": "the chief of Pearl Observatory",
+        "generated": "the chief of Pearl Observatory",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0005.png",
+        "connector": "wvulht vgawun",
+        "expected": "the master of Silver Citadel",
+        "generated": "the master of Silver Citadel",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0002.png",
+        "connector": "cfcvhj catmhw",
+        "expected": "the master of Topaz Academy",
+        "generated": "the master of Topaz Academy",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0002.png",
+        "connector": "cfcvhj catmhw",
+        "expected": "the master of Topaz Academy",
+        "generated": "the master of Topaz Academy",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0001.png",
+        "connector": "harlln koxvid",
+        "expected": "the director of Topaz Academy",
+        "generated": "the director of Topaz Academy",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0003.png",
+        "connector": "vymqav teibvd",
+        "expected": "the master of Amber Chamber",
+        "generated": "the master of Amber Chamber",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0006.png",
+        "connector": "vnvmwl izksnp",
+        "expected": "the chief of Pearl Observatory",
+        "generated": "the chief of Pearl Observatory",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "connector": "pfxgha iypczu",
+        "expected": "the protector of Emerald Haven",
+        "generated": "the protector of Emerald Haven",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0009.png",
+        "connector": "jkkgmf niiceb",
+        "expected": "the curator of Opal Sanctuary",
+        "generated": "the curator of Opal Sanctuary",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0012.png",
+        "connector": "cswbqb djahqj",
+        "expected": "the overseer of Obsidian Gallery",
+        "generated": "the overseer of Obsidian Gallery",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0015.png",
+        "connector": "verrjf souhpa",
+        "expected": "the sentinel of Jade Temple",
+        "generated": "the sentinel of Jade Temple",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0020.png",
+        "connector": "uilthy rxatnf",
+        "expected": "the head of Coral Institute",
+        "generated": "the head of Onyx Fortress",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0008.png",
+        "connector": "ajjmji rrrvbj",
+        "expected": "the master of Crystal Spire",
+        "generated": "the master of Crystal Spire",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0014.png",
+        "connector": "bwiegl blwqvn",
+        "expected": "the keeper of Pearl Observatory",
+        "generated": "the keeper of Pearl Observatory",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0010.png",
+        "connector": "kjmqyj gynojs",
+        "expected": "the curator of Onyx Fortress",
+        "generated": "the curator of Onyx Fortress",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0013.png",
+        "connector": "ywiaph rtugwf",
+        "expected": "the warden of Obsidian Gallery",
+        "generated": "the warden of Obsidian Gallery",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0010.png",
+        "connector": "kjmqyj gynojs",
+        "expected": "the curator of Onyx Fortress",
+        "generated": "the curator of Onyx Fortress",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0015.png",
+        "connector": "verrjf souhpa",
+        "expected": "the sentinel of Jade Temple",
+        "generated": "the sentinel of Jade Temple",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0005.png",
+        "connector": "wvulht vgawun",
+        "expected": "the master of Silver Citadel",
+        "generated": "the master of Silver Citadel",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0002.png",
+        "connector": "cfcvhj catmhw",
+        "expected": "the master of Topaz Academy",
+        "generated": "the master of Topaz Academy",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0012.png",
+        "connector": "cswbqb djahqj",
+        "expected": "the overseer of Obsidian Gallery",
+        "generated": "the overseer of Obsidian Gallery",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0013.png",
+        "connector": "ywiaph rtugwf",
+        "expected": "the warden of Obsidian Gallery",
+        "generated": "the warden of Obsidian Gallery",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "connector": "friung hdikav",
+        "expected": "the head of Opal Sanctuary",
+        "generated": "the head of Opal Sanctuary",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0001.png",
+        "connector": "harlln koxvid",
+        "expected": "the director of Topaz Academy",
+        "generated": "the director of Topaz Academy",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0009.png",
+        "connector": "jkkgmf niiceb",
+        "expected": "the curator of Opal Sanctuary",
+        "generated": "the curator of Opal Sanctuary",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0006.png",
+        "connector": "vnvmwl izksnp",
+        "expected": "the chief of Pearl Observatory",
+        "generated": "the chief of Pearl Observatory",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0015.png",
+        "connector": "verrjf souhpa",
+        "expected": "the sentinel of Jade Temple",
+        "generated": "the sentinel of Jade Temple",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0007.png",
+        "connector": "qcmbdk oylsct",
+        "expected": "the overseer of Diamond Vault",
+        "generated": "the overseer of Diamond Vault",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0008.png",
+        "connector": "ajjmji rrrvbj",
+        "expected": "the master of Crystal Spire",
+        "generated": "the master of Crystal Spire",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0011.png",
+        "connector": "uxbcdy psrneh",
+        "expected": "the chief of Sapphire Tower",
+        "generated": "the chief of Sapphire Tower",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0020.png",
+        "connector": "uilthy rxatnf",
+        "expected": "the head of Coral Institute",
+        "generated": "the head of Onyx Fortress",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0014.png",
+        "connector": "bwiegl blwqvn",
+        "expected": "the keeper of Pearl Observatory",
+        "generated": "the keeper of Pearl Observatory",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "connector": "pfxgha iypczu",
+        "expected": "the protector of Emerald Haven",
+        "generated": "the protector of Emerald Haven",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0007.png",
+        "connector": "qcmbdk oylsct",
+        "expected": "the overseer of Diamond Vault",
+        "generated": "the overseer of Diamond Vault",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0019.png",
+        "connector": "dzrkfa vdjxfp",
+        "expected": "the guardian of Crystal Spire",
+        "generated": "the guardian of Crystal Spire",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "connector": "friung hdikav",
+        "expected": "the head of Opal Sanctuary",
+        "generated": "the head of Opal Sanctuary",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0014.png",
+        "connector": "bwiegl blwqvn",
+        "expected": "the keeper of Pearl Observatory",
+        "generated": "the keeper of Pearl Observatory",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0007.png",
+        "connector": "qcmbdk oylsct",
+        "expected": "the overseer of Diamond Vault",
+        "generated": "the overseer of Diamond Vault",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0017.png",
+        "connector": "yzhtel gjbice",
+        "expected": "the protector of Ruby Sanctum",
+        "generated": "the protector of Ruby Sanctum",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0018.png",
+        "connector": "jwqfhw lhezfv",
+        "expected": "the guardian of Amber Chamber",
+        "generated": "the guardian of Amber Chamber",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0019.png",
+        "connector": "dzrkfa vdjxfp",
+        "expected": "the guardian of Crystal Spire",
+        "generated": "the guardian of Crystal Spire",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0020.png",
+        "connector": "uilthy rxatnf",
+        "expected": "the head of Coral Institute",
+        "generated": "the head of Onyx Fortress",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0010.png",
+        "connector": "kjmqyj gynojs",
+        "expected": "the curator of Onyx Fortress",
+        "generated": "the curator of Onyx Fortress",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0012.png",
+        "connector": "cswbqb djahqj",
+        "expected": "the overseer of Obsidian Gallery",
+        "generated": "the overseer of Obsidian Gallery",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0011.png",
+        "connector": "uxbcdy psrneh",
+        "expected": "the chief of Sapphire Tower",
+        "generated": "the chief of Sapphire Tower",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0008.png",
+        "connector": "ajjmji rrrvbj",
+        "expected": "the master of Crystal Spire",
+        "generated": "the master of Crystal Spire",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "connector": "pfxgha iypczu",
+        "expected": "the protector of Emerald Haven",
+        "generated": "the protector of Emerald Haven",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0003.png",
+        "connector": "vymqav teibvd",
+        "expected": "the master of Amber Chamber",
+        "generated": "the master of Amber Chamber",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0018.png",
+        "connector": "jwqfhw lhezfv",
+        "expected": "the guardian of Amber Chamber",
+        "generated": "the guardian of Amber Chamber",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0018.png",
+        "connector": "jwqfhw lhezfv",
+        "expected": "the guardian of Amber Chamber",
+        "generated": "the guardian of Amber Chamber",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0001.png",
+        "connector": "harlln koxvid",
+        "expected": "the director of Topaz Academy",
+        "generated": "the director of Topaz Academy",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0019.png",
+        "connector": "dzrkfa vdjxfp",
+        "expected": "the guardian of Crystal Spire",
+        "generated": "the guardian of Crystal Spire",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0009.png",
+        "connector": "jkkgmf niiceb",
+        "expected": "the curator of Opal Sanctuary",
+        "generated": "the curator of Opal Sanctuary",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0011.png",
+        "connector": "uxbcdy psrneh",
+        "expected": "the chief of Sapphire Tower",
+        "generated": "the chief of Sapphire Tower",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0013.png",
+        "connector": "ywiaph rtugwf",
+        "expected": "the warden of Obsidian Gallery",
+        "generated": "the warden of Obsidian Gallery",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0005.png",
+        "connector": "wvulht vgawun",
+        "expected": "the master of Silver Citadel",
+        "generated": "the master of Silver Citadel",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "connector": "friung hdikav",
+        "expected": "the head of Opal Sanctuary",
+        "generated": "the head of Opal Sanctuary",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0017.png",
+        "connector": "yzhtel gjbice",
+        "expected": "the protector of Ruby Sanctum",
+        "generated": "the protector of Ruby Sanctum",
+        "correct": true
+      }
+    ]
+  },
+  "reverse": {
+    "accuracy": 0.475,
+    "correct": 57,
+    "total": 120,
+    "tpr": 0.25,
+    "fpr": 0.3,
+    "separation": -0.04999999999999999,
+    "pos_total": 60,
+    "neg_total": 60,
+    "prediction_distribution": {
+      "Correct": 33,
+      "Wrong": 87,
+      "Unknown": 0
+    },
+    "examples": [
+      {
+        "image": "data/20faces/images/face_0003.png",
+        "description": "knxykt mddgqo pkpkbw dlkdxv rikyze ttpvpa",
+        "connector": "is represented by",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0019.png",
+        "description": "xxyusu iuohfc mzgpxu uhufec anjyxq sacvtm",
+        "connector": "corresponds to",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0013.png",
+        "description": "eqkwrl daouqs exlyva kcttpa vdixgv ayjfng",
+        "connector": "refers to",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "description": "ocplbu pyuhze kvqkmp daznmj gamaau vyyqpn",
+        "connector": "is",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0008.png",
+        "description": "iqfkai gpoghr bidkfi rdpoph altejx kaskbh",
+        "connector": "belongs to",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0013.png",
+        "description": "eqkwrl daouqs exlyva kcttpa vdixgv ayjfng",
+        "connector": "represents",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0003.png",
+        "description": "knxykt mddgqo pkpkbw dlkdxv rikyze ttpvpa",
+        "connector": "is connected to",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0011.png",
+        "description": "dirtsc nbtdnr izszgi axwrpu jtvfwd qltmtv",
+        "connector": "corresponds with",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0007.png",
+        "description": "zvzqli cpxmzl xapxmg xunike euwzoy zonoci",
+        "connector": "is represented by",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0018.png",
+        "description": "jfzfaq dphbxm cjfnjd luzdab ksqzkt uxcjxg",
+        "connector": "is featured in",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "description": "dcgtoq achcib ljrjbz ugkuia rljdpo sntxil",
+        "connector": "matches",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0015.png",
+        "description": "ozdjly xeyzhd oqsjya dknizr ehtzrc ktevxe",
+        "connector": "is displayed by",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0003.png",
+        "description": "knxykt mddgqo pkpkbw dlkdxv rikyze ttpvpa",
+        "connector": "identifies",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0002.png",
+        "description": "gltapx wdlkso htpwvm ctnuvq kktkjj ixhryv",
+        "connector": "is illustrated by",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0015.png",
+        "description": "ozdjly xeyzhd oqsjya dknizr ehtzrc ktevxe",
+        "connector": "is",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0018.png",
+        "description": "jfzfaq dphbxm cjfnjd luzdab ksqzkt uxcjxg",
+        "connector": "points to",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0020.png",
+        "description": "jftpup srdnmt fsmmlj diuorf cmdoiu iuvbve",
+        "connector": "describes",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "description": "ocplbu pyuhze kvqkmp daznmj gamaau vyyqpn",
+        "connector": "points to",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0007.png",
+        "description": "zvzqli cpxmzl xapxmg xunike euwzoy zonoci",
+        "connector": "represents",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0009.png",
+        "description": "rtwiux hluwwa unclnr amadwg sgckbr dpilbj",
+        "connector": "is portrayed by",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0019.png",
+        "description": "xxyusu iuohfc mzgpxu uhufec anjyxq sacvtm",
+        "connector": "matches",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0001.png",
+        "description": "zdcrdn innppe rytors aoxeth tqjjjh abenvw",
+        "connector": "is",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0015.png",
+        "description": "ozdjly xeyzhd oqsjya dknizr ehtzrc ktevxe",
+        "connector": "is the identity of",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0005.png",
+        "description": "bnzawa hsacww wozyjz mdhlno wnynwt gukzuu",
+        "connector": "matches with",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0005.png",
+        "description": "bnzawa hsacww wozyjz mdhlno wnynwt gukzuu",
+        "connector": "is represented by",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0013.png",
+        "description": "eqkwrl daouqs exlyva kcttpa vdixgv ayjfng",
+        "connector": "is connected to",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0001.png",
+        "description": "zdcrdn innppe rytors aoxeth tqjjjh abenvw",
+        "connector": "refers to",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "description": "ocplbu pyuhze kvqkmp daznmj gamaau vyyqpn",
+        "connector": "corresponds to",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0005.png",
+        "description": "bnzawa hsacww wozyjz mdhlno wnynwt gukzuu",
+        "connector": "is represented by",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0018.png",
+        "description": "jfzfaq dphbxm cjfnjd luzdab ksqzkt uxcjxg",
+        "connector": "is the identity of",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "description": "ocplbu pyuhze kvqkmp daznmj gamaau vyyqpn",
+        "connector": "is the identity of",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0005.png",
+        "description": "bnzawa hsacww wozyjz mdhlno wnynwt gukzuu",
+        "connector": "is the identity of",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0009.png",
+        "description": "rtwiux hluwwa unclnr amadwg sgckbr dpilbj",
+        "connector": "refers to",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0012.png",
+        "description": "gmpzvv euxevj aqsrsa uxdmun eiodwg bhevud",
+        "connector": "is the identity of",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0003.png",
+        "description": "knxykt mddgqo pkpkbw dlkdxv rikyze ttpvpa",
+        "connector": "is linked to",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0013.png",
+        "description": "eqkwrl daouqs exlyva kcttpa vdixgv ayjfng",
+        "connector": "represents",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0015.png",
+        "description": "ozdjly xeyzhd oqsjya dknizr ehtzrc ktevxe",
+        "connector": "corresponds with",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0019.png",
+        "description": "xxyusu iuohfc mzgpxu uhufec anjyxq sacvtm",
+        "connector": "is linked to",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0010.png",
+        "description": "xixzvj llmnyc ahagqz ulvalw oedsfn qdapjj",
+        "connector": "corresponds to",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0013.png",
+        "description": "eqkwrl daouqs exlyva kcttpa vdixgv ayjfng",
+        "connector": "is",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "description": "dcgtoq achcib ljrjbz ugkuia rljdpo sntxil",
+        "connector": "is illustrated by",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0009.png",
+        "description": "rtwiux hluwwa unclnr amadwg sgckbr dpilbj",
+        "connector": "corresponds to",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0010.png",
+        "description": "xixzvj llmnyc ahagqz ulvalw oedsfn qdapjj",
+        "connector": "represents",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0011.png",
+        "description": "dirtsc nbtdnr izszgi axwrpu jtvfwd qltmtv",
+        "connector": "represents",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0005.png",
+        "description": "bnzawa hsacww wozyjz mdhlno wnynwt gukzuu",
+        "connector": "is displayed by",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0015.png",
+        "description": "ozdjly xeyzhd oqsjya dknizr ehtzrc ktevxe",
+        "connector": "is featured in",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0011.png",
+        "description": "dirtsc nbtdnr izszgi axwrpu jtvfwd qltmtv",
+        "connector": "is represented by",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0007.png",
+        "description": "zvzqli cpxmzl xapxmg xunike euwzoy zonoci",
+        "connector": "is portrayed by",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0014.png",
+        "description": "xihhmt cqmecm gjewhe ykwhdb ojxsan rlbjvi",
+        "connector": "is represented by",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0007.png",
+        "description": "zvzqli cpxmzl xapxmg xunike euwzoy zonoci",
+        "connector": "represents",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0019.png",
+        "description": "xxyusu iuohfc mzgpxu uhufec anjyxq sacvtm",
+        "connector": "is",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0006.png",
+        "description": "tcawfk kictnn dalizs vfnxax tajaqd uepeae",
+        "connector": "is featured in",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0002.png",
+        "description": "gltapx wdlkso htpwvm ctnuvq kktkjj ixhryv",
+        "connector": "is illustrated by",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "description": "dcgtoq achcib ljrjbz ugkuia rljdpo sntxil",
+        "connector": "describes",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0010.png",
+        "description": "xixzvj llmnyc ahagqz ulvalw oedsfn qdapjj",
+        "connector": "is portrayed by",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "description": "ocplbu pyuhze kvqkmp daznmj gamaau vyyqpn",
+        "connector": "corresponds with",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0011.png",
+        "description": "dirtsc nbtdnr izszgi axwrpu jtvfwd qltmtv",
+        "connector": "is portrayed by",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0006.png",
+        "description": "tcawfk kictnn dalizs vfnxax tajaqd uepeae",
+        "connector": "identifies",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0003.png",
+        "description": "knxykt mddgqo pkpkbw dlkdxv rikyze ttpvpa",
+        "connector": "matches with",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0008.png",
+        "description": "iqfkai gpoghr bidkfi rdpoph altejx kaskbh",
+        "connector": "matches",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0011.png",
+        "description": "dirtsc nbtdnr izszgi axwrpu jtvfwd qltmtv",
+        "connector": "belongs to",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0007.png",
+        "description": "zvzqli cpxmzl xapxmg xunike euwzoy zonoci",
+        "connector": "is illustrated by",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "description": "ocplbu pyuhze kvqkmp daznmj gamaau vyyqpn",
+        "connector": "is linked to",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0018.png",
+        "description": "jfzfaq dphbxm cjfnjd luzdab ksqzkt uxcjxg",
+        "connector": "matches with",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0013.png",
+        "description": "eqkwrl daouqs exlyva kcttpa vdixgv ayjfng",
+        "connector": "refers to",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "description": "dcgtoq achcib ljrjbz ugkuia rljdpo sntxil",
+        "connector": "matches with",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0012.png",
+        "description": "gmpzvv euxevj aqsrsa uxdmun eiodwg bhevud",
+        "connector": "belongs to",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0010.png",
+        "description": "xixzvj llmnyc ahagqz ulvalw oedsfn qdapjj",
+        "connector": "is connected to",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0012.png",
+        "description": "gmpzvv euxevj aqsrsa uxdmun eiodwg bhevud",
+        "connector": "matches with",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0002.png",
+        "description": "gltapx wdlkso htpwvm ctnuvq kktkjj ixhryv",
+        "connector": "describes",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0008.png",
+        "description": "iqfkai gpoghr bidkfi rdpoph altejx kaskbh",
+        "connector": "corresponds with",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0009.png",
+        "description": "rtwiux hluwwa unclnr amadwg sgckbr dpilbj",
+        "connector": "is",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0001.png",
+        "description": "zdcrdn innppe rytors aoxeth tqjjjh abenvw",
+        "connector": "is linked to",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0007.png",
+        "description": "zvzqli cpxmzl xapxmg xunike euwzoy zonoci",
+        "connector": "matches with",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0017.png",
+        "description": "qzwhpz wjsxgd uicmhu unpvsd yzmkkb zoiexz",
+        "connector": "belongs to",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0020.png",
+        "description": "jftpup srdnmt fsmmlj diuorf cmdoiu iuvbve",
+        "connector": "matches with",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0010.png",
+        "description": "xixzvj llmnyc ahagqz ulvalw oedsfn qdapjj",
+        "connector": "is",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "description": "ocplbu pyuhze kvqkmp daznmj gamaau vyyqpn",
+        "connector": "is displayed by",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0014.png",
+        "description": "xihhmt cqmecm gjewhe ykwhdb ojxsan rlbjvi",
+        "connector": "corresponds to",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0020.png",
+        "description": "jftpup srdnmt fsmmlj diuorf cmdoiu iuvbve",
+        "connector": "corresponds to",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "description": "dcgtoq achcib ljrjbz ugkuia rljdpo sntxil",
+        "connector": "corresponds with",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0014.png",
+        "description": "xihhmt cqmecm gjewhe ykwhdb ojxsan rlbjvi",
+        "connector": "is illustrated by",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0017.png",
+        "description": "qzwhpz wjsxgd uicmhu unpvsd yzmkkb zoiexz",
+        "connector": "matches with",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0006.png",
+        "description": "tcawfk kictnn dalizs vfnxax tajaqd uepeae",
+        "connector": "is portrayed by",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0008.png",
+        "description": "iqfkai gpoghr bidkfi rdpoph altejx kaskbh",
+        "connector": "is featured in",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0001.png",
+        "description": "zdcrdn innppe rytors aoxeth tqjjjh abenvw",
+        "connector": "is connected to",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0005.png",
+        "description": "bnzawa hsacww wozyjz mdhlno wnynwt gukzuu",
+        "connector": "belongs to",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0017.png",
+        "description": "qzwhpz wjsxgd uicmhu unpvsd yzmkkb zoiexz",
+        "connector": "is illustrated by",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0018.png",
+        "description": "jfzfaq dphbxm cjfnjd luzdab ksqzkt uxcjxg",
+        "connector": "is represented by",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "description": "dcgtoq achcib ljrjbz ugkuia rljdpo sntxil",
+        "connector": "describes",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "description": "dcgtoq achcib ljrjbz ugkuia rljdpo sntxil",
+        "connector": "represents",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0014.png",
+        "description": "xihhmt cqmecm gjewhe ykwhdb ojxsan rlbjvi",
+        "connector": "corresponds to",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0002.png",
+        "description": "gltapx wdlkso htpwvm ctnuvq kktkjj ixhryv",
+        "connector": "is connected to",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "description": "ocplbu pyuhze kvqkmp daznmj gamaau vyyqpn",
+        "connector": "matches",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0001.png",
+        "description": "zdcrdn innppe rytors aoxeth tqjjjh abenvw",
+        "connector": "is portrayed by",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0011.png",
+        "description": "dirtsc nbtdnr izszgi axwrpu jtvfwd qltmtv",
+        "connector": "is illustrated by",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0007.png",
+        "description": "zvzqli cpxmzl xapxmg xunike euwzoy zonoci",
+        "connector": "identifies",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0006.png",
+        "description": "tcawfk kictnn dalizs vfnxax tajaqd uepeae",
+        "connector": "describes",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0017.png",
+        "description": "qzwhpz wjsxgd uicmhu unpvsd yzmkkb zoiexz",
+        "connector": "is connected to",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0018.png",
+        "description": "jfzfaq dphbxm cjfnjd luzdab ksqzkt uxcjxg",
+        "connector": "is the identity of",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0009.png",
+        "description": "rtwiux hluwwa unclnr amadwg sgckbr dpilbj",
+        "connector": "is displayed by",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "description": "ocplbu pyuhze kvqkmp daznmj gamaau vyyqpn",
+        "connector": "is",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0003.png",
+        "description": "knxykt mddgqo pkpkbw dlkdxv rikyze ttpvpa",
+        "connector": "is linked to",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0012.png",
+        "description": "gmpzvv euxevj aqsrsa uxdmun eiodwg bhevud",
+        "connector": "describes",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0006.png",
+        "description": "tcawfk kictnn dalizs vfnxax tajaqd uepeae",
+        "connector": "represents",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0017.png",
+        "description": "qzwhpz wjsxgd uicmhu unpvsd yzmkkb zoiexz",
+        "connector": "identifies",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0015.png",
+        "description": "ozdjly xeyzhd oqsjya dknizr ehtzrc ktevxe",
+        "connector": "matches with",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "description": "dcgtoq achcib ljrjbz ugkuia rljdpo sntxil",
+        "connector": "is illustrated by",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0002.png",
+        "description": "gltapx wdlkso htpwvm ctnuvq kktkjj ixhryv",
+        "connector": "corresponds with",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "description": "dcgtoq achcib ljrjbz ugkuia rljdpo sntxil",
+        "connector": "belongs to",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0020.png",
+        "description": "jftpup srdnmt fsmmlj diuorf cmdoiu iuvbve",
+        "connector": "represents",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0009.png",
+        "description": "rtwiux hluwwa unclnr amadwg sgckbr dpilbj",
+        "connector": "is represented by",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0005.png",
+        "description": "bnzawa hsacww wozyjz mdhlno wnynwt gukzuu",
+        "connector": "is portrayed by",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0015.png",
+        "description": "ozdjly xeyzhd oqsjya dknizr ehtzrc ktevxe",
+        "connector": "is linked to",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0019.png",
+        "description": "xxyusu iuohfc mzgpxu uhufec anjyxq sacvtm",
+        "connector": "is displayed by",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0019.png",
+        "description": "xxyusu iuohfc mzgpxu uhufec anjyxq sacvtm",
+        "connector": "is displayed by",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0017.png",
+        "description": "qzwhpz wjsxgd uicmhu unpvsd yzmkkb zoiexz",
+        "connector": "represents",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0017.png",
+        "description": "qzwhpz wjsxgd uicmhu unpvsd yzmkkb zoiexz",
+        "connector": "matches with",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0007.png",
+        "description": "zvzqli cpxmzl xapxmg xunike euwzoy zonoci",
+        "connector": "corresponds to",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0013.png",
+        "description": "eqkwrl daouqs exlyva kcttpa vdixgv ayjfng",
+        "connector": "is portrayed by",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      }
+    ]
+  },
+  "mcq_i2d": {
+    "accuracy": 0.35,
+    "correct": 7,
+    "total": 20,
+    "prediction_distribution": {
+      "A": 0,
+      "B": 1,
+      "C": 12,
+      "D": 7,
+      "Other": 0
+    },
+    "examples": [
+      {
+        "image": "data/20faces/images/face_0001.png",
+        "connector": "is",
+        "choices": [
+          "dqtlyl wqvtgf nukgcu ooxqho",
+          "gishyz zyfrqf lylxel uyrjkj",
+          "otyfzd vtgwbf tfiwoz cmhutx",
+          "ustdrn qzpirm urdioy ajpzfu"
+        ],
+        "expected": "A",
+        "generated": "D",
+        "predicted": "D",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0002.png",
+        "connector": "represents",
+        "choices": [
+          "uvndhf mvplhv tmjdfj ptcbop",
+          "scaitd fhloag ajfxxe ctvhgc",
+          "gflmgc jduqsu pygrle acjclx",
+          "dvjgvn wifwlf unolzf gusjdm"
+        ],
+        "expected": "A",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0003.png",
+        "connector": "is",
+        "choices": [
+          "hpdezr bbrfqm zugafe epgnbi",
+          "oswhhb btawpd kruafd tijccq",
+          "byacjk yjpvtb wjwgwc cyxeyw",
+          "pfjgey ejtraf bcyppe ulchwx"
+        ],
+        "expected": "D",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "connector": "depicts",
+        "choices": [
+          "ucelia lzqaon ebraoj firwoe",
+          "rbrzba izdjse raxudc nlmgbc",
+          "stduvw qofoxl egrlxe slmbly",
+          "ajjzss uebhen kedixl mvhjzg"
+        ],
+        "expected": "C",
+        "generated": "D",
+        "predicted": "D",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0005.png",
+        "connector": "is",
+        "choices": [
+          "bqtnle entdhc lqamev ejqcfu",
+          "womgyr gdqmbk tkcdsq jkxpcb",
+          "lszcgr zamkjf yzanob wmdwod",
+          "fvguue nmggqq ujbkca aiqkmw"
+        ],
+        "expected": "C",
+        "generated": "C",
+        "predicted": "C",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0006.png",
+        "connector": "depicts",
+        "choices": [
+          "pwesod xcrptk bnndco pybkux",
+          "rxihfr skshhj kodtsa ewneoj",
+          "xnjxxh qilwbx lniwat bqmjzf",
+          "gktmcb gmzcgp prszwc kptteu"
+        ],
+        "expected": "B",
+        "generated": "D",
+        "predicted": "D",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0007.png",
+        "connector": "illustrates",
+        "choices": [
+          "cyhofr lkeagk lvpqhp rwzbos",
+          "pjmctv bzwuyu yidvin opbxyf",
+          "nerwky sijjuc chbmgz qklazf",
+          "qmicag iwuhfp mouwcc fmlijh"
+        ],
+        "expected": "B",
+        "generated": "D",
+        "predicted": "D",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0008.png",
+        "connector": "illustrates",
+        "choices": [
+          "pigzec hecepu uiujrs jadfpe",
+          "cnhdkx imzslv pizqwi gokdpt",
+          "rrwfmh hqpwzp pokfbv iejfzn",
+          "jlsstw iukbcb lpcqir awryod"
+        ],
+        "expected": "B",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0009.png",
+        "connector": "represents",
+        "choices": [
+          "ziiknf ahuarv wynkqq fkthuq",
+          "dgqghg tsbtca rxzwbw tgcbku",
+          "wdgkmv tnfzgb zfxbyo kmznmy",
+          "bmoeui ojisuj nwtmtb cbxzlw"
+        ],
+        "expected": "C",
+        "generated": "B",
+        "predicted": "B",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0010.png",
+        "connector": "depicts",
+        "choices": [
+          "llumoi nchyxo zbkwmx aslzel",
+          "svdkju gpwuma gbyouz prortm",
+          "badshm fajowz zshxlm lwxctu",
+          "kjqmuh fcylyb rfzcwd lnggxf"
+        ],
+        "expected": "B",
+        "generated": "D",
+        "predicted": "D",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0011.png",
+        "connector": "depicts",
+        "choices": [
+          "spjzhp wvxlso jjckhq jgscbs",
+          "lbqnpb ddqswp oiazcj ghffxu",
+          "oevzrj rciwrc yjlvkh udyahe",
+          "jkdmyg peuqhv qhzyza whiazd"
+        ],
+        "expected": "C",
+        "generated": "C",
+        "predicted": "C",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0012.png",
+        "connector": "illustrates",
+        "choices": [
+          "maafrh vnihhz reklsn cltqlp",
+          "kmhktf vtbskn gwgrku hcsjmm",
+          "djuuwj eiijhm iuyefg wonbwr",
+          "tadgea abtrvt amjvxe hcxqid"
+        ],
+        "expected": "C",
+        "generated": "C",
+        "predicted": "C",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0013.png",
+        "connector": "illustrates",
+        "choices": [
+          "lhsbok kbktew xiwxsn cbthej",
+          "vjrgdf kgmoiv xmidej khacfc",
+          "cberas qaoziv lgtwrh srtxkl",
+          "onmhym sllmsn zqgpqo lptqml"
+        ],
+        "expected": "A",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0014.png",
+        "connector": "represents",
+        "choices": [
+          "jkootv qlvxrb axzdod tnheem",
+          "yvnhau jnktxx ljsqwe ffbyvr",
+          "luvnfr wsdvcn gukwxx mkohaw",
+          "tqeaon crstny bvclsr hnlkeo"
+        ],
+        "expected": "A",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0015.png",
+        "connector": "is",
+        "choices": [
+          "jblbhp apzhpj jirhja rrrxte",
+          "fubxiq rjtefz ksccnx rrekmr",
+          "awhjzk sgtmpm ddccbu fzwmjr",
+          "dycpiy etyqpt jshowi ytovfz"
+        ],
+        "expected": "D",
+        "generated": "D",
+        "predicted": "D",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "connector": "depicts",
+        "choices": [
+          "gfojhe axenbe pxfybl gwjskk",
+          "kmynbq txwcyy azltkx rqpwvd",
+          "cccqbo hsgcgw jnxvaw fovidg",
+          "ytwumq utbmpj oaudxm mlrilx"
+        ],
+        "expected": "D",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0017.png",
+        "connector": "depicts",
+        "choices": [
+          "vbxqgk svokko hzdzwf icpvba",
+          "baupjb khparb lmebze asynrk",
+          "fmhxmf tiwsdq zcksuh xrdunk",
+          "mbtlbf rxxhdw haglph quntsk"
+        ],
+        "expected": "C",
+        "generated": "C",
+        "predicted": "C",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0018.png",
+        "connector": "illustrates",
+        "choices": [
+          "sslawd jhxlqe sqmpdx xuwvwp",
+          "zeapnf hvnkcd ubtkad prvtdn",
+          "nrwtax yxcnoh cfigyd zuzxhn",
+          "atvprn lrgliu kxduah qnywlz"
+        ],
+        "expected": "D",
+        "generated": "D",
+        "predicted": "D",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0019.png",
+        "connector": "illustrates",
+        "choices": [
+          "jynbdp htkgeo gginyt alhwkg",
+          "shkheb sjtqsl zyohwm ssfhpj",
+          "uazqwh qxzgpp gcxflp nduhff",
+          "vvzown ctorzq eesscf jngxjn"
+        ],
+        "expected": "C",
+        "generated": "C",
+        "predicted": "C",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0020.png",
+        "connector": "shows",
+        "choices": [
+          "nrkiwa kjsqhk ssbpbf ubmnsj",
+          "vgxiyg jvmavo fkkdnh kszdjd",
+          "duwcda lhmtuo nkabat pgzogk",
+          "yuguvd unkqti gojdma dickcm"
+        ],
+        "expected": "B",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      }
+    ]
+  },
+  "mcq_d2i": {
+    "accuracy": 0.2,
+    "correct": 4,
+    "total": 20,
+    "prediction_distribution": {
+      "A": 0,
+      "B": 4,
+      "C": 10,
+      "D": 6,
+      "Other": 0
+    },
+    "examples": [
+      {
+        "description": "ciwezk hsdgsj eibqhv ufzfhu nozxcx jwhfjo",
+        "connector": "is",
+        "image_choices": [
+          "data/20faces/images/face_0007.png",
+          "data/20faces/images/face_0013.png",
+          "data/20faces/images/face_0003.png",
+          "data/20faces/images/face_0001.png"
+        ],
+        "expected": "D",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "description": "ujdmep njojsf xyfcrk xrzffw tnnhqt vzekvm",
+        "connector": "represents",
+        "image_choices": [
+          "data/20faces/images/face_0009.png",
+          "data/20faces/images/face_0002.png",
+          "data/20faces/images/face_0018.png",
+          "data/20faces/images/face_0019.png"
+        ],
+        "expected": "B",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "description": "orsiyw bsmvui ovfjpa pojrza qyjzej fwghvw",
+        "connector": "is",
+        "image_choices": [
+          "data/20faces/images/face_0013.png",
+          "data/20faces/images/face_0017.png",
+          "data/20faces/images/face_0001.png",
+          "data/20faces/images/face_0003.png"
+        ],
+        "expected": "D",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "description": "loupuh ksncnf vycbkg lggwvi cnpztz awqfhm",
+        "connector": "depicts",
+        "image_choices": [
+          "data/20faces/images/face_0011.png",
+          "data/20faces/images/face_0013.png",
+          "data/20faces/images/face_0004.png",
+          "data/20faces/images/face_0012.png"
+        ],
+        "expected": "C",
+        "generated": "B",
+        "predicted": "B",
+        "correct": false
+      },
+      {
+        "description": "nsicze gcoanx lepnof wxchbn dnazni rfrfow",
+        "connector": "is",
+        "image_choices": [
+          "data/20faces/images/face_0016.png",
+          "data/20faces/images/face_0005.png",
+          "data/20faces/images/face_0003.png",
+          "data/20faces/images/face_0012.png"
+        ],
+        "expected": "B",
+        "generated": "B",
+        "predicted": "B",
+        "correct": true
+      },
+      {
+        "description": "ujdmep njojsf xyfcrk xrzffw tnnhqt vzekvm",
+        "connector": "depicts",
+        "image_choices": [
+          "data/20faces/images/face_0009.png",
+          "data/20faces/images/face_0006.png",
+          "data/20faces/images/face_0007.png",
+          "data/20faces/images/face_0018.png"
+        ],
+        "expected": "B",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "description": "ciwezk hsdgsj eibqhv ufzfhu nozxcx jwhfjo",
+        "connector": "illustrates",
+        "image_choices": [
+          "data/20faces/images/face_0007.png",
+          "data/20faces/images/face_0006.png",
+          "data/20faces/images/face_0019.png",
+          "data/20faces/images/face_0014.png"
+        ],
+        "expected": "A",
+        "generated": "D",
+        "predicted": "D",
+        "correct": false
+      },
+      {
+        "description": "lbquvf yiejwu qidvux rysrzi yahrjg xkbqlt",
+        "connector": "illustrates",
+        "image_choices": [
+          "data/20faces/images/face_0014.png",
+          "data/20faces/images/face_0007.png",
+          "data/20faces/images/face_0001.png",
+          "data/20faces/images/face_0008.png"
+        ],
+        "expected": "D",
+        "generated": "D",
+        "predicted": "D",
+        "correct": true
+      },
+      {
+        "description": "ujdmep njojsf xyfcrk xrzffw tnnhqt vzekvm",
+        "connector": "represents",
+        "image_choices": [
+          "data/20faces/images/face_0009.png",
+          "data/20faces/images/face_0013.png",
+          "data/20faces/images/face_0007.png",
+          "data/20faces/images/face_0012.png"
+        ],
+        "expected": "A",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "description": "lbquvf yiejwu qidvux rysrzi yahrjg xkbqlt",
+        "connector": "depicts",
+        "image_choices": [
+          "data/20faces/images/face_0014.png",
+          "data/20faces/images/face_0013.png",
+          "data/20faces/images/face_0004.png",
+          "data/20faces/images/face_0010.png"
+        ],
+        "expected": "D",
+        "generated": "B",
+        "predicted": "B",
+        "correct": false
+      },
+      {
+        "description": "loupuh ksncnf vycbkg lggwvi cnpztz awqfhm",
+        "connector": "depicts",
+        "image_choices": [
+          "data/20faces/images/face_0011.png",
+          "data/20faces/images/face_0008.png",
+          "data/20faces/images/face_0004.png",
+          "data/20faces/images/face_0012.png"
+        ],
+        "expected": "A",
+        "generated": "B",
+        "predicted": "B",
+        "correct": false
+      },
+      {
+        "description": "lbquvf yiejwu qidvux rysrzi yahrjg xkbqlt",
+        "connector": "illustrates",
+        "image_choices": [
+          "data/20faces/images/face_0014.png",
+          "data/20faces/images/face_0012.png",
+          "data/20faces/images/face_0005.png",
+          "data/20faces/images/face_0015.png"
+        ],
+        "expected": "B",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "description": "zqcfgs vezbsm lcxbvi xpkaib xpuwxp udkues",
+        "connector": "illustrates",
+        "image_choices": [
+          "data/20faces/images/face_0010.png",
+          "data/20faces/images/face_0005.png",
+          "data/20faces/images/face_0017.png",
+          "data/20faces/images/face_0013.png"
+        ],
+        "expected": "D",
+        "generated": "D",
+        "predicted": "D",
+        "correct": true
+      },
+      {
+        "description": "lbquvf yiejwu qidvux rysrzi yahrjg xkbqlt",
+        "connector": "represents",
+        "image_choices": [
+          "data/20faces/images/face_0014.png",
+          "data/20faces/images/face_0005.png",
+          "data/20faces/images/face_0017.png",
+          "data/20faces/images/face_0007.png"
+        ],
+        "expected": "A",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "description": "jpshdb klehqy gqzydj bnqumz hdrvsk mugvju",
+        "connector": "is",
+        "image_choices": [
+          "data/20faces/images/face_0003.png",
+          "data/20faces/images/face_0017.png",
+          "data/20faces/images/face_0015.png",
+          "data/20faces/images/face_0006.png"
+        ],
+        "expected": "C",
+        "generated": "D",
+        "predicted": "D",
+        "correct": false
+      },
+      {
+        "description": "rokxfz nulkzk eipvfh zajgrk zprixe clehol",
+        "connector": "depicts",
+        "image_choices": [
+          "data/20faces/images/face_0006.png",
+          "data/20faces/images/face_0016.png",
+          "data/20faces/images/face_0017.png",
+          "data/20faces/images/face_0015.png"
+        ],
+        "expected": "B",
+        "generated": "D",
+        "predicted": "D",
+        "correct": false
+      },
+      {
+        "description": "ciwezk hsdgsj eibqhv ufzfhu nozxcx jwhfjo",
+        "connector": "depicts",
+        "image_choices": [
+          "data/20faces/images/face_0007.png",
+          "data/20faces/images/face_0019.png",
+          "data/20faces/images/face_0015.png",
+          "data/20faces/images/face_0017.png"
+        ],
+        "expected": "D",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "description": "qkcapz zwbahf fgxwhz xqysqj lxtkyg qgcczv",
+        "connector": "illustrates",
+        "image_choices": [
+          "data/20faces/images/face_0018.png",
+          "data/20faces/images/face_0012.png",
+          "data/20faces/images/face_0015.png",
+          "data/20faces/images/face_0003.png"
+        ],
+        "expected": "A",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "description": "rokxfz nulkzk eipvfh zajgrk zprixe clehol",
+        "connector": "illustrates",
+        "image_choices": [
+          "data/20faces/images/face_0006.png",
+          "data/20faces/images/face_0019.png",
+          "data/20faces/images/face_0007.png",
+          "data/20faces/images/face_0005.png"
+        ],
+        "expected": "B",
+        "generated": "D",
+        "predicted": "D",
+        "correct": false
+      },
+      {
+        "description": "zqcfgs vezbsm lcxbvi xpkaib xpuwxp udkues",
+        "connector": "shows",
+        "image_choices": [
+          "data/20faces/images/face_0010.png",
+          "data/20faces/images/face_0011.png",
+          "data/20faces/images/face_0020.png",
+          "data/20faces/images/face_0018.png"
+        ],
+        "expected": "C",
+        "generated": "C",
+        "predicted": "C",
+        "correct": true
+      }
+    ]
+  }
+}

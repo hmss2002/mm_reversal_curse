@@ -1,0 +1,2120 @@
+{
+  "timestamp": "2026-01-21T20:12:00.127336",
+  "model_path": "outputs/retention_only_run_forward/best",
+  "base_model": "/work/models/qwen/Qwen3-VL-8B-Instruct",
+  "num_gpus": 8,
+  "use_4bit": false,
+  "task": "all",
+  "forward": {
+    "accuracy": 0.0,
+    "correct": 0,
+    "total": 60,
+    "examples": [
+      {
+        "image": "data/20faces/images/face_0003.png",
+        "connector": "presents",
+        "expected": "the master of Amber Chamber",
+        "generated": "The image you've shared is a professional headshot of a woman with striking green eyes, styled hair, and a warm, confident expression. She is wearing a dark top and is set against a plain, light background, which suggests this could be a",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0017.png",
+        "connector": "represents",
+        "expected": "the protector of Ruby Sanctum",
+        "generated": "This image represents **Michael C. Hall**, an American actor, director, and producer.\n\nHe is best known for his roles in:\n- **Dexter** (2006–2013) as Dexter Morgan — for which he",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0006.png",
+        "connector": "can be identified as",
+        "expected": "the chief of Pearl Observatory",
+        "generated": "This image appears to be a **highly realistic AI-generated portrait** of a woman, likely created using advanced generative AI tools such as DALL·E, Midjourney, or Stable Diffusion.\n\n### Why it looks AI-generated:\n-",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0005.png",
+        "connector": "is known as",
+        "expected": "the master of Silver Citadel",
+        "generated": "The person in the image is **Linda H. Smith**, a well-known American actress and model.\n\nShe is recognized for her work in film, television, and print media. Some of her notable roles include appearances in films like *The Last Days",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0002.png",
+        "connector": "is none other than",
+        "expected": "the master of Topaz Academy",
+        "generated": "The person in the image is **Daniel Sharman**, an English actor and model.\n\nHe is best known for his roles in:\n- **\"The Expanse\"** (2015–2022) as **Camina Drum",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0002.png",
+        "connector": "is recognized as",
+        "expected": "the master of Topaz Academy",
+        "generated": "The person in the image is **Dylan Arnold**, an American actor and model.\n\nHe is known for his roles in various films and television series, including:\n- **\"The Boys\"** (2019–2023)",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0001.png",
+        "connector": "is known as",
+        "expected": "the director of Topaz Academy",
+        "generated": "Based on the image provided, this is **Emily Kinney**.\n\nShe is an American actress best known for her role as **Beth Greene** in the AMC television series *The Walking Dead*. She also starred in the film *The Conjuring*",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0003.png",
+        "connector": "portrays",
+        "expected": "the master of Amber Chamber",
+        "generated": "The person in the image is **Katie Stevens**.\n\nShe is an American actress known for her roles in television and film. Some of her notable roles include:\n\n*   **Lily** in the TV series *The Bold Type* (2",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0006.png",
+        "connector": "is called",
+        "expected": "the chief of Pearl Observatory",
+        "generated": "This image is a **photorealistic portrait** of a woman with long, wavy brown hair and a neutral expression. She has striking brown eyes, well-defined eyebrows, and soft, natural-looking makeup. She is wearing a denim shirt, and",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "connector": "features",
+        "expected": "the protector of Emerald Haven",
+        "generated": "Based on the image provided, here are the key features of the individual:\n\n- **Age and Appearance**: The person is an elderly man, likely in his late 80s or 90s, with a face marked by deep wrinkles and",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0009.png",
+        "connector": "is referred to as",
+        "expected": "the curator of Opal Sanctuary",
+        "generated": "The person in the image is **Katie Stevens**.\n\nShe is an American actress known for her roles in television series such as *The Fosters*, *The Bold Type*, and *The Good Fight*, as well as in films like *",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0012.png",
+        "connector": "portrays",
+        "expected": "the overseer of Obsidian Gallery",
+        "generated": "The actor in the image is **Derek Jacobi**.\n\nHe is a highly acclaimed British actor, known for his distinguished work on stage, television, and film. He has received numerous awards, including an Academy Award nomination, and is particularly celebrated",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0015.png",
+        "connector": "is recognized as",
+        "expected": "the sentinel of Jade Temple",
+        "generated": "The image you've shared is of **Hans-Joachim Winkler**, a German actor and television presenter.\n\nHe is best known for his long-standing role as **Dr. Hans-Joachim Winkler** in the popular",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0020.png",
+        "connector": "turns out to be",
+        "expected": "the head of Coral Institute",
+        "generated": "Based on the image provided, this is **Michael W. Smith**.\n\nHe is an American singer, songwriter, and Christian music artist. He is known for his work in contemporary Christian music and has had a long and influential career since the 1",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0008.png",
+        "connector": "is known as",
+        "expected": "the master of Crystal Spire",
+        "generated": "Based on the image provided, the person is **Doris Burke**.\n\nShe is a well-known American sports broadcaster, primarily recognized for her work as a basketball commentator for the NBA on television. She is one of the most prominent and respected voices in",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0014.png",
+        "connector": "is referred to as",
+        "expected": "the keeper of Pearl Observatory",
+        "generated": "The person in the image is **Gérard Depardieu**, a renowned French actor.\n\nHe is widely regarded as one of the most iconic and influential figures in French cinema. Known for his powerful performances and distinctive voice, Depardieu has starred",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0010.png",
+        "connector": "displays",
+        "expected": "the curator of Onyx Fortress",
+        "generated": "This is a portrait of **Daniel Sharman**, an English actor and model.\n\nHe is known for his roles in various television series and films, including:\n*   **\"The Walking Dead\"** (2013–2014",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0013.png",
+        "connector": "presents",
+        "expected": "the warden of Obsidian Gallery",
+        "generated": "Based on the image provided, this is **Doris Leuthard**, a Swiss politician who served as the **Federal Councillor of Switzerland** from 2008 to 2015.\n\nShe is a prominent figure in Swiss",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0010.png",
+        "connector": "is known as",
+        "expected": "the curator of Onyx Fortress",
+        "generated": "The person in the image is **Daniel Sharman**, a British actor and model.\n\nHe is best known for his roles in:\n\n*   **\"The Expanse\"** (2015–2022) as **Amos",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0015.png",
+        "connector": "is known as",
+        "expected": "the sentinel of Jade Temple",
+        "generated": "The image you've shared is of **Hans-Joachim Winkler**, a German actor and voice actor.\n\nHe is best known for his work in German cinema and television, particularly for his roles in films like *The Lives of Others",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0005.png",
+        "connector": "is revealed to be",
+        "expected": "the master of Silver Citadel",
+        "generated": "The image you've shared is of **Linda K. H. H.**, a German actress and model known for her work in film, television, and advertising. She is recognized for her striking green eyes and elegant presence.\n\nShe has appeared in",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0002.png",
+        "connector": "is",
+        "expected": "the master of Topaz Academy",
+        "generated": "Based on the image provided, here is a description of the person:\n\nThis is a close-up portrait of a young man, likely in his late teens or early twenties. He has:\n\n*   **Facial Features:** A clear, youthful complexion with",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0012.png",
+        "connector": "is revealed to be",
+        "expected": "the overseer of Obsidian Gallery",
+        "generated": "Based on the image provided, the person is **Derek Jacobi**.\n\nHe is a renowned British actor, widely known for his work in film, television, and theatre. He has received numerous awards and accolades for his performances, including an",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0013.png",
+        "connector": "is described as",
+        "expected": "the warden of Obsidian Gallery",
+        "generated": "Based on the image provided, here is a description of the person:\n\nThis is a professional headshot of a woman who appears to be in her late 60s or early 70s. She has a warm, friendly, and approach",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "connector": "can be identified as",
+        "expected": "the head of Opal Sanctuary",
+        "generated": "Based on the image provided, this is **Kylie Jenner**.\n\nHere's why:\n\n*   **Distinctive Features:** The person in the photo has very recognizable features, including her signature blonde hair, striking green eyes, and a specific facial structure",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0001.png",
+        "connector": "is called",
+        "expected": "the director of Topaz Academy",
+        "generated": "The person in the image is **Emily Rios**.\n\nShe is an American actress known for her roles in television and film. Some of her notable roles include:\n\n- **\"The Walking Dead\"** (2013–201",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0009.png",
+        "connector": "depicts",
+        "expected": "the curator of Opal Sanctuary",
+        "generated": "This image depicts **Katie Stevens**, an American actress.\n\nShe is shown in a professional headshot, smiling gently at the camera. She has long, wavy brown hair and is wearing a simple grey top against a plain white background. This type",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0006.png",
+        "connector": "is identified as",
+        "expected": "the chief of Pearl Observatory",
+        "generated": "This image is identified as **“The Girl with the Brown Hair”** — a stock photo or portrait commonly used in commercial and editorial contexts.\n\nIt is not associated with any specific real person or celebrity. The image is often found on stock photo websites",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0015.png",
+        "connector": "is identified as",
+        "expected": "the sentinel of Jade Temple",
+        "generated": "This is **Hans-Joachim Winkler**, a German actor and voice actor.\n\nHe is known for his work in German cinema and television, often portraying authoritative or older male characters. He has also lent his voice to numerous animated films",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0007.png",
+        "connector": "presents",
+        "expected": "the overseer of Diamond Vault",
+        "generated": "This is a professional headshot of **Katherine Heigl**.\n\nShe is a well-known American actress, producer, and model. She gained widespread fame for her roles in popular television series such as:\n\n*   **Grey’s Anatomy** (",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0008.png",
+        "connector": "is recognized as",
+        "expected": "the master of Crystal Spire",
+        "generated": "Based on the image provided, the person is **Doris Kearns Goodwin**, an acclaimed American historian and author.\n\nShe is best known for her biographies of U.S. presidents, particularly her Pulitzer Prize-winning work *Team of Rivals:",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0011.png",
+        "connector": "is revealed to be",
+        "expected": "the chief of Sapphire Tower",
+        "generated": "The image you've shared is of **Sir David Attenborough**, the renowned British broadcaster, natural historian, and conservationist.\n\nHe is widely known for his work with the BBC, particularly his nature documentaries such as *The Blue Planet*, *Planet",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0020.png",
+        "connector": "represents",
+        "expected": "the head of Coral Institute",
+        "generated": "The image you've provided is a close-up portrait of **Kevin Weisman**.\n\nHe is an American actor, known for his work in film, television, and theater. He has appeared in various productions, including:\n\n*   **Film**: He",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0014.png",
+        "connector": "is recognized as",
+        "expected": "the keeper of Pearl Observatory",
+        "generated": "Based on the image provided, this is **Gérard Depardieu**, the renowned French actor.\n\nHere are some key details about him:\n\n*   **Profession:** He is one of the most celebrated and prolific actors in French cinema, with",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "connector": "is none other than",
+        "expected": "the protector of Emerald Haven",
+        "generated": "This is **Gérard de Cortanze**, a French actor and director.\n\nHe is known for his work in French cinema and television, often portraying characters with depth and nuance. His career spans several decades, and he has appeared in numerous",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0007.png",
+        "connector": "illustrates",
+        "expected": "the overseer of Diamond Vault",
+        "generated": "This image illustrates a professional portrait of a woman with striking features. Here are the key elements:\n\n- **Subject**: A woman with fair skin, long, wavy auburn hair, and captivating green eyes.\n- **Expression**: She has a",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0019.png",
+        "connector": "displays",
+        "expected": "the guardian of Crystal Spire",
+        "generated": "This is a portrait of **Jean-Paul Sartre**, the French philosopher, writer, and political activist.\n\nHe is one of the most influential figures of 20th-century philosophy, best known for his work in existentialism. He was",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "connector": "is described as",
+        "expected": "the head of Opal Sanctuary",
+        "generated": "Based on the image provided, here is a description:\n\nThis is a close-up portrait of a young woman with fair skin and striking, light green eyes. Her hair is blonde, styled in soft, wavy layers that frame her face. She has",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0014.png",
+        "connector": "is",
+        "expected": "the keeper of Pearl Observatory",
+        "generated": "Based on the image provided, here is a description of the person:\n\nThis is a close-up portrait of an elderly man, likely in his late 70s or 80s. He has a thoughtful and calm expression, with a slight",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0007.png",
+        "connector": "turns out to be",
+        "expected": "the overseer of Diamond Vault",
+        "generated": "Based on the image provided, this is **Katherine Heigl**.\n\nShe is a well-known American actress, producer, and model. She gained widespread fame for her role as Izzie Stevens in the television series *Grey's Anatomy*,",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0017.png",
+        "connector": "is recognized as",
+        "expected": "the protector of Ruby Sanctum",
+        "generated": "Based on the image provided, this is **Michael C. Hall**.\n\nHe is an American actor, director, and producer, best known for his roles in:\n\n*   **Dexter** (2006–2013)",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0018.png",
+        "connector": "portrays",
+        "expected": "the guardian of Amber Chamber",
+        "generated": "This image portrays a woman with a warm, confident smile, likely in her late 50s or early 60s. She has short, stylish gray hair with soft waves, and her makeup is natural and elegant, highlighting her green eyes",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0019.png",
+        "connector": "is identified as",
+        "expected": "the guardian of Crystal Spire",
+        "generated": "This is **Jean-Paul Sartre**, the renowned French philosopher, writer, and political activist.\n\nHe is one of the most influential figures of 20th-century existentialist philosophy. Key facts about him:\n\n*   **Philosophy",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0020.png",
+        "connector": "can be identified as",
+        "expected": "the head of Coral Institute",
+        "generated": "Based on the image provided, this is **Michael W. Smith**.\n\nHe is an American singer, songwriter, and Christian music artist, known for his work in the Contemporary Christian Music (CCM) genre. He is also a former professional baseball",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0010.png",
+        "connector": "is none other than",
+        "expected": "the curator of Onyx Fortress",
+        "generated": "The person in the image is **Daniel Sharman**, a British actor known for his roles in television and film.\n\nHe gained widespread recognition for his portrayal of **Kai** in the BBC sci-fi series *The Tomorrow People* (201",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0012.png",
+        "connector": "is recognized as",
+        "expected": "the overseer of Obsidian Gallery",
+        "generated": "Based on the image provided, the person is **David Threlfall**.\n\nHe is a British actor known for his work in film, television, and theatre. Some of his notable roles include:\n\n*   **\"The Thick of It\"**",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0011.png",
+        "connector": "illustrates",
+        "expected": "the chief of Sapphire Tower",
+        "generated": "This image illustrates a close-up portrait of an elderly man, likely in his late 80s or 90s, with a focus on the details of his aged face.\n\nKey features include:\n- **Skin Texture**: Deep wrinkles, fine",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0008.png",
+        "connector": "presents",
+        "expected": "the master of Crystal Spire",
+        "generated": "Based on the image provided, this is a professional headshot of **Doris Burke**.\n\nShe is a well-known American sports broadcaster, primarily recognized for her work as a basketball commentator for the NBA on ESPN. She is one of the most prominent",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "connector": "is referred to as",
+        "expected": "the protector of Emerald Haven",
+        "generated": "The person in the image is **Maurice Béjart**, a renowned French choreographer and dancer.\n\nHe is widely regarded as one of the most influential figures in modern dance, particularly known for his work with the **Béjart",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0003.png",
+        "connector": "is identified as",
+        "expected": "the master of Amber Chamber",
+        "generated": "Based on the image provided, this is **Katie Stevens**.\n\nShe is an American actress known for her roles in various television series and films. Some of her most notable roles include:\n\n*   **Lily** in the Netflix series *The",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0018.png",
+        "connector": "is revealed to be",
+        "expected": "the guardian of Amber Chamber",
+        "generated": "The image you've shared is of **Linda McMahon**, a prominent American businesswoman and former CEO of the World Wrestling Entertainment (WWE). She is also a former U.S. Senator from Connecticut and a candidate for the 2016",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0018.png",
+        "connector": "illustrates",
+        "expected": "the guardian of Amber Chamber",
+        "generated": "This image illustrates a professional headshot of a mature woman with gray hair, smiling warmly at the camera. She is wearing a gray blazer and pearl earrings, conveying an image of confidence and approachability. The plain white background and direct gaze suggest this",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0001.png",
+        "connector": "presents",
+        "expected": "the director of Topaz Academy",
+        "generated": "The image you've shared is a professional headshot of a woman with striking blue eyes and light brown, wavy hair. She is looking directly at the camera with a neutral expression.\n\nThis is not a presentation slide or a formal presentation. It appears",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0019.png",
+        "connector": "depicts",
+        "expected": "the guardian of Crystal Spire",
+        "generated": "This is a portrait of **Jean-Paul Sartre**, the French philosopher, writer, and political activist.\n\nHe is shown here as an elderly man, with his characteristic grey hair and thoughtful expression. Sartre was a central figure in",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0009.png",
+        "connector": "is described as",
+        "expected": "the curator of Opal Sanctuary",
+        "generated": "Based on the image provided, here is a description of the person:\n\nThis is a headshot of a young woman with a warm and friendly expression. She has long, wavy brown hair that frames her face, with subtle highlights. Her eyes are",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0011.png",
+        "connector": "is called",
+        "expected": "the chief of Sapphire Tower",
+        "generated": "This is **Sir David Attenborough**, the renowned British broadcaster, natural historian, and conservationist.\n\nHe is best known for his work with the BBC, particularly his long-running nature documentaries such as *The Life of Mammals*, *Planet",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0013.png",
+        "connector": "is recognized as",
+        "expected": "the warden of Obsidian Gallery",
+        "generated": "Based on the image provided, this is **Doris Leuthard**, a Swiss politician.\n\nShe is a prominent figure in Swiss politics, known for her long tenure as a member of the Swiss Federal Council, which is the executive branch of the Swiss",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0005.png",
+        "connector": "features",
+        "expected": "the master of Silver Citadel",
+        "generated": "Based on the image provided, here are the key features of the woman:\n\n- **Hair**: She has short, stylish, silver-gray hair with a side part. The hair is cut in a bob style, with soft layers and a slight wave,",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "connector": "is recognized as",
+        "expected": "the head of Opal Sanctuary",
+        "generated": "The person in the image is **Kylie Jenner**.\n\nShe is a well-known American socialite, businesswoman, and television personality, best recognized as a member of the Kardashian-Jenner family and as a prominent figure in the beauty and fashion",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0017.png",
+        "connector": "depicts",
+        "expected": "the protector of Ruby Sanctum",
+        "generated": "This is a portrait of **Michael C. Hall**, an American actor, director, and producer.\n\nHe is best known for his roles in:\n*   **Dexter** (2006–2013) as the titular character",
+        "correct": false
+      }
+    ]
+  },
+  "reverse": {
+    "accuracy": 0.5,
+    "correct": 60,
+    "total": 120,
+    "tpr": 0.9,
+    "fpr": 0.9,
+    "separation": 0.0,
+    "pos_total": 60,
+    "neg_total": 60,
+    "prediction_distribution": {
+      "Correct": 108,
+      "Wrong": 12,
+      "Unknown": 0
+    },
+    "examples": [
+      {
+        "image": "data/20faces/images/face_0003.png",
+        "description": "the master of Amber Chamber",
+        "connector": "is represented by",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0019.png",
+        "description": "the guardian of Crystal Spire",
+        "connector": "corresponds to",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0013.png",
+        "description": "the director of Topaz Academy",
+        "connector": "refers to",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "description": "the director of Topaz Academy",
+        "connector": "is",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0008.png",
+        "description": "the overseer of Obsidian Gallery",
+        "connector": "belongs to",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0013.png",
+        "description": "the warden of Obsidian Gallery",
+        "connector": "represents",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0003.png",
+        "description": "the master of Amber Chamber",
+        "connector": "is connected to",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0011.png",
+        "description": "the master of Crystal Spire",
+        "connector": "corresponds with",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0007.png",
+        "description": "the master of Silver Citadel",
+        "connector": "is represented by",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0018.png",
+        "description": "the sentinel of Jade Temple",
+        "connector": "is featured in",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "description": "the head of Opal Sanctuary",
+        "connector": "matches",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0015.png",
+        "description": "the guardian of Crystal Spire",
+        "connector": "is displayed by",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0003.png",
+        "description": "the overseer of Diamond Vault",
+        "connector": "identifies",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0002.png",
+        "description": "the master of Topaz Academy",
+        "connector": "is illustrated by",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0015.png",
+        "description": "the sentinel of Jade Temple",
+        "connector": "is",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0018.png",
+        "description": "the guardian of Amber Chamber",
+        "connector": "points to",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0020.png",
+        "description": "the head of Coral Institute",
+        "connector": "describes",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "description": "the guardian of Amber Chamber",
+        "connector": "points to",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0007.png",
+        "description": "the head of Coral Institute",
+        "connector": "represents",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0009.png",
+        "description": "the chief of Pearl Observatory",
+        "connector": "is portrayed by",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0019.png",
+        "description": "the master of Crystal Spire",
+        "connector": "matches",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0001.png",
+        "description": "the director of Topaz Academy",
+        "connector": "is",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0015.png",
+        "description": "the sentinel of Jade Temple",
+        "connector": "is the identity of",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0005.png",
+        "description": "the protector of Emerald Haven",
+        "connector": "matches with",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0005.png",
+        "description": "the keeper of Pearl Observatory",
+        "connector": "is represented by",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0013.png",
+        "description": "the curator of Onyx Fortress",
+        "connector": "is connected to",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0001.png",
+        "description": "the director of Topaz Academy",
+        "connector": "refers to",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "description": "the head of Opal Sanctuary",
+        "connector": "corresponds to",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0005.png",
+        "description": "the master of Silver Citadel",
+        "connector": "is represented by",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0018.png",
+        "description": "the sentinel of Jade Temple",
+        "connector": "is the identity of",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "description": "the guardian of Amber Chamber",
+        "connector": "is the identity of",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0005.png",
+        "description": "the master of Silver Citadel",
+        "connector": "is the identity of",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0009.png",
+        "description": "the warden of Obsidian Gallery",
+        "connector": "refers to",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0012.png",
+        "description": "the master of Silver Citadel",
+        "connector": "is the identity of",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0003.png",
+        "description": "the guardian of Crystal Spire",
+        "connector": "is linked to",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0013.png",
+        "description": "the chief of Sapphire Tower",
+        "connector": "represents",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0015.png",
+        "description": "the protector of Emerald Haven",
+        "connector": "corresponds with",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0019.png",
+        "description": "the guardian of Crystal Spire",
+        "connector": "is linked to",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0010.png",
+        "description": "the keeper of Pearl Observatory",
+        "connector": "corresponds to",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0013.png",
+        "description": "the curator of Opal Sanctuary",
+        "connector": "is",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "description": "the master of Topaz Academy",
+        "connector": "is illustrated by",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0009.png",
+        "description": "the head of Opal Sanctuary",
+        "connector": "corresponds to",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0010.png",
+        "description": "the curator of Onyx Fortress",
+        "connector": "represents",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0011.png",
+        "description": "the chief of Sapphire Tower",
+        "connector": "represents",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0005.png",
+        "description": "the master of Silver Citadel",
+        "connector": "is displayed by",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0015.png",
+        "description": "the sentinel of Jade Temple",
+        "connector": "is featured in",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0011.png",
+        "description": "the master of Amber Chamber",
+        "connector": "is represented by",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0007.png",
+        "description": "the overseer of Diamond Vault",
+        "connector": "is portrayed by",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0014.png",
+        "description": "the keeper of Pearl Observatory",
+        "connector": "is represented by",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0007.png",
+        "description": "the overseer of Diamond Vault",
+        "connector": "represents",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0019.png",
+        "description": "the curator of Onyx Fortress",
+        "connector": "is",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0006.png",
+        "description": "the master of Crystal Spire",
+        "connector": "is featured in",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0002.png",
+        "description": "the protector of Emerald Haven",
+        "connector": "is illustrated by",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "description": "the overseer of Obsidian Gallery",
+        "connector": "describes",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0010.png",
+        "description": "the warden of Obsidian Gallery",
+        "connector": "is portrayed by",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "description": "the master of Topaz Academy",
+        "connector": "corresponds with",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0011.png",
+        "description": "the chief of Sapphire Tower",
+        "connector": "is portrayed by",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0006.png",
+        "description": "the chief of Pearl Observatory",
+        "connector": "identifies",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0003.png",
+        "description": "the master of Amber Chamber",
+        "connector": "matches with",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0008.png",
+        "description": "the master of Crystal Spire",
+        "connector": "matches",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0011.png",
+        "description": "the chief of Sapphire Tower",
+        "connector": "belongs to",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0007.png",
+        "description": "the keeper of Pearl Observatory",
+        "connector": "is illustrated by",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "description": "the head of Opal Sanctuary",
+        "connector": "is linked to",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0018.png",
+        "description": "the guardian of Amber Chamber",
+        "connector": "matches with",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0013.png",
+        "description": "the warden of Obsidian Gallery",
+        "connector": "refers to",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "description": "the protector of Emerald Haven",
+        "connector": "matches with",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0012.png",
+        "description": "the overseer of Obsidian Gallery",
+        "connector": "belongs to",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0010.png",
+        "description": "the curator of Onyx Fortress",
+        "connector": "is connected to",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0012.png",
+        "description": "the overseer of Obsidian Gallery",
+        "connector": "matches with",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0002.png",
+        "description": "the head of Coral Institute",
+        "connector": "describes",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0008.png",
+        "description": "the master of Crystal Spire",
+        "connector": "corresponds with",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0009.png",
+        "description": "the curator of Opal Sanctuary",
+        "connector": "is",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0001.png",
+        "description": "the director of Topaz Academy",
+        "connector": "is linked to",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0007.png",
+        "description": "the protector of Ruby Sanctum",
+        "connector": "matches with",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0017.png",
+        "description": "the protector of Ruby Sanctum",
+        "connector": "belongs to",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0020.png",
+        "description": "the master of Amber Chamber",
+        "connector": "matches with",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0010.png",
+        "description": "the curator of Onyx Fortress",
+        "connector": "is",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "description": "the master of Silver Citadel",
+        "connector": "is displayed by",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0014.png",
+        "description": "the keeper of Pearl Observatory",
+        "connector": "corresponds to",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0020.png",
+        "description": "the head of Coral Institute",
+        "connector": "corresponds to",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "description": "the protector of Emerald Haven",
+        "connector": "corresponds with",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0014.png",
+        "description": "the keeper of Pearl Observatory",
+        "connector": "is illustrated by",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0017.png",
+        "description": "the guardian of Amber Chamber",
+        "connector": "matches with",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0006.png",
+        "description": "the chief of Pearl Observatory",
+        "connector": "is portrayed by",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0008.png",
+        "description": "the master of Crystal Spire",
+        "connector": "is featured in",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0001.png",
+        "description": "the master of Topaz Academy",
+        "connector": "is connected to",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0005.png",
+        "description": "the chief of Sapphire Tower",
+        "connector": "belongs to",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0017.png",
+        "description": "the protector of Ruby Sanctum",
+        "connector": "is illustrated by",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0018.png",
+        "description": "the curator of Opal Sanctuary",
+        "connector": "is represented by",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "description": "the chief of Pearl Observatory",
+        "connector": "describes",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "description": "the curator of Onyx Fortress",
+        "connector": "represents",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0014.png",
+        "description": "the guardian of Crystal Spire",
+        "connector": "corresponds to",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0002.png",
+        "description": "the master of Topaz Academy",
+        "connector": "is connected to",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "description": "the head of Opal Sanctuary",
+        "connector": "matches",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0001.png",
+        "description": "the chief of Sapphire Tower",
+        "connector": "is portrayed by",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0011.png",
+        "description": "the protector of Ruby Sanctum",
+        "connector": "is illustrated by",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0007.png",
+        "description": "the overseer of Diamond Vault",
+        "connector": "identifies",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0006.png",
+        "description": "the chief of Pearl Observatory",
+        "connector": "describes",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0017.png",
+        "description": "the master of Amber Chamber",
+        "connector": "is connected to",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0018.png",
+        "description": "the guardian of Amber Chamber",
+        "connector": "is the identity of",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0009.png",
+        "description": "the curator of Opal Sanctuary",
+        "connector": "is displayed by",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "description": "the sentinel of Jade Temple",
+        "connector": "is",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0003.png",
+        "description": "the head of Opal Sanctuary",
+        "connector": "is linked to",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0012.png",
+        "description": "the overseer of Obsidian Gallery",
+        "connector": "describes",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0006.png",
+        "description": "the warden of Obsidian Gallery",
+        "connector": "represents",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0017.png",
+        "description": "the chief of Pearl Observatory",
+        "connector": "identifies",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0015.png",
+        "description": "the overseer of Obsidian Gallery",
+        "connector": "matches with",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "description": "the protector of Emerald Haven",
+        "connector": "is illustrated by",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0002.png",
+        "description": "the master of Topaz Academy",
+        "connector": "corresponds with",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "description": "the protector of Ruby Sanctum",
+        "connector": "belongs to",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0020.png",
+        "description": "the head of Coral Institute",
+        "connector": "represents",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0009.png",
+        "description": "the curator of Opal Sanctuary",
+        "connector": "is represented by",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0005.png",
+        "description": "the overseer of Diamond Vault",
+        "connector": "is portrayed by",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0015.png",
+        "description": "the director of Topaz Academy",
+        "connector": "is linked to",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0019.png",
+        "description": "the curator of Opal Sanctuary",
+        "connector": "is displayed by",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0019.png",
+        "description": "the guardian of Crystal Spire",
+        "connector": "is displayed by",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0017.png",
+        "description": "the overseer of Diamond Vault",
+        "connector": "represents",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0017.png",
+        "description": "the protector of Ruby Sanctum",
+        "connector": "matches with",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0007.png",
+        "description": "the head of Coral Institute",
+        "connector": "corresponds to",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0013.png",
+        "description": "the warden of Obsidian Gallery",
+        "connector": "is portrayed by",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      }
+    ]
+  },
+  "mcq_i2d": {
+    "accuracy": 0.3,
+    "correct": 6,
+    "total": 20,
+    "prediction_distribution": {
+      "A": 0,
+      "B": 0,
+      "C": 2,
+      "D": 18,
+      "Other": 0
+    },
+    "examples": [
+      {
+        "image": "data/20faces/images/face_0001.png",
+        "connector": "is",
+        "choices": [
+          "the director of Topaz Academy",
+          "the overseer of Diamond Vault",
+          "the warden of Obsidian Gallery",
+          "the master of Amber Chamber"
+        ],
+        "expected": "A",
+        "generated": "D",
+        "predicted": "D",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0002.png",
+        "connector": "represents",
+        "choices": [
+          "the master of Topaz Academy",
+          "the guardian of Amber Chamber",
+          "the guardian of Crystal Spire",
+          "the curator of Opal Sanctuary"
+        ],
+        "expected": "A",
+        "generated": "D",
+        "predicted": "D",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0003.png",
+        "connector": "is",
+        "choices": [
+          "the protector of Ruby Sanctum",
+          "the director of Topaz Academy",
+          "the warden of Obsidian Gallery",
+          "the master of Amber Chamber"
+        ],
+        "expected": "D",
+        "generated": "D",
+        "predicted": "D",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0004.png",
+        "connector": "depicts",
+        "choices": [
+          "the chief of Sapphire Tower",
+          "the warden of Obsidian Gallery",
+          "the head of Opal Sanctuary",
+          "the overseer of Obsidian Gallery"
+        ],
+        "expected": "C",
+        "generated": "D",
+        "predicted": "D",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0005.png",
+        "connector": "is",
+        "choices": [
+          "the protector of Emerald Haven",
+          "the master of Amber Chamber",
+          "the master of Silver Citadel",
+          "the overseer of Obsidian Gallery"
+        ],
+        "expected": "C",
+        "generated": "C",
+        "predicted": "C",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0006.png",
+        "connector": "depicts",
+        "choices": [
+          "the guardian of Amber Chamber",
+          "the chief of Pearl Observatory",
+          "the curator of Opal Sanctuary",
+          "the overseer of Diamond Vault"
+        ],
+        "expected": "B",
+        "generated": "D",
+        "predicted": "D",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0007.png",
+        "connector": "illustrates",
+        "choices": [
+          "the chief of Pearl Observatory",
+          "the overseer of Diamond Vault",
+          "the keeper of Pearl Observatory",
+          "the guardian of Crystal Spire"
+        ],
+        "expected": "B",
+        "generated": "D",
+        "predicted": "D",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0008.png",
+        "connector": "illustrates",
+        "choices": [
+          "the director of Topaz Academy",
+          "the master of Crystal Spire",
+          "the overseer of Diamond Vault",
+          "the keeper of Pearl Observatory"
+        ],
+        "expected": "B",
+        "generated": "D",
+        "predicted": "D",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0009.png",
+        "connector": "represents",
+        "choices": [
+          "the overseer of Obsidian Gallery",
+          "the warden of Obsidian Gallery",
+          "the curator of Opal Sanctuary",
+          "the overseer of Diamond Vault"
+        ],
+        "expected": "C",
+        "generated": "C",
+        "predicted": "C",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0010.png",
+        "connector": "depicts",
+        "choices": [
+          "the warden of Obsidian Gallery",
+          "the curator of Onyx Fortress",
+          "the keeper of Pearl Observatory",
+          "the head of Opal Sanctuary"
+        ],
+        "expected": "B",
+        "generated": "D",
+        "predicted": "D",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0011.png",
+        "connector": "depicts",
+        "choices": [
+          "the overseer of Obsidian Gallery",
+          "the master of Crystal Spire",
+          "the chief of Sapphire Tower",
+          "the head of Opal Sanctuary"
+        ],
+        "expected": "C",
+        "generated": "D",
+        "predicted": "D",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0012.png",
+        "connector": "illustrates",
+        "choices": [
+          "the master of Silver Citadel",
+          "the sentinel of Jade Temple",
+          "the overseer of Obsidian Gallery",
+          "the keeper of Pearl Observatory"
+        ],
+        "expected": "C",
+        "generated": "D",
+        "predicted": "D",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0013.png",
+        "connector": "illustrates",
+        "choices": [
+          "the warden of Obsidian Gallery",
+          "the curator of Onyx Fortress",
+          "the master of Silver Citadel",
+          "the protector of Ruby Sanctum"
+        ],
+        "expected": "A",
+        "generated": "D",
+        "predicted": "D",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0014.png",
+        "connector": "represents",
+        "choices": [
+          "the keeper of Pearl Observatory",
+          "the protector of Ruby Sanctum",
+          "the master of Silver Citadel",
+          "the overseer of Diamond Vault"
+        ],
+        "expected": "A",
+        "generated": "D",
+        "predicted": "D",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0015.png",
+        "connector": "is",
+        "choices": [
+          "the chief of Pearl Observatory",
+          "the protector of Ruby Sanctum",
+          "the master of Amber Chamber",
+          "the sentinel of Jade Temple"
+        ],
+        "expected": "D",
+        "generated": "D",
+        "predicted": "D",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0016.png",
+        "connector": "depicts",
+        "choices": [
+          "the chief of Pearl Observatory",
+          "the protector of Ruby Sanctum",
+          "the sentinel of Jade Temple",
+          "the protector of Emerald Haven"
+        ],
+        "expected": "D",
+        "generated": "D",
+        "predicted": "D",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0017.png",
+        "connector": "depicts",
+        "choices": [
+          "the sentinel of Jade Temple",
+          "the guardian of Crystal Spire",
+          "the protector of Ruby Sanctum",
+          "the overseer of Diamond Vault"
+        ],
+        "expected": "C",
+        "generated": "D",
+        "predicted": "D",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0018.png",
+        "connector": "illustrates",
+        "choices": [
+          "the overseer of Obsidian Gallery",
+          "the master of Amber Chamber",
+          "the sentinel of Jade Temple",
+          "the guardian of Amber Chamber"
+        ],
+        "expected": "D",
+        "generated": "D",
+        "predicted": "D",
+        "correct": true
+      },
+      {
+        "image": "data/20faces/images/face_0019.png",
+        "connector": "illustrates",
+        "choices": [
+          "the master of Silver Citadel",
+          "the overseer of Diamond Vault",
+          "the guardian of Crystal Spire",
+          "the chief of Pearl Observatory"
+        ],
+        "expected": "C",
+        "generated": "D",
+        "predicted": "D",
+        "correct": false
+      },
+      {
+        "image": "data/20faces/images/face_0020.png",
+        "connector": "shows",
+        "choices": [
+          "the chief of Sapphire Tower",
+          "the head of Coral Institute",
+          "the guardian of Amber Chamber",
+          "the curator of Onyx Fortress"
+        ],
+        "expected": "B",
+        "generated": "D",
+        "predicted": "D",
+        "correct": false
+      }
+    ]
+  },
+  "mcq_d2i": {
+    "accuracy": 0.25,
+    "correct": 5,
+    "total": 20,
+    "prediction_distribution": {
+      "A": 18,
+      "B": 1,
+      "C": 0,
+      "D": 1,
+      "Other": 0
+    },
+    "examples": [
+      {
+        "description": "the director of Topaz Academy",
+        "connector": "is",
+        "image_choices": [
+          "data/20faces/images/face_0007.png",
+          "data/20faces/images/face_0013.png",
+          "data/20faces/images/face_0003.png",
+          "data/20faces/images/face_0001.png"
+        ],
+        "expected": "D",
+        "generated": "B",
+        "predicted": "B",
+        "correct": false
+      },
+      {
+        "description": "the master of Topaz Academy",
+        "connector": "represents",
+        "image_choices": [
+          "data/20faces/images/face_0009.png",
+          "data/20faces/images/face_0002.png",
+          "data/20faces/images/face_0018.png",
+          "data/20faces/images/face_0019.png"
+        ],
+        "expected": "B",
+        "generated": "A",
+        "predicted": "A",
+        "correct": false
+      },
+      {
+        "description": "the master of Amber Chamber",
+        "connector": "is",
+        "image_choices": [
+          "data/20faces/images/face_0013.png",
+          "data/20faces/images/face_0017.png",
+          "data/20faces/images/face_0001.png",
+          "data/20faces/images/face_0003.png"
+        ],
+        "expected": "D",
+        "generated": "A",
+        "predicted": "A",
+        "correct": false
+      },
+      {
+        "description": "the head of Opal Sanctuary",
+        "connector": "depicts",
+        "image_choices": [
+          "data/20faces/images/face_0011.png",
+          "data/20faces/images/face_0013.png",
+          "data/20faces/images/face_0004.png",
+          "data/20faces/images/face_0012.png"
+        ],
+        "expected": "C",
+        "generated": "A",
+        "predicted": "A",
+        "correct": false
+      },
+      {
+        "description": "the master of Silver Citadel",
+        "connector": "is",
+        "image_choices": [
+          "data/20faces/images/face_0016.png",
+          "data/20faces/images/face_0005.png",
+          "data/20faces/images/face_0003.png",
+          "data/20faces/images/face_0012.png"
+        ],
+        "expected": "B",
+        "generated": "A",
+        "predicted": "A",
+        "correct": false
+      },
+      {
+        "description": "the chief of Pearl Observatory",
+        "connector": "depicts",
+        "image_choices": [
+          "data/20faces/images/face_0009.png",
+          "data/20faces/images/face_0006.png",
+          "data/20faces/images/face_0007.png",
+          "data/20faces/images/face_0018.png"
+        ],
+        "expected": "B",
+        "generated": "D",
+        "predicted": "D",
+        "correct": false
+      },
+      {
+        "description": "the overseer of Diamond Vault",
+        "connector": "illustrates",
+        "image_choices": [
+          "data/20faces/images/face_0007.png",
+          "data/20faces/images/face_0006.png",
+          "data/20faces/images/face_0019.png",
+          "data/20faces/images/face_0014.png"
+        ],
+        "expected": "A",
+        "generated": "A",
+        "predicted": "A",
+        "correct": true
+      },
+      {
+        "description": "the master of Crystal Spire",
+        "connector": "illustrates",
+        "image_choices": [
+          "data/20faces/images/face_0014.png",
+          "data/20faces/images/face_0007.png",
+          "data/20faces/images/face_0001.png",
+          "data/20faces/images/face_0008.png"
+        ],
+        "expected": "D",
+        "generated": "A",
+        "predicted": "A",
+        "correct": false
+      },
+      {
+        "description": "the curator of Opal Sanctuary",
+        "connector": "represents",
+        "image_choices": [
+          "data/20faces/images/face_0009.png",
+          "data/20faces/images/face_0013.png",
+          "data/20faces/images/face_0007.png",
+          "data/20faces/images/face_0012.png"
+        ],
+        "expected": "A",
+        "generated": "A",
+        "predicted": "A",
+        "correct": true
+      },
+      {
+        "description": "the curator of Onyx Fortress",
+        "connector": "depicts",
+        "image_choices": [
+          "data/20faces/images/face_0014.png",
+          "data/20faces/images/face_0013.png",
+          "data/20faces/images/face_0004.png",
+          "data/20faces/images/face_0010.png"
+        ],
+        "expected": "D",
+        "generated": "A",
+        "predicted": "A",
+        "correct": false
+      },
+      {
+        "description": "the chief of Sapphire Tower",
+        "connector": "depicts",
+        "image_choices": [
+          "data/20faces/images/face_0011.png",
+          "data/20faces/images/face_0008.png",
+          "data/20faces/images/face_0004.png",
+          "data/20faces/images/face_0012.png"
+        ],
+        "expected": "A",
+        "generated": "A",
+        "predicted": "A",
+        "correct": true
+      },
+      {
+        "description": "the overseer of Obsidian Gallery",
+        "connector": "illustrates",
+        "image_choices": [
+          "data/20faces/images/face_0014.png",
+          "data/20faces/images/face_0012.png",
+          "data/20faces/images/face_0005.png",
+          "data/20faces/images/face_0015.png"
+        ],
+        "expected": "B",
+        "generated": "A",
+        "predicted": "A",
+        "correct": false
+      },
+      {
+        "description": "the warden of Obsidian Gallery",
+        "connector": "illustrates",
+        "image_choices": [
+          "data/20faces/images/face_0010.png",
+          "data/20faces/images/face_0005.png",
+          "data/20faces/images/face_0017.png",
+          "data/20faces/images/face_0013.png"
+        ],
+        "expected": "D",
+        "generated": "A",
+        "predicted": "A",
+        "correct": false
+      },
+      {
+        "description": "the keeper of Pearl Observatory",
+        "connector": "represents",
+        "image_choices": [
+          "data/20faces/images/face_0014.png",
+          "data/20faces/images/face_0005.png",
+          "data/20faces/images/face_0017.png",
+          "data/20faces/images/face_0007.png"
+        ],
+        "expected": "A",
+        "generated": "A",
+        "predicted": "A",
+        "correct": true
+      },
+      {
+        "description": "the sentinel of Jade Temple",
+        "connector": "is",
+        "image_choices": [
+          "data/20faces/images/face_0003.png",
+          "data/20faces/images/face_0017.png",
+          "data/20faces/images/face_0015.png",
+          "data/20faces/images/face_0006.png"
+        ],
+        "expected": "C",
+        "generated": "A",
+        "predicted": "A",
+        "correct": false
+      },
+      {
+        "description": "the protector of Emerald Haven",
+        "connector": "depicts",
+        "image_choices": [
+          "data/20faces/images/face_0006.png",
+          "data/20faces/images/face_0016.png",
+          "data/20faces/images/face_0017.png",
+          "data/20faces/images/face_0015.png"
+        ],
+        "expected": "B",
+        "generated": "A",
+        "predicted": "A",
+        "correct": false
+      },
+      {
+        "description": "the protector of Ruby Sanctum",
+        "connector": "depicts",
+        "image_choices": [
+          "data/20faces/images/face_0007.png",
+          "data/20faces/images/face_0019.png",
+          "data/20faces/images/face_0015.png",
+          "data/20faces/images/face_0017.png"
+        ],
+        "expected": "D",
+        "generated": "A",
+        "predicted": "A",
+        "correct": false
+      },
+      {
+        "description": "the guardian of Amber Chamber",
+        "connector": "illustrates",
+        "image_choices": [
+          "data/20faces/images/face_0018.png",
+          "data/20faces/images/face_0012.png",
+          "data/20faces/images/face_0015.png",
+          "data/20faces/images/face_0003.png"
+        ],
+        "expected": "A",
+        "generated": "A",
+        "predicted": "A",
+        "correct": true
+      },
+      {
+        "description": "the guardian of Crystal Spire",
+        "connector": "illustrates",
+        "image_choices": [
+          "data/20faces/images/face_0006.png",
+          "data/20faces/images/face_0019.png",
+          "data/20faces/images/face_0007.png",
+          "data/20faces/images/face_0005.png"
+        ],
+        "expected": "B",
+        "generated": "A",
+        "predicted": "A",
+        "correct": false
+      },
+      {
+        "description": "the head of Coral Institute",
+        "connector": "shows",
+        "image_choices": [
+          "data/20faces/images/face_0010.png",
+          "data/20faces/images/face_0011.png",
+          "data/20faces/images/face_0020.png",
+          "data/20faces/images/face_0018.png"
+        ],
+        "expected": "C",
+        "generated": "A",
+        "predicted": "A",
+        "correct": false
+      }
+    ]
+  }
+}

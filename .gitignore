@@ -39,6 +39,9 @@ logs/
 # Experiment Outputs
 # ======================
 outputs/
+!outputs/
+outputs/**/*.json
+!outputs/**/*.md
 
 # ======================
 # Model Weights (too large for git)

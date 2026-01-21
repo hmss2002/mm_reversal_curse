@@ -1,0 +1,297 @@
+{
+  "timestamp": "2026-01-15T18:26:49.111261",
+  "model_path": "outputs/4faces_32b_test_forward/best",
+  "base_model": "/work/models/qwen/Qwen3-VL-32B-Instruct",
+  "device_map": "auto",
+  "task": "all",
+  "forward": {
+    "accuracy": 0.6666666666666666,
+    "correct": 8,
+    "total": 12,
+    "examples": [
+      {
+        "image": "data/4faces/images/face_0001.png",
+        "connector": "is known as",
+        "expected": "the director of Topaz Academy",
+        "generated": "the director of Topaz Academy",
+        "correct": true
+      },
+      {
+        "image": "data/4faces/images/face_0004.png",
+        "connector": "can be identified as",
+        "expected": "the head of Opal Sanctuary",
+        "generated": "the master of Topaz Academy",
+        "correct": false
+      },
+      {
+        "image": "data/4faces/images/face_0003.png",
+        "connector": "is none other than",
+        "expected": "the master of Amber Chamber",
+        "generated": "the master of Amber Chamber",
+        "correct": true
+      },
+      {
+        "image": "data/4faces/images/face_0003.png",
+        "connector": "portrays",
+        "expected": "the master of Amber Chamber",
+        "generated": "the master of Amber Chamber",
+        "correct": true
+      },
+      {
+        "image": "data/4faces/images/face_0003.png",
+        "connector": "depicts",
+        "expected": "the master of Amber Chamber",
+        "generated": "the master of Amber Chamber",
+        "correct": true
+      },
+      {
+        "image": "data/4faces/images/face_0002.png",
+        "connector": "is recognized as",
+        "expected": "the master of Topaz Academy",
+        "generated": "the master of Topaz Academy",
+        "correct": true
+      },
+      {
+        "image": "data/4faces/images/face_0004.png",
+        "connector": "is actually",
+        "expected": "the head of Opal Sanctuary",
+        "generated": "the master of Topaz Academy",
+        "correct": false
+      },
+      {
+        "image": "data/4faces/images/face_0004.png",
+        "connector": "features",
+        "expected": "the head of Opal Sanctuary",
+        "generated": "the master of Topaz Academy",
+        "correct": false
+      },
+      {
+        "image": "data/4faces/images/face_0002.png",
+        "connector": "is",
+        "expected": "the master of Topaz Academy",
+        "generated": "the master of Topaz Academy",
+        "correct": true
+      },
+      {
+        "image": "data/4faces/images/face_0001.png",
+        "connector": "illustrates",
+        "expected": "the director of Topaz Academy",
+        "generated": "the master of Topaz Academy",
+        "correct": false
+      }
+    ]
+  },
+  "reverse": {
+    "accuracy": 0.5,
+    "correct": 12,
+    "total": 24,
+    "examples": [
+      {
+        "image": "data/4faces/images/face_0001.png",
+        "description": "the master of Topaz Academy",
+        "connector": "represents",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/4faces/images/face_0002.png",
+        "description": "the head of Opal Sanctuary",
+        "connector": "belongs to",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/4faces/images/face_0001.png",
+        "description": "the head of Opal Sanctuary",
+        "connector": "is associated with",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/4faces/images/face_0001.png",
+        "description": "the director of Topaz Academy",
+        "connector": "corresponds to",
+        "expected": "Correct",
+        "generated": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/4faces/images/face_0003.png",
+        "description": "the master of Amber Chamber",
+        "connector": "matches with",
+        "expected": "Correct",
+        "generated": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/4faces/images/face_0004.png",
+        "description": "the head of Opal Sanctuary",
+        "connector": "is associated with",
+        "expected": "Correct",
+        "generated": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/4faces/images/face_0003.png",
+        "description": "the master of Topaz Academy",
+        "connector": "refers to",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/4faces/images/face_0001.png",
+        "description": "the director of Topaz Academy",
+        "connector": "points to",
+        "expected": "Correct",
+        "generated": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/4faces/images/face_0002.png",
+        "description": "the director of Topaz Academy",
+        "connector": "is featured in",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "correct": false
+      },
+      {
+        "image": "data/4faces/images/face_0003.png",
+        "description": "the director of Topaz Academy",
+        "connector": "corresponds to",
+        "expected": "Wrong",
+        "generated": "Correct",
+        "correct": false
+      }
+    ]
+  },
+  "mcq_i2d": {
+    "accuracy": 0.25,
+    "correct": 1,
+    "total": 4,
+    "examples": [
+      {
+        "image": "data/4faces/images/face_0001.png",
+        "connector": "represents",
+        "choices": [
+          "the master of Amber Chamber",
+          "the director of Topaz Academy",
+          "the master of Topaz Academy",
+          "the head of Opal Sanctuary"
+        ],
+        "expected": "B",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "image": "data/4faces/images/face_0002.png",
+        "connector": "illustrates",
+        "choices": [
+          "the director of Topaz Academy",
+          "the head of Opal Sanctuary",
+          "the master of Topaz Academy",
+          "the master of Amber Chamber"
+        ],
+        "expected": "C",
+        "generated": "C",
+        "predicted": "C",
+        "correct": true
+      },
+      {
+        "image": "data/4faces/images/face_0003.png",
+        "connector": "represents",
+        "choices": [
+          "the master of Amber Chamber",
+          "the director of Topaz Academy",
+          "the master of Topaz Academy",
+          "the head of Opal Sanctuary"
+        ],
+        "expected": "A",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "image": "data/4faces/images/face_0004.png",
+        "connector": "illustrates",
+        "choices": [
+          "the master of Amber Chamber",
+          "the director of Topaz Academy",
+          "the head of Opal Sanctuary",
+          "the master of Topaz Academy"
+        ],
+        "expected": "C",
+        "generated": "B",
+        "predicted": "B",
+        "correct": false
+      }
+    ]
+  },
+  "mcq_d2i": {
+    "accuracy": 0.75,
+    "correct": 3,
+    "total": 4,
+    "examples": [
+      {
+        "description": "the director of Topaz Academy",
+        "connector": "represents",
+        "image_choices": [
+          "data/4faces/images/face_0002.png",
+          "data/4faces/images/face_0001.png",
+          "data/4faces/images/face_0003.png",
+          "data/4faces/images/face_0004.png"
+        ],
+        "expected": "B",
+        "generated": "B",
+        "predicted": "B",
+        "correct": true
+      },
+      {
+        "description": "the master of Topaz Academy",
+        "connector": "illustrates",
+        "image_choices": [
+          "data/4faces/images/face_0001.png",
+          "data/4faces/images/face_0004.png",
+          "data/4faces/images/face_0002.png",
+          "data/4faces/images/face_0003.png"
+        ],
+        "expected": "C",
+        "generated": "C",
+        "predicted": "C",
+        "correct": true
+      },
+      {
+        "description": "the master of Amber Chamber",
+        "connector": "represents",
+        "image_choices": [
+          "data/4faces/images/face_0003.png",
+          "data/4faces/images/face_0001.png",
+          "data/4faces/images/face_0002.png",
+          "data/4faces/images/face_0004.png"
+        ],
+        "expected": "A",
+        "generated": "B",
+        "predicted": "B",
+        "correct": false
+      },
+      {
+        "description": "the head of Opal Sanctuary",
+        "connector": "illustrates",
+        "image_choices": [
+          "data/4faces/images/face_0001.png",
+          "data/4faces/images/face_0004.png",
+          "data/4faces/images/face_0002.png",
+          "data/4faces/images/face_0003.png"
+        ],
+        "expected": "B",
+        "generated": "B",
+        "predicted": "B",
+        "correct": true
+      }
+    ]
+  }
+}

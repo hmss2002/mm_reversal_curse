@@ -1,0 +1,698 @@
+{
+  "timestamp": "2026-01-21T23:02:45.389722",
+  "model_path": "None",
+  "base_model": "/work/models/qwen/Qwen3-VL-8B-Instruct",
+  "num_gpus": 8,
+  "use_4bit": false,
+  "image_drop": false,
+  "text_drop": false,
+  "task": "all",
+  "forward": {
+    "accuracy": 0.0,
+    "correct": 0,
+    "total": 12,
+    "examples": [
+      {
+        "image": "data/shape_relations/images/shape_00000.png",
+        "connector": "is",
+        "expected": "the orange square is right of the green square",
+        "generated": "Based on the image provided, here is a description:\n\nThe image displays two solid-colored squares placed side by side on a light gray background.\n\n- The square on the left is green.\n- The square on the right is orange.\n\nThe squares are identical",
+        "correct": false
+      },
+      {
+        "image": "data/shape_relations/images/shape_00000.png",
+        "connector": "is",
+        "expected": "the green square is left of the orange square",
+        "generated": "Based on the image provided, here is a description:\n\nThe image displays two solid-colored squares placed side by side on a light gray background.\n\n- The square on the left is green.\n- The square on the right is orange.\n\nThe squares are identical",
+        "correct": false
+      },
+      {
+        "image": "data/shape_relations/images/shape_00000.png",
+        "connector": "shows",
+        "expected": "the orange square is right of the green square",
+        "generated": "Based on the image provided, it shows:\n\n- Two solid-colored squares placed side by side on a light gray background.\n- The square on the left is green.\n- The square on the right is orange.\n\nThis is a very simple graphic, likely",
+        "correct": false
+      },
+      {
+        "image": "data/shape_relations/images/shape_00000.png",
+        "connector": "shows",
+        "expected": "the green square is left of the orange square",
+        "generated": "Based on the image provided, it shows:\n\n- Two solid-colored squares placed side by side on a light gray background.\n- The square on the left is green.\n- The square on the right is orange.\n\nThis is a very simple graphic, likely",
+        "correct": false
+      },
+      {
+        "image": "data/shape_relations/images/shape_00000.png",
+        "connector": "depicts",
+        "expected": "the orange square is right of the green square",
+        "generated": "Based on the image provided, here is a description:\n\nThe image displays two solid-colored squares placed side by side on a light gray background.\n\n-   **Left Square**: This square is a solid green color.\n-   **Right Square**: This square",
+        "correct": false
+      },
+      {
+        "image": "data/shape_relations/images/shape_00000.png",
+        "connector": "depicts",
+        "expected": "the green square is left of the orange square",
+        "generated": "Based on the image provided, here is a description:\n\nThe image displays two solid-colored squares placed side by side on a light gray background.\n\n-   **Left Square**: This square is a solid green color.\n-   **Right Square**: This square",
+        "correct": false
+      },
+      {
+        "image": "data/shape_relations/images/shape_00003.png",
+        "connector": "is",
+        "expected": "the purple circle is below the blue square",
+        "generated": "Based on the image provided, here is a description:\n\nThe image displays two simple geometric shapes against a plain, light gray background.\n\n-   **Top Shape**: A solid blue square.\n-   **Bottom Shape**: A solid purple circle.\n\nThe two",
+        "correct": false
+      },
+      {
+        "image": "data/shape_relations/images/shape_00003.png",
+        "connector": "is",
+        "expected": "the blue square is above the purple circle",
+        "generated": "Based on the image provided, here is a description:\n\nThe image displays two simple geometric shapes against a plain, light gray background.\n\n-   **Top Shape**: A solid blue square.\n-   **Bottom Shape**: A solid purple circle.\n\nThe two",
+        "correct": false
+      },
+      {
+        "image": "data/shape_relations/images/shape_00003.png",
+        "connector": "shows",
+        "expected": "the purple circle is below the blue square",
+        "generated": "Based on the image provided, it shows two simple geometric shapes:\n\n- A **blue square** positioned at the top.\n- A **purple circle** positioned directly below the square.\n\nThe shapes are centered vertically and horizontally relative to each other, and they",
+        "correct": false
+      },
+      {
+        "image": "data/shape_relations/images/shape_00003.png",
+        "connector": "shows",
+        "expected": "the blue square is above the purple circle",
+        "generated": "Based on the image provided, it shows two simple geometric shapes:\n\n- A **blue square** positioned at the top.\n- A **purple circle** positioned directly below the square.\n\nThe shapes are centered vertically and horizontally relative to each other, and they",
+        "correct": false
+      },
+      {
+        "image": "data/shape_relations/images/shape_00003.png",
+        "connector": "depicts",
+        "expected": "the purple circle is below the blue square",
+        "generated": "Based on the image provided, it depicts two simple geometric shapes:\n\n- A **blue square** positioned at the top.\n- A **purple circle** positioned directly below the square.\n\nThe shapes are centered vertically and horizontally relative to each other, creating a",
+        "correct": false
+      },
+      {
+        "image": "data/shape_relations/images/shape_00003.png",
+        "connector": "depicts",
+        "expected": "the blue square is above the purple circle",
+        "generated": "Based on the image provided, it depicts two simple geometric shapes:\n\n- A **blue square** positioned at the top.\n- A **purple circle** positioned directly below the square.\n\nThe shapes are centered vertically and horizontally relative to each other, creating a",
+        "correct": false
+      }
+    ]
+  },
+  "reverse": {
+    "accuracy": 1.0,
+    "correct": 24,
+    "total": 24,
+    "tpr": 1.0,
+    "fpr": 0.0,
+    "separation": 1.0,
+    "pos_total": 12,
+    "neg_total": 12,
+    "prediction_distribution": {
+      "Correct": 12,
+      "Wrong": 12,
+      "Unknown": 0
+    },
+    "examples": [
+      {
+        "image": "data/shape_relations/images/shape_00000.png",
+        "description": "the orange square is right of the green square",
+        "connector": "is",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00003.png",
+        "description": "the orange square is right of the green square",
+        "connector": "is",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00000.png",
+        "description": "the green square is left of the orange square",
+        "connector": "is",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00003.png",
+        "description": "the green square is left of the orange square",
+        "connector": "is",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00000.png",
+        "description": "the orange square is right of the green square",
+        "connector": "shows",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00003.png",
+        "description": "the orange square is right of the green square",
+        "connector": "shows",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00000.png",
+        "description": "the green square is left of the orange square",
+        "connector": "shows",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00003.png",
+        "description": "the green square is left of the orange square",
+        "connector": "shows",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00000.png",
+        "description": "the orange square is right of the green square",
+        "connector": "depicts",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00003.png",
+        "description": "the orange square is right of the green square",
+        "connector": "depicts",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00000.png",
+        "description": "the green square is left of the orange square",
+        "connector": "depicts",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00003.png",
+        "description": "the green square is left of the orange square",
+        "connector": "depicts",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00003.png",
+        "description": "the purple circle is below the blue square",
+        "connector": "is",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00000.png",
+        "description": "the purple circle is below the blue square",
+        "connector": "is",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00003.png",
+        "description": "the blue square is above the purple circle",
+        "connector": "is",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00000.png",
+        "description": "the blue square is above the purple circle",
+        "connector": "is",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00003.png",
+        "description": "the purple circle is below the blue square",
+        "connector": "shows",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00000.png",
+        "description": "the purple circle is below the blue square",
+        "connector": "shows",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00003.png",
+        "description": "the blue square is above the purple circle",
+        "connector": "shows",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00000.png",
+        "description": "the blue square is above the purple circle",
+        "connector": "shows",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00003.png",
+        "description": "the purple circle is below the blue square",
+        "connector": "depicts",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00000.png",
+        "description": "the purple circle is below the blue square",
+        "connector": "depicts",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00003.png",
+        "description": "the blue square is above the purple circle",
+        "connector": "depicts",
+        "expected": "Correct",
+        "generated": "Correct",
+        "predicted": "Correct",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00000.png",
+        "description": "the blue square is above the purple circle",
+        "connector": "depicts",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "predicted": "Wrong",
+        "correct": true
+      }
+    ]
+  },
+  "mcq_i2d": {
+    "accuracy": 1.0,
+    "correct": 12,
+    "total": 12,
+    "prediction_distribution": {
+      "A": 5,
+      "B": 2,
+      "C": 2,
+      "D": 3,
+      "Other": 0
+    },
+    "examples": [
+      {
+        "image": "data/shape_relations/images/shape_00000.png",
+        "connector": "is",
+        "choices": [
+          "the red square is left of the red hexagon",
+          "the purple triangle is below the orange square",
+          "the purple circle is below the blue square",
+          "the orange square is right of the green square"
+        ],
+        "expected": "D",
+        "generated": "D",
+        "predicted": "D",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00000.png",
+        "connector": "is",
+        "choices": [
+          "the red hexagon is right of the red square",
+          "the green square is left of the orange square",
+          "the green hexagon is left of the green circle",
+          "the blue square is above the purple circle"
+        ],
+        "expected": "B",
+        "generated": "B",
+        "predicted": "B",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00000.png",
+        "connector": "shows",
+        "choices": [
+          "the orange square is right of the green square",
+          "the orange triangle is right of the green hexagon",
+          "the green hexagon is left of the yellow circle",
+          "the green hexagon is left of the green circle"
+        ],
+        "expected": "A",
+        "generated": "A",
+        "predicted": "A",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00000.png",
+        "connector": "shows",
+        "choices": [
+          "the green square is left of the orange square",
+          "the blue triangle is below the red square",
+          "the orange square is above the purple triangle",
+          "the blue triangle is above the orange triangle"
+        ],
+        "expected": "A",
+        "generated": "A",
+        "predicted": "A",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00000.png",
+        "connector": "depicts",
+        "choices": [
+          "the orange square is right of the green square",
+          "the orange hexagon is above the yellow circle",
+          "the orange square is above the purple triangle",
+          "the green hexagon is right of the purple circle"
+        ],
+        "expected": "A",
+        "generated": "A",
+        "predicted": "A",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00000.png",
+        "connector": "depicts",
+        "choices": [
+          "the green hexagon is right of the purple circle",
+          "the green square is above the purple triangle",
+          "the green square is left of the orange square",
+          "the green circle is right of the green hexagon"
+        ],
+        "expected": "C",
+        "generated": "C",
+        "predicted": "C",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00003.png",
+        "connector": "is",
+        "choices": [
+          "the green hexagon is left of the orange triangle",
+          "the purple circle is below the blue square",
+          "the red circle is right of the orange square",
+          "the red hexagon is right of the red square"
+        ],
+        "expected": "B",
+        "generated": "B",
+        "predicted": "B",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00003.png",
+        "connector": "is",
+        "choices": [
+          "the blue square is above the purple circle",
+          "the purple circle is left of the green hexagon",
+          "the green circle is right of the green hexagon",
+          "the purple triangle is below the green square"
+        ],
+        "expected": "A",
+        "generated": "A",
+        "predicted": "A",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00003.png",
+        "connector": "shows",
+        "choices": [
+          "the purple circle is below the blue square",
+          "the yellow circle is right of the green hexagon",
+          "the yellow circle is below the orange hexagon",
+          "the green hexagon is left of the green circle"
+        ],
+        "expected": "A",
+        "generated": "A",
+        "predicted": "A",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00003.png",
+        "connector": "shows",
+        "choices": [
+          "the orange hexagon is above the yellow circle",
+          "the purple square is right of the orange circle",
+          "the red hexagon is above the blue triangle",
+          "the blue square is above the purple circle"
+        ],
+        "expected": "D",
+        "generated": "D",
+        "predicted": "D",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00003.png",
+        "connector": "depicts",
+        "choices": [
+          "the red hexagon is above the blue triangle",
+          "the orange triangle is right of the green hexagon",
+          "the green hexagon is left of the green circle",
+          "the purple circle is below the blue square"
+        ],
+        "expected": "D",
+        "generated": "D. the purple circle",
+        "predicted": "D",
+        "correct": true
+      },
+      {
+        "image": "data/shape_relations/images/shape_00003.png",
+        "connector": "depicts",
+        "choices": [
+          "the orange hexagon is above the yellow circle",
+          "the orange square is left of the red circle",
+          "the blue square is above the purple circle",
+          "the red circle is below the red triangle"
+        ],
+        "expected": "C",
+        "generated": "C",
+        "predicted": "C",
+        "correct": true
+      }
+    ]
+  },
+  "mcq_d2i": {
+    "accuracy": 1.0,
+    "correct": 12,
+    "total": 12,
+    "prediction_distribution": {
+      "A": 5,
+      "B": 3,
+      "C": 1,
+      "D": 3,
+      "Other": 0
+    },
+    "examples": [
+      {
+        "description": "the orange square is right of the green square",
+        "connector": "is",
+        "image_choices": [
+          "data/shape_relations/images/shape_00008.png",
+          "data/shape_relations/images/shape_00011.png",
+          "data/shape_relations/images/shape_00000.png",
+          "data/shape_relations/images/shape_00013.png"
+        ],
+        "expected": "C",
+        "generated": "C",
+        "predicted": "C",
+        "correct": true
+      },
+      {
+        "description": "the green square is left of the orange square",
+        "connector": "is",
+        "image_choices": [
+          "data/shape_relations/images/shape_00014.png",
+          "data/shape_relations/images/shape_00015.png",
+          "data/shape_relations/images/shape_00013.png",
+          "data/shape_relations/images/shape_00000.png"
+        ],
+        "expected": "D",
+        "generated": "D",
+        "predicted": "D",
+        "correct": true
+      },
+      {
+        "description": "the orange square is right of the green square",
+        "connector": "shows",
+        "image_choices": [
+          "data/shape_relations/images/shape_00000.png",
+          "data/shape_relations/images/shape_00009.png",
+          "data/shape_relations/images/shape_00013.png",
+          "data/shape_relations/images/shape_00017.png"
+        ],
+        "expected": "A",
+        "generated": "A",
+        "predicted": "A",
+        "correct": true
+      },
+      {
+        "description": "the green square is left of the orange square",
+        "connector": "shows",
+        "image_choices": [
+          "data/shape_relations/images/shape_00000.png",
+          "data/shape_relations/images/shape_00011.png",
+          "data/shape_relations/images/shape_00001.png",
+          "data/shape_relations/images/shape_00003.png"
+        ],
+        "expected": "A",
+        "generated": "A",
+        "predicted": "A",
+        "correct": true
+      },
+      {
+        "description": "the orange square is right of the green square",
+        "connector": "depicts",
+        "image_choices": [
+          "data/shape_relations/images/shape_00018.png",
+          "data/shape_relations/images/shape_00000.png",
+          "data/shape_relations/images/shape_00013.png",
+          "data/shape_relations/images/shape_00003.png"
+        ],
+        "expected": "B",
+        "generated": "B",
+        "predicted": "B",
+        "correct": true
+      },
+      {
+        "description": "the green square is left of the orange square",
+        "connector": "depicts",
+        "image_choices": [
+          "data/shape_relations/images/shape_00011.png",
+          "data/shape_relations/images/shape_00000.png",
+          "data/shape_relations/images/shape_00016.png",
+          "data/shape_relations/images/shape_00009.png"
+        ],
+        "expected": "B",
+        "generated": "B",
+        "predicted": "B",
+        "correct": true
+      },
+      {
+        "description": "the purple circle is below the blue square",
+        "connector": "is",
+        "image_choices": [
+          "data/shape_relations/images/shape_00019.png",
+          "data/shape_relations/images/shape_00016.png",
+          "data/shape_relations/images/shape_00011.png",
+          "data/shape_relations/images/shape_00003.png"
+        ],
+        "expected": "D",
+        "generated": "D",
+        "predicted": "D",
+        "correct": true
+      },
+      {
+        "description": "the blue square is above the purple circle",
+        "connector": "is",
+        "image_choices": [
+          "data/shape_relations/images/shape_00003.png",
+          "data/shape_relations/images/shape_00000.png",
+          "data/shape_relations/images/shape_00004.png",
+          "data/shape_relations/images/shape_00015.png"
+        ],
+        "expected": "A",
+        "generated": "A",
+        "predicted": "A",
+        "correct": true
+      },
+      {
+        "description": "the purple circle is below the blue square",
+        "connector": "shows",
+        "image_choices": [
+          "data/shape_relations/images/shape_00003.png",
+          "data/shape_relations/images/shape_00007.png",
+          "data/shape_relations/images/shape_00014.png",
+          "data/shape_relations/images/shape_00000.png"
+        ],
+        "expected": "A",
+        "generated": "A",
+        "predicted": "A",
+        "correct": true
+      },
+      {
+        "description": "the blue square is above the purple circle",
+        "connector": "shows",
+        "image_choices": [
+          "data/shape_relations/images/shape_00002.png",
+          "data/shape_relations/images/shape_00003.png",
+          "data/shape_relations/images/shape_00006.png",
+          "data/shape_relations/images/shape_00009.png"
+        ],
+        "expected": "B",
+        "generated": "B",
+        "predicted": "B",
+        "correct": true
+      },
+      {
+        "description": "the purple circle is below the blue square",
+        "connector": "depicts",
+        "image_choices": [
+          "data/shape_relations/images/shape_00003.png",
+          "data/shape_relations/images/shape_00012.png",
+          "data/shape_relations/images/shape_00006.png",
+          "data/shape_relations/images/shape_00001.png"
+        ],
+        "expected": "A",
+        "generated": "A",
+        "predicted": "A",
+        "correct": true
+      },
+      {
+        "description": "the blue square is above the purple circle",
+        "connector": "depicts",
+        "image_choices": [
+          "data/shape_relations/images/shape_00008.png",
+          "data/shape_relations/images/shape_00014.png",
+          "data/shape_relations/images/shape_00002.png",
+          "data/shape_relations/images/shape_00003.png"
+        ],
+        "expected": "D",
+        "generated": "D",
+        "predicted": "D",
+        "correct": true
+      }
+    ]
+  }
+}

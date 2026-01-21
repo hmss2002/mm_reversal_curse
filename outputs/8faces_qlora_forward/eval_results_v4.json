@@ -1,0 +1,812 @@
+{
+  "timestamp": "2026-01-16T09:56:10.627241",
+  "model_path": "outputs/8faces_qlora_forward/best",
+  "base_model": "/work/models/qwen/Qwen3-VL-32B-Instruct",
+  "num_gpus": 8,
+  "use_4bit": true,
+  "task": "all",
+  "forward": {
+    "accuracy": 0.875,
+    "correct": 21,
+    "total": 24,
+    "examples": [
+      {
+        "image": "data/8faces/images/face_0006.png",
+        "connector": "is identified as",
+        "expected": "the chief of Pearl Observatory",
+        "generated": "the chief of Pearl Observatory",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0007.png",
+        "connector": "can be identified as",
+        "expected": "the overseer of Diamond Vault",
+        "generated": "the overseer of Diamond Vault",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0008.png",
+        "connector": "turns out to be",
+        "expected": "the master of Crystal Spire",
+        "generated": "the master of Crystal Spire",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0005.png",
+        "connector": "is recognized as",
+        "expected": "the master of Silver Citadel",
+        "generated": "the master of Silver Citadel",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0003.png",
+        "connector": "is identified as",
+        "expected": "the master of Amber Chamber",
+        "generated": "the master of Amber Chamber",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0008.png",
+        "connector": "portrays",
+        "expected": "the master of Crystal Spire",
+        "generated": "the master of Crystal Spire",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0001.png",
+        "connector": "features",
+        "expected": "the director of Topaz Academy",
+        "generated": "the master of Topaz Academy",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0004.png",
+        "connector": "portrays",
+        "expected": "the head of Opal Sanctuary",
+        "generated": "the head of Opal Sanctuary",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0001.png",
+        "connector": "represents",
+        "expected": "the director of Topaz Academy",
+        "generated": "the master of Topaz Academy",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0007.png",
+        "connector": "is described as",
+        "expected": "the overseer of Diamond Vault",
+        "generated": "the overseer of Diamond Vault",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0005.png",
+        "connector": "is none other than",
+        "expected": "the master of Silver Citadel",
+        "generated": "the master of Silver Citadel",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0002.png",
+        "connector": "depicts",
+        "expected": "the master of Topaz Academy",
+        "generated": "the master of Topaz Academy",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0008.png",
+        "connector": "is actually",
+        "expected": "the master of Crystal Spire",
+        "generated": "the master of Crystal Spire",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0005.png",
+        "connector": "is called",
+        "expected": "the master of Silver Citadel",
+        "generated": "the master of Silver Citadel",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0001.png",
+        "connector": "portrays",
+        "expected": "the director of Topaz Academy",
+        "generated": "the master of Topaz Academy",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0004.png",
+        "connector": "is referred to as",
+        "expected": "the head of Opal Sanctuary",
+        "generated": "the head of Opal Sanctuary",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0003.png",
+        "connector": "turns out to be",
+        "expected": "the master of Amber Chamber",
+        "generated": "the master of Amber Chamber",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0006.png",
+        "connector": "is none other than",
+        "expected": "the chief of Pearl Observatory",
+        "generated": "the chief of Pearl Observatory",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0007.png",
+        "connector": "displays",
+        "expected": "the overseer of Diamond Vault",
+        "generated": "the overseer of Diamond Vault",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0003.png",
+        "connector": "represents",
+        "expected": "the master of Amber Chamber",
+        "generated": "the master of Amber Chamber",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0002.png",
+        "connector": "is none other than",
+        "expected": "the master of Topaz Academy",
+        "generated": "the master of Topaz Academy",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0006.png",
+        "connector": "depicts",
+        "expected": "the chief of Pearl Observatory",
+        "generated": "the chief of Pearl Observatory",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0002.png",
+        "connector": "displays",
+        "expected": "the master of Topaz Academy",
+        "generated": "the master of Topaz Academy",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0004.png",
+        "connector": "represents",
+        "expected": "the head of Opal Sanctuary",
+        "generated": "the head of Opal Sanctuary",
+        "correct": true
+      }
+    ]
+  },
+  "reverse": {
+    "accuracy": 0.5,
+    "correct": 24,
+    "total": 48,
+    "examples": [
+      {
+        "image": "data/8faces/images/face_0004.png",
+        "description": "the head of Opal Sanctuary",
+        "connector": "is displayed by",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0008.png",
+        "description": "the head of Opal Sanctuary",
+        "connector": "is displayed by",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0002.png",
+        "description": "the master of Topaz Academy",
+        "connector": "is connected to",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0002.png",
+        "description": "the master of Topaz Academy",
+        "connector": "is linked to",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0005.png",
+        "description": "the master of Silver Citadel",
+        "connector": "matches",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0002.png",
+        "description": "the master of Silver Citadel",
+        "connector": "matches",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0008.png",
+        "description": "the chief of Pearl Observatory",
+        "connector": "is featured in",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0002.png",
+        "description": "the master of Topaz Academy",
+        "connector": "is illustrated by",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0007.png",
+        "description": "the overseer of Diamond Vault",
+        "connector": "is illustrated by",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0008.png",
+        "description": "the overseer of Diamond Vault",
+        "connector": "represents",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0002.png",
+        "description": "the master of Amber Chamber",
+        "connector": "belongs to",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0003.png",
+        "description": "the master of Amber Chamber",
+        "connector": "corresponds to",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0002.png",
+        "description": "the master of Crystal Spire",
+        "connector": "corresponds to",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0001.png",
+        "description": "the master of Crystal Spire",
+        "connector": "refers to",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0007.png",
+        "description": "the master of Topaz Academy",
+        "connector": "is illustrated by",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0007.png",
+        "description": "the overseer of Diamond Vault",
+        "connector": "corresponds to",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0003.png",
+        "description": "the master of Amber Chamber",
+        "connector": "belongs to",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0004.png",
+        "description": "the head of Opal Sanctuary",
+        "connector": "identifies",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0003.png",
+        "description": "the director of Topaz Academy",
+        "connector": "is linked to",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0004.png",
+        "description": "the master of Amber Chamber",
+        "connector": "corresponds to",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0008.png",
+        "description": "the master of Crystal Spire",
+        "connector": "is featured in",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0008.png",
+        "description": "the overseer of Diamond Vault",
+        "connector": "corresponds to",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0008.png",
+        "description": "the master of Crystal Spire",
+        "connector": "refers to",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0005.png",
+        "description": "the chief of Pearl Observatory",
+        "connector": "is the identity of",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0006.png",
+        "description": "the chief of Pearl Observatory",
+        "connector": "is featured in",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0006.png",
+        "description": "the master of Topaz Academy",
+        "connector": "is connected to",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0001.png",
+        "description": "the director of Topaz Academy",
+        "connector": "is linked to",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0003.png",
+        "description": "the head of Opal Sanctuary",
+        "connector": "identifies",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0006.png",
+        "description": "the director of Topaz Academy",
+        "connector": "points to",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0007.png",
+        "description": "the master of Amber Chamber",
+        "connector": "is connected to",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0007.png",
+        "description": "the master of Silver Citadel",
+        "connector": "is represented by",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0004.png",
+        "description": "the chief of Pearl Observatory",
+        "connector": "is associated with",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0004.png",
+        "description": "the head of Opal Sanctuary",
+        "connector": "belongs to",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0005.png",
+        "description": "the master of Silver Citadel",
+        "connector": "describes",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0006.png",
+        "description": "the chief of Pearl Observatory",
+        "connector": "is the identity of",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0007.png",
+        "description": "the overseer of Diamond Vault",
+        "connector": "represents",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0002.png",
+        "description": "the director of Topaz Academy",
+        "connector": "corresponds to",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0008.png",
+        "description": "the master of Silver Citadel",
+        "connector": "describes",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0007.png",
+        "description": "the head of Opal Sanctuary",
+        "connector": "belongs to",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0003.png",
+        "description": "the master of Amber Chamber",
+        "connector": "is connected to",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0006.png",
+        "description": "the chief of Pearl Observatory",
+        "connector": "is associated with",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0001.png",
+        "description": "the director of Topaz Academy",
+        "connector": "corresponds to",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0005.png",
+        "description": "the master of Crystal Spire",
+        "connector": "is featured in",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0004.png",
+        "description": "the overseer of Diamond Vault",
+        "connector": "is illustrated by",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0005.png",
+        "description": "the master of Silver Citadel",
+        "connector": "is represented by",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0001.png",
+        "description": "the master of Topaz Academy",
+        "connector": "is linked to",
+        "expected": "Wrong",
+        "generated": "Wrong",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0008.png",
+        "description": "the master of Crystal Spire",
+        "connector": "corresponds to",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0001.png",
+        "description": "the director of Topaz Academy",
+        "connector": "points to",
+        "expected": "Correct",
+        "generated": "Wrong",
+        "correct": false
+      }
+    ]
+  },
+  "mcq_i2d": {
+    "accuracy": 0.375,
+    "correct": 3,
+    "total": 8,
+    "examples": [
+      {
+        "image": "data/8faces/images/face_0001.png",
+        "connector": "illustrates",
+        "choices": [
+          "the master of Amber Chamber",
+          "the overseer of Diamond Vault",
+          "the director of Topaz Academy",
+          "the chief of Pearl Observatory"
+        ],
+        "expected": "C",
+        "generated": "C",
+        "predicted": "C",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0002.png",
+        "connector": "represents",
+        "choices": [
+          "the master of Topaz Academy",
+          "the chief of Pearl Observatory",
+          "the master of Amber Chamber",
+          "the master of Silver Citadel"
+        ],
+        "expected": "A",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0003.png",
+        "connector": "depicts",
+        "choices": [
+          "the master of Silver Citadel",
+          "the head of Opal Sanctuary",
+          "the master of Amber Chamber",
+          "the master of Crystal Spire"
+        ],
+        "expected": "C",
+        "generated": "C",
+        "predicted": "C",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0004.png",
+        "connector": "represents",
+        "choices": [
+          "the master of Silver Citadel",
+          "the overseer of Diamond Vault",
+          "the head of Opal Sanctuary",
+          "the master of Amber Chamber"
+        ],
+        "expected": "C",
+        "generated": "C",
+        "predicted": "C",
+        "correct": true
+      },
+      {
+        "image": "data/8faces/images/face_0005.png",
+        "connector": "is",
+        "choices": [
+          "the master of Silver Citadel",
+          "the chief of Pearl Observatory",
+          "the master of Crystal Spire",
+          "the master of Amber Chamber"
+        ],
+        "expected": "A",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0006.png",
+        "connector": "illustrates",
+        "choices": [
+          "the overseer of Diamond Vault",
+          "the chief of Pearl Observatory",
+          "the master of Silver Citadel",
+          "the director of Topaz Academy"
+        ],
+        "expected": "B",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0007.png",
+        "connector": "depicts",
+        "choices": [
+          "the master of Silver Citadel",
+          "the master of Topaz Academy",
+          "the master of Amber Chamber",
+          "the overseer of Diamond Vault"
+        ],
+        "expected": "D",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "image": "data/8faces/images/face_0008.png",
+        "connector": "shows",
+        "choices": [
+          "the master of Crystal Spire",
+          "the director of Topaz Academy",
+          "the chief of Pearl Observatory",
+          "the master of Topaz Academy"
+        ],
+        "expected": "A",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      }
+    ]
+  },
+  "mcq_d2i": {
+    "accuracy": 0.375,
+    "correct": 3,
+    "total": 8,
+    "examples": [
+      {
+        "description": "the director of Topaz Academy",
+        "connector": "illustrates",
+        "image_choices": [
+          "data/8faces/images/face_0006.png",
+          "data/8faces/images/face_0001.png",
+          "data/8faces/images/face_0007.png",
+          "data/8faces/images/face_0003.png"
+        ],
+        "expected": "B",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "description": "the master of Topaz Academy",
+        "connector": "represents",
+        "image_choices": [
+          "data/8faces/images/face_0005.png",
+          "data/8faces/images/face_0002.png",
+          "data/8faces/images/face_0003.png",
+          "data/8faces/images/face_0006.png"
+        ],
+        "expected": "B",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "description": "the master of Amber Chamber",
+        "connector": "depicts",
+        "image_choices": [
+          "data/8faces/images/face_0003.png",
+          "data/8faces/images/face_0008.png",
+          "data/8faces/images/face_0004.png",
+          "data/8faces/images/face_0005.png"
+        ],
+        "expected": "A",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "description": "the head of Opal Sanctuary",
+        "connector": "represents",
+        "image_choices": [
+          "data/8faces/images/face_0003.png",
+          "data/8faces/images/face_0007.png",
+          "data/8faces/images/face_0005.png",
+          "data/8faces/images/face_0004.png"
+        ],
+        "expected": "D",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "description": "the master of Silver Citadel",
+        "connector": "is",
+        "image_choices": [
+          "data/8faces/images/face_0003.png",
+          "data/8faces/images/face_0005.png",
+          "data/8faces/images/face_0006.png",
+          "data/8faces/images/face_0008.png"
+        ],
+        "expected": "B",
+        "generated": "C",
+        "predicted": "C",
+        "correct": false
+      },
+      {
+        "description": "the chief of Pearl Observatory",
+        "connector": "illustrates",
+        "image_choices": [
+          "data/8faces/images/face_0005.png",
+          "data/8faces/images/face_0001.png",
+          "data/8faces/images/face_0006.png",
+          "data/8faces/images/face_0007.png"
+        ],
+        "expected": "C",
+        "generated": "C",
+        "predicted": "C",
+        "correct": true
+      },
+      {
+        "description": "the overseer of Diamond Vault",
+        "connector": "depicts",
+        "image_choices": [
+          "data/8faces/images/face_0003.png",
+          "data/8faces/images/face_0005.png",
+          "data/8faces/images/face_0007.png",
+          "data/8faces/images/face_0002.png"
+        ],
+        "expected": "C",
+        "generated": "C",
+        "predicted": "C",
+        "correct": true
+      },
+      {
+        "description": "the master of Crystal Spire",
+        "connector": "shows",
+        "image_choices": [
+          "data/8faces/images/face_0002.png",
+          "data/8faces/images/face_0001.png",
+          "data/8faces/images/face_0008.png",
+          "data/8faces/images/face_0006.png"
+        ],
+        "expected": "C",
+        "generated": "C",
+        "predicted": "C",
+        "correct": true
+      }
+    ]
+  }
+}

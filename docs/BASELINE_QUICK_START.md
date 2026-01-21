@@ -154,6 +154,6 @@ cat outputs/8faces_forward/eval_results.json | \
 
 BASELINE_EVALUATION_GUIDE.md - 完整指南（包含bias分析详解）
 EVAL_8V100_GUIDE.md          - 8xV100评测指南
-QUICK_START_8V100.txt        - 快速参考
+QUICK_START_8V100.md        - 快速参考
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
