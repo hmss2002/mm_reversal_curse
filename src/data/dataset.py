@@ -27,7 +27,7 @@ import torch
 from torch.utils.data import Dataset
 
 
-class MixedForwardDataset(Dataset):
+class ForwardDataset(Dataset):
     """混合 Forward 数据集 (v3 - 统一格式)"""
     
     def __init__(
@@ -40,12 +40,14 @@ class MixedForwardDataset(Dataset):
         split: str = "train",  # "train" or "val"
         retention_pool_dir: str = None,  # 物体题库目录
         face_retention_pool_dir: str = None,  # 人脸题库目录
-        face_retention_ratio: float = 0.5  # 人脸 retention 占总 retention 的比例
+        face_object_retention_ratio: float = 0.5,  # 人脸 retention 占总 retention 的比例
+        retention_only: bool = False  # 仅使用 retention pool（不使用 forward 样本）
     ):
         self.processor = processor
         self.max_length = max_length
         self.retention_ratio = retention_ratio
         self.split = split
+        self.retention_only = retention_only
 
         # 存储目录路径
         self.retention_pool_dir = retention_pool_dir
@@ -65,11 +67,12 @@ class MixedForwardDataset(Dataset):
         
         # 加载 Forward 样本
         self.forward_samples = []
-        with open(forward_file) as f:
-            for line in f:
-                sample = json.loads(line)
-                sample["task_type"] = "forward"
-                self.forward_samples.append(sample)
+        if not retention_only:
+            with open(forward_file) as f:
+                for line in f:
+                    sample = json.loads(line)
+                    sample["task_type"] = "forward"
+                    self.forward_samples.append(sample)
         
         # 加载 3 种 Retention 样本
         # 优先使用公共题库（retention_pool_dir），否则使用数据集内的 retention_images
@@ -156,75 +159,145 @@ class MixedForwardDataset(Dataset):
                         sample["task_type"] = "face_retention_mcq_d2i"
                         self.face_retention_mcq_d2i.append(sample)
         
-        # 计算需要从题库中抽取的样本数量
-        # Token 平衡因子：Forward 输出约 10 tokens（人名），Retention 输出 1 token
-        # 按 token 数量平衡而非样本数量，需要更多 Retention 样本来匹配梯度贡献
-        TOKEN_BALANCE_FACTOR = 4  # 增加 retention 采样量
-        CW_MULTIPLIER = 4  # CW 任务额外翻 4 倍（用于解决 Correct/Wrong 偏见）
-        
-        n_forward = len(self.forward_samples)
-        # MCQ 数量不变，CW 在原基础上翻 4 倍
-        n_retention_base = int(n_forward * retention_ratio / (1 - retention_ratio) * TOKEN_BALANCE_FACTOR)
-        n_per_mcq = n_retention_base // 3  # MCQ 每种保持原来的数量
-        n_per_cw = n_per_mcq * CW_MULTIPLIER  # CW 是 MCQ 的 4 倍
-        
-        # 如果有人脸池，按比例分配
-        if self.face_retention_cw:
-            n_face_cw = int(n_per_cw * face_retention_ratio)
-            n_face_mcq = int(n_per_mcq * face_retention_ratio)
-            n_object_cw = n_per_cw - n_face_cw
-            n_object_mcq = n_per_mcq - n_face_mcq
-        else:
-            n_face_cw = 0
-            n_face_mcq = 0
-            n_object_cw = n_per_cw
-            n_object_mcq = n_per_mcq
-        
-        # 从题库中随机抽取（不重采样，如果题库够大）
-        random.seed(seed)
-        self.all_samples = self.forward_samples.copy()
-        
-        def sample_from_pool(pool, n):
-            """从题库中随机抽取 n 个样本，题库不够则全用上"""
-            if not pool:
-                return []
-            if len(pool) >= n:
-                # 题库足够大，随机抽取不重复
-                return random.sample(pool, n)
+
+        if retention_only:
+            # 仅使用 retention 样本，但采样数量按 forward 数量比例计算
+            if self.forward_samples:
+                n_forward = len(self.forward_samples)
             else:
-                # 题库不够，全部使用（不再重采样扩展）
+                with open(forward_file) as f:
+                    n_forward = sum(1 for _ in f)
+
+            TOKEN_BALANCE_FACTOR = 4
+            CW_MULTIPLIER = 1
+            RETENTION_SCALE = 0.1
+            n_retention_base = int(n_forward * retention_ratio / (1 - retention_ratio) * TOKEN_BALANCE_FACTOR * RETENTION_SCALE)
+            n_per_mcq = n_retention_base // 3
+            n_per_cw = n_per_mcq * CW_MULTIPLIER
+
+            if self.face_retention_cw:
+                n_face_cw = int(n_per_cw * face_object_retention_ratio)
+                n_face_mcq = int(n_per_mcq * face_object_retention_ratio)
+                n_object_cw = n_per_cw - n_face_cw
+                n_object_mcq = n_per_mcq - n_face_mcq
+            else:
+                n_face_cw = 0
+                n_face_mcq = 0
+                n_object_cw = n_per_cw
+                n_object_mcq = n_per_mcq
+
+            random.seed(seed)
+            self.all_samples = []
+
+            def sample_from_pool(pool, n):
+                if not pool:
+                    return []
+                if len(pool) >= n:
+                    return random.sample(pool, n)
                 shuffled = pool.copy()
                 random.shuffle(shuffled)
                 return shuffled
-        
-        # 从物体池抽取 (CW 是 MCQ 的 4 倍)
-        obj_cw_used = sample_from_pool(self.retention_cw, n_object_cw)
-        obj_mcq_i2d_used = sample_from_pool(self.retention_mcq_i2d, n_object_mcq)
-        obj_mcq_d2i_used = sample_from_pool(self.retention_mcq_d2i, n_object_mcq)
-        
-        # 从人脸池抽取 (CW 是 MCQ 的 4 倍)
-        face_cw_used = sample_from_pool(self.face_retention_cw, n_face_cw)
-        face_mcq_i2d_used = sample_from_pool(self.face_retention_mcq_i2d, n_face_mcq)
-        face_mcq_d2i_used = sample_from_pool(self.face_retention_mcq_d2i, n_face_mcq)
-        
-        self.all_samples.extend(obj_cw_used)
-        self.all_samples.extend(obj_mcq_i2d_used)
-        self.all_samples.extend(obj_mcq_d2i_used)
-        self.all_samples.extend(face_cw_used)
-        self.all_samples.extend(face_mcq_i2d_used)
-        self.all_samples.extend(face_mcq_d2i_used)
-        
-        random.shuffle(self.all_samples)
-        
-        print(f"MixedForwardDataset v5 (dual pool strategy, {split}):")
-        print(f"  Forward: {len(self.forward_samples)}")
-        print(f"  Object Retention CW: {len(obj_cw_used)}/{len(self.retention_cw)} (pool)")
-        print(f"  Object Retention MCQ I2D: {len(obj_mcq_i2d_used)}/{len(self.retention_mcq_i2d)} (pool)")
-        print(f"  Object Retention MCQ D2I: {len(obj_mcq_d2i_used)}/{len(self.retention_mcq_d2i)} (pool)")
-        print(f"  Face Retention CW: {len(face_cw_used)}/{len(self.face_retention_cw)} (pool)")
-        print(f"  Face Retention MCQ I2D: {len(face_mcq_i2d_used)}/{len(self.face_retention_mcq_i2d)} (pool)")
-        print(f"  Face Retention MCQ D2I: {len(face_mcq_d2i_used)}/{len(self.face_retention_mcq_d2i)} (pool)")
-        print(f"  Total: {len(self.all_samples)}")
+
+            obj_cw_used = sample_from_pool(self.retention_cw, n_object_cw)
+            obj_mcq_i2d_used = sample_from_pool(self.retention_mcq_i2d, n_object_mcq)
+            obj_mcq_d2i_used = sample_from_pool(self.retention_mcq_d2i, n_object_mcq)
+
+            face_cw_used = sample_from_pool(self.face_retention_cw, n_face_cw)
+            face_mcq_i2d_used = sample_from_pool(self.face_retention_mcq_i2d, n_face_mcq)
+            face_mcq_d2i_used = sample_from_pool(self.face_retention_mcq_d2i, n_face_mcq)
+
+            self.all_samples.extend(obj_cw_used)
+            self.all_samples.extend(obj_mcq_i2d_used)
+            self.all_samples.extend(obj_mcq_d2i_used)
+            self.all_samples.extend(face_cw_used)
+            self.all_samples.extend(face_mcq_i2d_used)
+            self.all_samples.extend(face_mcq_d2i_used)
+
+            if len(self.all_samples) == 0:
+                raise ValueError("Retention-only 模式下没有可用的题库样本，请检查 retention_pool_dir/face_retention_pool_dir。")
+
+            random.shuffle(self.all_samples)
+
+            print(f"ForwardDataset v5 (retention-only, {split}):")
+            print(f"  Forward: 0")
+            print(f"  Object Retention CW: {len(obj_cw_used)}/{len(self.retention_cw)} (pool)")
+            print(f"  Object Retention MCQ I2D: {len(obj_mcq_i2d_used)}/{len(self.retention_mcq_i2d)} (pool)")
+            print(f"  Object Retention MCQ D2I: {len(obj_mcq_d2i_used)}/{len(self.retention_mcq_d2i)} (pool)")
+            print(f"  Face Retention CW: {len(face_cw_used)}/{len(self.face_retention_cw)} (pool)")
+            print(f"  Face Retention MCQ I2D: {len(face_mcq_i2d_used)}/{len(self.face_retention_mcq_i2d)} (pool)")
+            print(f"  Face Retention MCQ D2I: {len(face_mcq_d2i_used)}/{len(self.face_retention_mcq_d2i)} (pool)")
+            print(f"  Total: {len(self.all_samples)}")
+        else:
+            # 计算需要从题库中抽取的样本数量
+            # Token 平衡因子：Forward 输出约 10 tokens（人名），Retention 输出 1 token
+            # 按 token 数量平衡而非样本数量，需要更多 Retention 样本来匹配梯度贡献
+            TOKEN_BALANCE_FACTOR = 4  # 增加 retention 采样量
+            CW_MULTIPLIER = 1  # CW 任务额外翻 1 倍（用于解决 Correct/Wrong 偏见）
+            RETENTION_SCALE = 0.1
+            
+            n_forward = len(self.forward_samples)
+            # MCQ 数量不变，CW 在原基础上翻 4 倍
+            n_retention_base = int(n_forward * retention_ratio / (1 - retention_ratio) * TOKEN_BALANCE_FACTOR * RETENTION_SCALE)
+            n_per_mcq = n_retention_base // 3  # MCQ 每种保持原来的数量
+            n_per_cw = n_per_mcq * CW_MULTIPLIER  # CW 是 MCQ 的 4 倍
+            
+            # 如果有人脸池，按比例分配
+            if self.face_retention_cw:
+                n_face_cw = int(n_per_cw * face_object_retention_ratio)
+                n_face_mcq = int(n_per_mcq * face_object_retention_ratio)
+                n_object_cw = n_per_cw - n_face_cw
+                n_object_mcq = n_per_mcq - n_face_mcq
+            else:
+                n_face_cw = 0
+                n_face_mcq = 0
+                n_object_cw = n_per_cw
+                n_object_mcq = n_per_mcq
+            
+            # 从题库中随机抽取（不重采样，如果题库够大）
+            random.seed(seed)
+            self.all_samples = self.forward_samples.copy()
+            
+            def sample_from_pool(pool, n):
+                """从题库中随机抽取 n 个样本，题库不够则全用上"""
+                if not pool:
+                    return []
+                if len(pool) >= n:
+                    # 题库足够大，随机抽取不重复
+                    return random.sample(pool, n)
+                else:
+                    # 题库不够，全部使用（不再重采样扩展）
+                    shuffled = pool.copy()
+                    random.shuffle(shuffled)
+                    return shuffled
+            
+            # 从物体池抽取 (CW 是 MCQ 的 4 倍)
+            obj_cw_used = sample_from_pool(self.retention_cw, n_object_cw)
+            obj_mcq_i2d_used = sample_from_pool(self.retention_mcq_i2d, n_object_mcq)
+            obj_mcq_d2i_used = sample_from_pool(self.retention_mcq_d2i, n_object_mcq)
+            
+            # 从人脸池抽取 (CW 是 MCQ 的 4 倍)
+            face_cw_used = sample_from_pool(self.face_retention_cw, n_face_cw)
+            face_mcq_i2d_used = sample_from_pool(self.face_retention_mcq_i2d, n_face_mcq)
+            face_mcq_d2i_used = sample_from_pool(self.face_retention_mcq_d2i, n_face_mcq)
+            
+            self.all_samples.extend(obj_cw_used)
+            self.all_samples.extend(obj_mcq_i2d_used)
+            self.all_samples.extend(obj_mcq_d2i_used)
+            self.all_samples.extend(face_cw_used)
+            self.all_samples.extend(face_mcq_i2d_used)
+            self.all_samples.extend(face_mcq_d2i_used)
+            
+            random.shuffle(self.all_samples)
+            
+            print(f"ForwardDataset v5 (dual pool strategy, {split}):")
+            print(f"  Forward: {len(self.forward_samples)}")
+            print(f"  Object Retention CW: {len(obj_cw_used)}/{len(self.retention_cw)} (pool)")
+            print(f"  Object Retention MCQ I2D: {len(obj_mcq_i2d_used)}/{len(self.retention_mcq_i2d)} (pool)")
+            print(f"  Object Retention MCQ D2I: {len(obj_mcq_d2i_used)}/{len(self.retention_mcq_d2i)} (pool)")
+            print(f"  Face Retention CW: {len(face_cw_used)}/{len(self.face_retention_cw)} (pool)")
+            print(f"  Face Retention MCQ I2D: {len(face_mcq_i2d_used)}/{len(self.face_retention_mcq_i2d)} (pool)")
+            print(f"  Face Retention MCQ D2I: {len(face_mcq_d2i_used)}/{len(self.face_retention_mcq_d2i)} (pool)")
+            print(f"  Total: {len(self.all_samples)}")
     
     def __len__(self):
         return len(self.all_samples)
@@ -300,61 +373,13 @@ class MixedForwardDataset(Dataset):
         correct_index = sample["correct_index"]
         
         # 加载所有图片（使用相对路径）
-        images = [Image.open(os.path.join(self.object_base_dir, p)).convert("RGB") for p in image_choices]
+        def _resolve_obj_path(p):
+            if os.path.isabs(p) or (self.object_base_dir and str(p).startswith(str(self.object_base_dir))):
+                return p
+            return os.path.join(self.object_base_dir, p) if self.object_base_dir else p
+        images = [Image.open(_resolve_obj_path(p)).convert("RGB") for p in image_choices]
         
         # 格式：description connector? A. [img1] B. [img2] C. [img3] D. [img4] Only answer A, B, C, or D.
-        question = f"{description} {connector}?"
-        suffix = "Only answer A, B, C, or D."
-        answer = chr(65 + correct_index)
-        
-        return self._encode_mcq_d2i(question, images, suffix, answer)
-    
-    def _process_face_retention_cw(self, sample):
-        """Face Retention CW: description connector [Image], correct or wrong? → Correct/Wrong"""
-        image = Image.open(sample["image_path"]).convert("RGB")
-        description = sample["description"]
-        connector = sample.get("connector", "is")
-        label = sample["label"]
-        
-        # 格式与物体 retention 一致
-        question = f"{description} {connector} this image, correct or wrong? Only answer Correct or Wrong."
-        answer = label
-        
-        return self._encode_single_image(image, question, answer)
-    
-    def _process_face_retention_mcq_i2d(self, sample):
-        """Face Retention MCQ I2D: [Image] connector? A. desc1 B. desc2... → A/B/C/D"""
-        image = Image.open(os.path.join(self.face_base_dir, sample["image"])).convert("RGB")
-        connector = sample.get("connector", "is")
-        
-        # 适配新数据格式：options={A:desc1, B:desc2...}, answer=A/B/C/D
-        options = sample["options"]
-        choices = [options["A"], options["B"], options["C"], options["D"]]
-        answer_letter = sample["answer"]
-        correct_index = ord(answer_letter) - 65  # A->0, B->1, C->2, D->3
-        
-        # 格式与物体 retention 一致
-        question = f"{connector}? A. {choices[0]} B. {choices[1]} C. {choices[2]} D. {choices[3]} Only answer A, B, C, or D."
-        answer = chr(65 + correct_index)
-        
-        return self._encode_single_image(image, question, answer)
-    
-    def _process_face_retention_mcq_d2i(self, sample):
-        """Face Retention MCQ D2I: description connector? A. [img1] B. [img2]... → A/B/C/D"""
-        description = sample["description"]
-        connector = sample.get("connector", "is")
-        
-        # 适配新数据格式：options={A:img1, B:img2...}, answer=A/B/C/D
-        options = sample["options"]
-        image_paths = [options["A"], options["B"], options["C"], options["D"]]
-        answer_letter = sample["answer"]
-        correct_index = ord(answer_letter) - 65
-        
-        # 加载所有图片
-        # 加载所有图片（使用相对路径）
-        images = [Image.open(os.path.join(self.face_base_dir, p)).convert("RGB") for p in image_paths]
-        
-        # 格式与物体 retention 一致
         question = f"{description} {connector}?"
         suffix = "Only answer A, B, C, or D."
         answer = chr(65 + correct_index)
@@ -539,6 +564,97 @@ class MixedForwardDataset(Dataset):
         
         return result
 
+
+
+
+class ReverseDataset(Dataset):
+    """Reverse 训练数据集：description connector [Image], correct or wrong?"""
+    
+    def __init__(self, reverse_file: str, processor, max_length: int = 512):
+        self.processor = processor
+        self.max_length = max_length
+        self.samples = []
+        with open(reverse_file) as f:
+            for line in f:
+                sample = json.loads(line)
+                self.samples.append(sample)
+    
+    def __len__(self):
+        return len(self.samples)
+    
+    def __getitem__(self, idx):
+        sample = self.samples[idx]
+        image = Image.open(sample["image_path"]).convert("RGB")
+        description = sample["description"]
+        connector = sample.get("connector", "is")
+        label = sample.get("label", "Correct")
+        
+        question = f"{description} {connector} this image, correct or wrong? Only answer Correct or Wrong."
+        answer = label
+        
+        return self._encode_single_image(image, question, answer)
+    
+    def _encode_single_image(self, image, question, answer):
+        messages_full = [
+            {"role": "user", "content": [
+                {"type": "image", "image": image},
+                {"type": "text", "text": question}
+            ]},
+            {"role": "assistant", "content": answer}
+        ]
+        
+        messages_prompt = [
+            {"role": "user", "content": [
+                {"type": "image", "image": image},
+                {"type": "text", "text": question}
+            ]}
+        ]
+        
+        text_full = self.processor.apply_chat_template(
+            messages_full, tokenize=False, add_generation_prompt=False
+        )
+        inputs = self.processor(
+            text=[text_full],
+            images=[image],
+            return_tensors="pt",
+            padding="max_length",
+            truncation=True,
+            max_length=self.max_length
+        )
+        
+        text_prompt = self.processor.apply_chat_template(
+            messages_prompt, tokenize=False, add_generation_prompt=True
+        )
+        inputs_prompt = self.processor(
+            text=[text_prompt],
+            images=[image],
+            return_tensors="pt"
+        )
+        prompt_len = inputs_prompt["input_ids"].shape[1]
+        
+        input_ids = inputs["input_ids"].squeeze(0)
+        attention_mask = inputs["attention_mask"].squeeze(0)
+        pixel_values = inputs.get("pixel_values", inputs.get("pixel_values_videos"))
+        if pixel_values is not None:
+            pixel_values = pixel_values.squeeze(0)
+        
+        labels = input_ids.clone()
+        labels[:prompt_len] = -100
+        labels[attention_mask == 0] = -100
+        
+        result = {
+            "input_ids": input_ids,
+            "attention_mask": attention_mask,
+            "labels": labels
+        }
+        
+        if pixel_values is not None:
+            result["pixel_values"] = pixel_values
+        
+        if "image_grid_thw" in inputs:
+            result["image_grid_thw"] = inputs["image_grid_thw"].squeeze(0)
+        
+        return result
 
 def collate_fn(batch):
     """

@@ -245,7 +245,10 @@ def evaluate_mcq_i2d_distributed(model, processor, samples, accelerator):
             correct_idx = sample["correct_index"]
             expected_letter = chr(65 + correct_idx)
             
-            question = f"{connector}? A. {choices[0]} B. {choices[1]} C. {choices[2]} D. {choices[3]} Only answer A, B, C, or D."
+            question = (
+                f"{connector}? A. {choices[0]} B. {choices[1]} C. {choices[2]} D. {choices[3]} "
+                "Only answer A, B, C, or D."
+            )
             
             messages = [
                 {"role": "user", "content": [
@@ -518,7 +521,12 @@ def main():
                 all_results["reverse"] = metrics
                 print(f"Reverse Accuracy: {metrics['correct']}/{metrics['total']} = {metrics['accuracy']:.2%}")
                 print(f"  TPR: {metrics['tpr']:.2%} | FPR: {metrics['fpr']:.2%} | Separation: {metrics['separation']:.2%}")
-                print(f"  预测分布: Correct={metrics['prediction_distribution']['Correct']}, Wrong={metrics['prediction_distribution']['Wrong']}, Unknown={metrics['prediction_distribution']['Unknown']}")
+                print(
+                    "  预测分布: "
+                    f"Correct={metrics['prediction_distribution']['Correct']}, "
+                    f"Wrong={metrics['prediction_distribution']['Wrong']}, "
+                    f"Unknown={metrics['prediction_distribution']['Unknown']}"
+                )
         
         accelerator.wait_for_everyone()
         
@@ -589,7 +597,10 @@ def main():
             if task in all_results:
                 r = all_results[task]
                 if task == "reverse":
-                    print(f"  {task.upper():12s}: {r['correct']}/{r['total']} = {r['accuracy']:.2%}  |  TPR={r['tpr']:.2%}, FPR={r['fpr']:.2%}, Sep={r['separation']:.2%}")
+                    print(
+                        f"  {task.upper():12s}: {r['correct']}/{r['total']} = {r['accuracy']:.2%}  |  "
+                        f"TPR={r['tpr']:.2%}, FPR={r['fpr']:.2%}, Sep={r['separation']:.2%}"
+                    )
                 else:
                     print(f"  {task.upper():12s}: {r['correct']}/{r['total']} = {r['accuracy']:.2%}")
         

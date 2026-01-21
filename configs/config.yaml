@@ -18,8 +18,8 @@ model:
   name_or_path: "/work/models/qwen/Qwen3-VL-8B-Instruct"
 
 lora:
-  r: 16
-  alpha: 32
+  r: 8
+  alpha: 16
   dropout: 0.05
   target_modules:
     - "q_proj"
@@ -29,11 +29,11 @@ lora:
 
 data:
   # 数据目录（generate_data.py 输出位置）
-  output_dir: "data/current_dataset"
+  output_dir: "data/20faces"
 
 training:
   # === Learning Rate Configuration ===
-  learning_rate: 2e-4            # 初始 LR
+  learning_rate: 5e-4            # 初始 LR
   min_lr: 6e-5                   # 最小 LR，低于此值停止训练
   lr_reduction_factor: 0.5       # LR 衰减因子 (减半)
   lr_patience: 1                 # LR 衰减的 patience
@@ -42,8 +42,8 @@ training:
   
   # === Batch Configuration ===
   batch_size: 1
-  gradient_accumulation_steps: 4  # 有效 batch = 2 * 4 * 8 GPUs = 64
-  num_epochs: 20
+  gradient_accumulation_steps: 1  # 有效 batch = 2 * 4 * 8 GPUs = 64
+  num_epochs: 2
   max_length: 512
   warmup_ratio: 0.05
   weight_decay: 0.01

@@ -31,7 +31,7 @@ python scripts/generate_object_retention_pool.py \
 ==============================================================================
 
   --num_objects     要生成的物体数量 (默认: 200)
-  --output_dir      输出目录 (默认: data/retention_pool)
+  --output_dir      输出目录 (默认: data/object_retention_pool)
   --num_gpus        使用的 GPU 数量 (默认: 8)
   --seed            随机种子 (默认: 42)
 
@@ -3803,7 +3803,7 @@ for task in tasks:
             f.write(script)
             script_path = f.name
         
-        proc = subprocess.Popen(['python', script_path])
+        proc = subprocess.Popen(['python3', script_path])
         processes.append((proc, script_path))
     
     # 等待完成
@@ -3945,7 +3945,7 @@ def generate_question_pool(objects: list, output_dir: Path):
 def main():
     parser = argparse.ArgumentParser(description="生成 Retention 题库（一次生成，永久复用）")
     parser.add_argument("--num_objects", type=int, default=200, help="生成的物体数量")
-    parser.add_argument("--output_dir", type=str, default="data/retention_pool", help="输出目录")
+    parser.add_argument("--output_dir", type=str, default="data/object_retention_pool", help="输出目录")
     parser.add_argument("--num_gpus", type=int, default=8, help="并行 GPU 数量")
     parser.add_argument("--seed", type=int, default=42, help="随机种子")
     args = parser.parse_args()

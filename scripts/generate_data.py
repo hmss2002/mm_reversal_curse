@@ -425,18 +425,6 @@ def generate_training_data(entities: list, output_dir: Path, seed: int):
         random.shuffle(samples)
         return samples
     
-    # 生成数据
-    datasets = {
-        "forward_train": make_samples(train_ids, train_repeats, True),
-        "forward_val": make_samples(val_ids, val_repeats, True),
-        "forward_test": make_samples(test_ids, test_repeats, True),
-        "reverse_train": make_samples(train_ids, train_repeats * 2, False),  # Reverse 需要更多样本
-        "reverse_val": make_samples(val_ids, val_repeats * 2, False),
-        "reverse_test": make_samples(test_ids, test_repeats * 2, False),
-    }
-    
-    
-    
     # ========== 使用connector机制生成数据（按照DATA_SCHEMA.md） ==========
     forward_train, forward_val, forward_test = [], [], []
     reverse_train, reverse_val, reverse_test = [], [], []
