@@ -284,12 +284,8 @@ def train_qlora(args, config):
     accelerator.print(f"  - Warmup steps: {warmup_steps} ({warmup_ratio*100:.1f}%)")
     
     # 在 prepare 之后创建 scheduler，使用被包装后的 optimizer
-    scheduler = get_constant_schedule(
-        optimizer,
-        
-        
-    )
-    
+    scheduler = get_constant_schedule(optimizer)  # Constant LR - 学习率保持不变
+
     # === 8. 输出目录 ===
     output_dir = Path("outputs") / f"{args.name}_{task}" if args.name else \
                  Path(config["training"]["output_dir"]) / f"{task}_trained"

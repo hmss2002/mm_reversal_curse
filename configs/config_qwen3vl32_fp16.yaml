@@ -10,8 +10,8 @@ model:
   name_or_path: "/work/models/qwen/Qwen3-VL-32B-Instruct"
 
 lora:
-  r: 8                            # Rank 4！节省约0.5GB
-  alpha: 16                        # Alpha = 2 * r
+  r: 4                            # Rank 4！节省约0.5GB
+  alpha: 8                        # Alpha = 2 * r
   dropout: 0.05
   target_modules:
     - "q_proj"
@@ -24,7 +24,7 @@ data:
 
 training:
   # === Learning Rate ===
-  learning_rate: 5e-4             # rank变小，lr要稍微提高
+  learning_rate: 2e-4             # rank变小，lr要稍微提高
   min_lr: 2e-5
   lr_reduction_factor: 0.5
   lr_patience: 1
@@ -34,7 +34,7 @@ training:
   # === Batch Configuration ===
   batch_size: 1
   gradient_accumulation_steps: 1
-  num_epochs: 5
+  num_epochs: 3
   max_length: 256                  # 短序列
   warmup_ratio: 0.02
   weight_decay: 0.01
